@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ROYAL CASINO - VIP</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="taixiu.css">
+</head>
+
+<body>
+    <div class="notification" id="notif">Thông báo</div>
+
+    <div class="header">
+        <a href="/" class="back-btn">
+            <span style="font-size: 18px; margin-right: 5px; margin-bottom: 2px;"></span>
+        </a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="music-btn" onclick="toggleMusic()"
+                style="background:none; border:none; cursor:pointer; font-size:24px; color:#ffd700; text-shadow: 2px 2px 0px #3e2723;">
+                🎵
+            </button>
+            <div class="user-money"><span id="balance">...</span></div>
+        </div>
+    </div>
+
+    <div class="game-board">
+        <div class="side-panel">
+            <div class="bet-circle tai" id="box-tai" onclick="quickBet('tai')">
+                <div class="rate" style="margin-top: 45px;">1 : 1.98</div>
+            </div>
+            <div class="total-bet" id="total-tai">0</div>
+            <div class="my-bet" id="my-tai"></div>
+        </div>
+
+        <div class="center-stage">
+            <div class="timer-container">
+                <div class="timer" id="timer">00</div>
+            </div>
+            <img src="/images/dice/plate.png" class="plate">
+            <div class="dice-container">
+                <img src="/images/dice/1.png" class="dice" id="d1">
+                <img src="/images/dice/1.png" class="dice" id="d2">
+                <img src="/images/dice/1.png" class="dice" id="d3">
+            </div>
+            <div class="bowl-container" id="bowl">
+                <div class="bowl-img"></div>
+            </div>
+            <div id="result-toast">
+                <div class="toast-content">
+                    <div class="toast-text" id="toast-text">...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="bet-circle xiu" id="box-xiu" onclick="quickBet('xiu')">
+                <div class="rate" style="margin-top: 45px;">1 : 1.98</div>
+            </div>
+            <div class="total-bet" id="total-xiu">0</div>
+            <div class="my-bet" id="my-xiu"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div id="history-bar" class="history-bar"></div>
+
+        <div class="bet-info-row">
+            <div>
+                <div class="info-label">Đang chọn</div>
+                <div id="selected-amount-display">1</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="info-label">Số dư tối đa</div>
+                <div class="info-value" id="max-display">...</div>
+            </div>
+        </div>
+
+        <div class="slider-wrapper">
+            <div class="slider-track-bg"></div>
+            <div class="slider-fill" id="slider-fill"></div>
+            <input type="range" id="bet-slider" min="1" max="1000" step="1" value="1" oninput="handleSliderInput(this)">
+            <div class="ticks">
+                <div class="tick" onclick="jumpTo(0)">MIN</div>
+                <div class="tick" onclick="jumpTo(0.25)">25%</div>
+                <div class="tick" onclick="jumpTo(0.5)">50%</div>
+                <div class="tick" onclick="jumpTo(0.75)">75%</div>
+                <div class="tick" onclick="jumpTo(1)">ALL</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="taixiu.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,671 @@
+/* --- FILE: taixiu.css --- */
+
+/* 1. CẤU HÌNH CHUNG & FONT CHỮ */
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+body {
+    /* 1. Đường dẫn đến ảnh mới chuẩn 16:9 */
+    background-image: url('/images/ui/bg-bamboo.jpg');
+
+    /* 2. Không lặp lại */
+    background-repeat: no-repeat;
+
+    /* 3. Căn giữa */
+    background-position: center center;
+
+    /* 4. QUAN TRỌNG: Ép ảnh vừa khít màn hình. 
+       Vì ảnh đã chuẩn tỉ lệ nên sẽ rất đẹp trên màn hình ngang */
+    background-size: 100% 100%;
+
+    /* Các thuộc tính khác giữ nguyên */
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Lora', serif;
+    display: flex;
+    flex-direction: column;
+    color: #3e2723;
+}
+
+/* Hiệu ứng tối 4 góc để tạo chiều sâu (Vignette) */
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+body::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* Hiệu ứng tối 4 góc (Vignette) - Màu đen mờ tỏa từ ngoài vào */
+    background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.3) 60%, rgba(0, 0, 0, 0.8) 100%);
+
+    pointer-events: none;
+    /* Để vẫn bấm được xuyên qua lớp phủ này */
+    z-index: 2;
+    /* Nằm đè lên nền chiếu nhưng nằm dưới các nút */
+}
+
+/* 2. HEADER (Trong suốt, bỏ nền đen cũ) */
+.header {
+    position: relative;
+    z-index: 10;
+    height: 70px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+}
+
+/* NÚT RỜI BÀN (Kiểu biển gỗ) */
+/* --- Cập nhật trong taixiu.css --- */
+
+.back-btn {
+    /* Dùng ảnh gỗ có sẵn chữ làm nền */
+    background: url('/images/ui/btn-wood.png') center/contain no-repeat;
+    background-color: transparent;
+    /* Xóa màu nền cũ */
+    border: none;
+    /* Không cần viền nữa */
+
+    /* Đặt kích thước cố định cho nút */
+    width: 130px;
+    /* Chiều ngang */
+    height: 50px;
+    /* Chiều cao */
+
+    /* Cần giữ lại dòng này để nút vẫn bấm được */
+    display: block;
+
+    /* Hiệu ứng bóng đổ nhẹ cho cả cái nút nổi lên */
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
+    transition: transform 0.1s;
+
+    /* Xóa bỏ các dòng chỉnh font chữ cũ đi (vì không còn chữ nữa) */
+    /* color: ... XÓA */
+    /* font-family: ... XÓA */
+    /* text-shadow: ... XÓA */
+}
+
+/* Hiệu ứng khi nhấn vào nút */
+.back-btn:active {
+    transform: scale(0.95);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.user-money {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 22px;
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #3e2723;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+/* 3. BÀN CHƠI (GAME BOARD) */
+.game-board {
+    flex: 1;
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.side-panel {
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* NÚT CƯỢC - QUAN TRỌNG: ĐỔI TỪ TRÒN SANG BẢNG GỖ */
+.bet-circle {
+    width: 140px;
+    height: 85px;
+    /* Hình chữ nhật */
+    border-radius: 12px;
+    /* Bo góc nhẹ */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    border: 2px solid #3e2723;
+    transition: transform 0.1s;
+}
+
+/* Nút TÀI (Màu đỏ gỗ) */
+.tai {
+    /* Nếu có ảnh thì dùng ảnh, không thì dùng màu gradient giả gỗ đỏ */
+    background: url('/images/ui/wood-board-red.png') center/contain no-repeat;
+    background-color: #8a2b2b;
+    /* Màu dự phòng */
+}
+
+/* Nút XỈU (Màu xanh gỗ) */
+.xiu {
+    background: url('/images/ui/wood-board-blue.png') center/contain no-repeat;
+    background-color: #2c3e50;
+    /* Màu dự phòng */
+}
+
+.bet-circle.selected {
+    transform: scale(1.05) translateY(-5px);
+    filter: brightness(1.2);
+}
+
+.label {
+    font-family: 'Cinzel', serif;
+    font-size: 40px;
+    font-weight: 700;
+    color: #fff8e1;
+    /* Màu kem sáng */
+    text-shadow: 2px 2px 4px #000;
+    margin-bottom: 0;
+    line-height: 1;
+    margin-top: 5px;
+}
+
+.rate {
+    font-size: 11px;
+    color: #ddd;
+    font-family: 'Lora', serif;
+    font-style: italic;
+}
+
+/* Tiền cược hiển thị bên dưới */
+.my-bet {
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffd700;
+    text-shadow: 1px 1px 2px #000;
+    background: rgba(62, 39, 35, 0.8);
+    padding: 4px 12px;
+    border-radius: 4px;
+    min-height: 28px;
+    border: 1px solid #8d6e63;
+}
+
+.total-bet {
+    color: #3e2723;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+
+/* 4. KHU VỰC BÁT ĐĨA (CENTER) */
+.center-stage {
+    width: 300px;
+    height: 300px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Đồng hồ đếm ngược (Khung gỗ vuông) */
+.timer-container {
+    position: absolute;
+    top: -60px;
+    z-index: 20;
+    width: 60px;
+    height: 60px;
+    background: url('/images/ui/wood-frame.png') center/cover;
+    background-color: #3e2723;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+    border: none;
+    /* Bỏ border vàng cũ */
+}
+
+.timer {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff8e1;
+}
+
+.plate {
+    width: 280px;
+    height: 280px;
+    position: absolute;
+    z-index: 1;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
+}
+
+.dice-container {
+    /* Tăng kích thước khung chứa để tạo khoảng hở */
+    width: 110px;
+    /* Tăng từ 90px lên 110px (Tách 2 viên dưới) */
+    height: 100px;
+    /* Tăng từ 85px lên 100px (Tách viên trên với viên dưới) */
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Căn giữa đĩa */
+    z-index: 5;
+    display: block;
+}
+
+.dice {
+    width: 42px;
+    height: 42px;
+    /* Giữ nguyên hoặc chỉnh nhỏ xíu nếu cần */
+    position: absolute;
+
+    /* Đổi bóng đổ: Bóng nhỏ và đậm sát chân để tạo cảm giác nằm lì trên đĩa */
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    transition: transform 0.3s;
+}
+
+#d1 {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    /* Viên trên cùng nằm giữa */
+}
+
+#d2 {
+    bottom: 0;
+    left: 0;
+    /* Góc dưới trái */
+}
+
+#d3 {
+    bottom: 0;
+    right: 0;
+    /* Góc dưới phải */
+}
+
+.bowl-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    cursor: grab;
+}
+
+.bowl-img {
+    width: 100%;
+    height: 100%;
+    background-image: url('/images/dice/bowl.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8));
+}
+
+/* Animation xóc */
+.shaking {
+    animation: shake 0.1s infinite;
+}
+
+@keyframes shake {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    25% {
+        transform: translate(-52%, -48%) rotate(3deg);
+    }
+
+    75% {
+        transform: translate(-48%, -52%) rotate(-3deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+}
+
+/* 5. FOOTER (THANH GỖ ĐẬM) */
+/* --- Cập nhật trong taixiu.css --- */
+
+.footer {
+    position: relative;
+    z-index: 10;
+
+    /* Giữ nguyên nền gỗ cũ */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)),
+        url('/images/ui/wood-panel.jpg') center/cover;
+
+    /* THAY ĐỔI: Viền trên sáng màu vàng kim nhạt (tạo khối 3D) */
+    border-top: 2px solid rgba(255, 223, 128, 0.5);
+
+    /* Bóng đổ cực đậm xuống nền chiếu để tách biệt hẳn */
+    box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.9);
+
+    padding: 15px 25px 25px 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.history-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 8px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px #000;
+}
+
+.bet-info-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+}
+
+.info-label {
+    color: #e0e0e0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 0 #000;
+    /* Viền đen nhẹ */
+}
+
+.info-value,
+.tick {
+    color: #ffffff;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    /* Viền đen bao quanh chữ */
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+#selected-amount-display {
+    color: #ffd700;
+    font-weight: 900;
+    font-size: 26px;
+    /* Viền đen dày hơn cho số to */
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+/* 6. SLIDER (THANH KÉO GỖ) */
+.slider-wrapper {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+/* Rãnh trượt */
+.slider-track-bg {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: #3e2723;
+    border-radius: 5px;
+    transform: translateY(-50%);
+    z-index: 0;
+    border: 1px solid #5d4037;
+    box-shadow: inset 0 2px 5px #000;
+}
+
+/* Phần màu vàng đã kéo */
+.slider-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 10px;
+    background: linear-gradient(90deg, #ff6f00, #ffb300);
+    border-radius: 5px;
+    transform: translateY(-50%);
+    z-index: 1;
+    width: 0%;
+    pointer-events: none;
+}
+
+/* Nút kéo (Cục tròn) */
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    position: absolute;
+    z-index: 5;
+    margin: 0;
+    height: 40px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 35px;
+    height: 35px;
+    /* To hơn chút cho dễ kéo */
+    border-radius: 50%;
+
+    /* Tạo hình đồng xu vàng 3D */
+    background: radial-gradient(circle at 30% 30%, #fff9c4, #fbc02d, #f57f17);
+
+    border: 2px solid #fff;
+    /* Viền trắng mảnh tạo độ sắc */
+    box-shadow: 0 0 10px #ffeb3b, 0 4px 8px rgba(0, 0, 0, 0.8);
+    /* Phát sáng nhẹ + bóng đổ */
+
+    cursor: pointer;
+    transform: translateY(-2px);
+    /* Nhấc nhẹ lên khỏi rãnh */
+    transition: transform 0.1s;
+}
+
+/* Khi đang kéo thì sáng rực lên */
+input[type=range]:active::-webkit-slider-thumb {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px #ffeb3b, 0 5px 15px rgba(0, 0, 0, 1);
+}
+
+.ticks {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    padding: 0 10px;
+    /* Thêm đệm để chữ không sát mép quá */
+}
+
+.tick {
+    font-size: 12px;
+    /* Tăng kích thước */
+    color: #ffffff;
+    /* Màu trắng tinh */
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    /* Viền đen cứng giúp chữ nét trên nền tối */
+    text-shadow: 1px 1px 0px #000, 1px 1px 2px rgba(0, 0, 0, 0.8);
+    transition: all 0.2s;
+}
+
+.tick.active {
+    color: #ffd700;
+    opacity: 1;
+    text-shadow: 0 0 10px #ffcc00;
+}
+
+/* 7. TOAST KẾT QUẢ (THÔNG BÁO) */
+#result-toast {
+    position: absolute;
+    bottom: -80px;
+    width: 100%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.toast-content {
+    display: inline-block;
+    background: #fff8e1;
+    /* Màu giấy */
+    color: #b71c1c;
+    padding: 8px 30px;
+    border-radius: 4px;
+    border: 2px solid #b71c1c;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+}
+
+.toast-text {
+    font-family: 'Cinzel', serif;
+    font-size: 30px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Notification */
+.notification {
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(38, 24, 19, 0.95);
+    padding: 15px 25px;
+    border-radius: 5px;
+    border: 2px solid #8d6e63;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    color: #fff8e1;
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    z-index: 9999;
+    display: none;
+    text-align: center;
+}
+
+/* --- VISUAL EFFECTS --- */
+
+/* 1. Winner Glow Pulse */
+@keyframes pulse-gold {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        transform: scale(1);
+    }
+
+    70% {
+        box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0);
+        transform: scale(1.05);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+        transform: scale(1);
+    }
+}
+
+.winner-glow {
+    animation: pulse-gold 1.5s infinite;
+    z-index: 20;
+    /* Ensure it pops out */
+    border-color: #ffd700 !important;
+}
+
+/* 2. Dice Drop / Fade In Effect */
+@keyframes dice-drop {
+    0% {
+        opacity: 0;
+        transform: translateY(-50px) rotate(180deg);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateY(10px) rotate(0deg);
+    }
+
+    80% {
+        transform: translateY(-5px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.dice.dice-reveal {
+    animation: dice-drop 0.6s ease-out forwards;
+}
+
+/* Add slight delays for each dice to feel natural */
+#d1.dice-reveal {
+    animation-delay: 0s;
+}
+
+#d2.dice-reveal {
+    animation-delay: 0.1s;
+}
+
+#d3.dice-reveal {
+    animation-delay: 0.2s;
+}
+
+
+/* 3. Flying Coin Animation */
+.flying-coin {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle at 30% 30%, #fff9c4, #fbc02d, #f57f17);
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 5px #ffd700;
+    z-index: 9999;
+    pointer-events: none;
+    /* Animation will be handled by JS mostly for coordinates, 
+       but we can add a spin effect here */
+    animation: coin-spin 0.5s linear infinite;
+}
+
+@keyframes coin-spin {
+    0% {
+        transform: scaleX(1);
+    }
+
+    50% {
+        transform: scaleX(0.1);
+    }
+
+    100% {
+        transform: scaleX(1);
+    }
+}

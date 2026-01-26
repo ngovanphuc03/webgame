@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sòng Bài VIP - Đẳng Cấp Poker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* TABLE BACKGROUND */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1a1a1a, #000);
+        }
+
+        /* TOP BAR */
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #ffd700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        #table-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        #table-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        #hand-number,
+        #game-state {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        #top-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .top-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .top-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* POKER TABLE */
+        .poker-table-container {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            height: 70%;
+            max-width: 1200px;
+            max-height: 650px;
+        }
+
+        .table-rail {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #3e2723, #1a0f0d);
+            border-radius: 250px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            position: relative;
+        }
+
+        .table-felt {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #2e7d32, #1b5e20);
+            border-radius: 220px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+            position: relative;
+            border: 5px solid rgba(0, 0, 0, 0.2);
+        }
+
+        /* COMMUNITY CARDS */
+        .community-container {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .card {
+            width: 80px;
+            height: 112px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* POT */
+        .pot-container {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .pot-value {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 25px;
+            border-radius: 25px;
+            border: 2px solid #ffd700;
+            font-size: 28px;
+            color: #ffd700;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        #side-pots {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .side-pot {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #ffd700;
+            margin: 3px 0;
+        }
+
+        /* SEATS */
+        .seat {
+            position: absolute;
+            width: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .seat[data-pos="0"] {
+            bottom: 20px;
+            /* Was -80px. Moved up to avoid covering cards with controls */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .seat[data-pos="1"] {
+            bottom: -50px;
+            right: 8%;
+        }
+
+        .seat[data-pos="2"] {
+            top: 55%;
+            right: -100px;
+        }
+
+        .seat[data-pos="3"] {
+            top: 5%;
+            right: -60px;
+        }
+
+        .seat[data-pos="4"] {
+            top: -100px;
+            right: 28%;
+        }
+
+        .seat[data-pos="5"] {
+            top: -100px;
+            left: 28%;
+        }
+
+        .seat[data-pos="6"] {
+            top: 5%;
+            left: -60px;
+        }
+
+        .seat[data-pos="7"] {
+            top: 55%;
+            left: -100px;
+        }
+
+        .seat[data-pos="8"] {
+            bottom: -50px;
+            left: 8%;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid #444;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .seat.active .avatar-img {
+            border-color: #ffd700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .dealer-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 2px solid black;
+            border-radius: 50%;
+            color: black;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            z-index: 5;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .turn-timer-ring {
+            position: absolute;
+            inset: -6px;
+            border: 4px solid transparent;
+            border-top-color: #f1c40f;
+            border-right-color: #f1c40f;
+            border-radius: 50%;
+            animation: spin-timer 30s linear forwards;
+        }
+
+        @keyframes spin-timer {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .sit-out-badge {
+            position: absolute;
+            bottom: 0;
+            background: rgba(255, 0, 0, 0.8);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .player-label {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 6px 14px;
+            border-radius: 15px;
+            margin-top: -20px;
+            min-width: 100px;
+            text-align: center;
+            border: 1px solid #555;
+            z-index: 2;
+        }
+
+        .player-label.disconnected {
+            opacity: 0.5;
+        }
+
+        .p-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .p-chips {
+            color: #4caf50;
+            font-size: 13px;
+        }
+
+        .p-stats {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .hole-cards {
+            position: absolute;
+            top: -60px;
+            display: flex;
+            gap: 3px;
+        }
+
+        .mini-card {
+            width: 55px;
+            height: 77px;
+            background-size: cover;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .bet-chip {
+            position: absolute;
+            bottom: -35px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #f1c40f;
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: 2px solid #f1c40f;
+            font-weight: bold;
+            font-size: 15px;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+
+        .action-bubble {
+            position: absolute;
+            top: -45px;
+            background: white;
+            color: black;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 13px;
+            animation: bubble-pop 0.4s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes bubble-pop {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .auto-action-indicator {
+            position: absolute;
+            top: -25px;
+            left: -10px;
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        /* CONTROLS */
+        #controls-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.9));
+            border: 3px solid #ffd700;
+            border-radius: 50px;
+            padding: 20px 45px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        #controls-bar.hidden {
+            transform: translate(-50%, 200px);
+        }
+
+        .quick-raise {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .quick-raise button {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid #666;
+            color: #eee;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+
+        .quick-raise button:hover {
+            background: #f1c40f;
+            color: #000;
+        }
+
+        .raise-wrapper {
+            text-align: center;
+        }
+
+        #raise-bubble {
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        #raise-slider {
+            width: 250px;
+            accent-color: #ffd700;
+        }
+
+        .main-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-game {
+            min-width: 110px;
+            height: 65px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.6);
+            color: white;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn-game:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+
+        .btn-fold {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+        }
+
+        .btn-check {
+            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+        }
+
+        .btn-call {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+        }
+
+        .btn-raise {
+            background: linear-gradient(to bottom, #f1c40f, #f39c12);
+            color: #000;
+        }
+
+        .btn-allin {
+            background: linear-gradient(to bottom, #e67e22, #d35400);
+        }
+
+        /* QUICK ACTIONS (when not your turn) */
+        #quick-actions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #555;
+            border-radius: 15px;
+            padding: 15px;
+            z-index: 999;
+        }
+
+        #quick-actions.hidden {
+            display: none;
+        }
+
+        .quick-btn {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #666;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* CHAT */
+        #chat-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 300px;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #555;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            z-index: 999;
+        }
+
+        #chat-header {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 10px;
+            border-bottom: 1px solid #555;
+            font-weight: bold;
+            border-radius: 13px 13px 0 0;
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .chat-msg {
+            margin: 5px 0;
+            padding: 5px 8px;
+            border-radius: 8px;
+        }
+
+        .chat-system {
+            background: rgba(100, 100, 100, 0.3);
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .chat-me {
+            background: rgba(33, 150, 243, 0.3);
+            text-align: right;
+        }
+
+        .chat-other {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-name {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        #chat-input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #555;
+        }
+
+        #chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 8px;
+            color: white;
+            margin-right: 5px;
+        }
+
+        #chat-send {
+            background: #ffd700;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* WIN OVERLAY */
+        #win-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        #win-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #win-details {
+            text-align: center;
+        }
+
+        .winner-name {
+            font-size: 50px;
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .win-desc {
+            font-size: 24px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .win-amount {
+            font-size: 70px;
+            color: #4caf50;
+            font-weight: bold;
+            text-shadow: 0 0 50px rgba(76, 175, 80, 0.7);
+            animation: win-glow 1.5s infinite;
+        }
+
+        @keyframes win-glow {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .showdown-result {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px;
+            border: 2px solid #ffd700;
+        }
+
+        .result-name {
+            font-size: 24px;
+            color: #ffd700;
+        }
+
+        .result-hand {
+            font-size: 18px;
+            color: #fff;
+            margin: 5px 0;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        /* TOAST NOTIFICATIONS */
+        .toast {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px 20px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-error {
+            border-color: #e74c3c;
+        }
+
+        .toast-success {
+            border-color: #2ecc71;
+        }
+
+        .toast-info {
+            border-color: #3498db;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .poker-table-container {
+                width: 95%;
+                height: 60%;
+            }
+
+            #chat-panel {
+                width: 250px;
+                height: 300px;
+            }
+
+            #controls-bar {
+                padding: 15px 25px;
+            }
+
+            .btn-game {
+                min-width: 90px;
+                height: 55px;
+                font-size: 14px;
+            }
+
+            .seat[data-pos="0"] {
+                bottom: 22%;
+                /* Increased from 18% for better clearance */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- TOP BAR -->
+    <div id="top-bar">
+        <div id="table-info">
+            <div id="table-name">Sòng Bài VIP</div>
+            <div id="table-blinds" style="color:#aaa; font-size:14px;">Blinds: --/--</div>
+            <div id="hand-number">Ván #0</div>
+            <div id="game-state">ĐANG CHỜ</div>
+        </div>
+        <div id="top-actions">
+            <button class="top-btn" id="btn-sound" onclick="toggleSound()">🔊</button>
+            <button class="top-btn" id="btn-animations" onclick="toggleAnimations()">✨</button>
+            <button class="top-btn" onclick="toggleSitOut()">💺 Tạm Rời</button>
+            <button class="top-btn" onclick="leaveTable()">🚪 Rời Bàn</button>
+        </div>
+    </div>
+
+    <!-- GAME CONTAINER -->
+    <div id="game-container">
+        <div class="poker-table-container">
+            <div class="table-rail">
+                <div class="table-felt">
+                    <div class="community-container" id="community-cards"></div>
+                    <div class="pot-container">
+                        <div class="pot-value" id="pot-amount">$0</div>
+                        <div id="side-pots"></div>
+                    </div>
+                </div>
+                <div id="seats-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div id="controls-bar" class="hidden">
+        <div class="quick-raise">
+            <button onclick="setQuickRaise(0.5)">½ Hũ</button>
+            <button onclick="setQuickRaise(0.75)">¾ Hũ</button>
+            <button onclick="setQuickRaise(1)">Hũ</button>
+            <button onclick="setQuickRaise(2)">2x Hũ</button>
+            <button onclick="setQuickRaise(999)">All-in</button>
+        </div>
+        <div class="raise-wrapper">
+            <div id="raise-bubble">$0</div>
+            <input type="range" id="raise-slider" min="0" step="100" oninput="updateRaiseDisplay(this.value)">
+        </div>
+        <div class="main-actions">
+            <button class="btn-game btn-fold" onclick="doAction('fold')">Bỏ Bài</button>
+            <button class="btn-game btn-check" id="btn-check-call">Xem</button>
+            <button class="btn-game btn-raise" id="btn-raise" onclick="doAction('raise')">Tố</button>
+            <button class="btn-game btn-allin" id="btn-allin" onclick="doAction('allin')">Tất Tay</button>
+        </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div id="quick-actions" class="hidden">
+        <div style="margin-bottom:10px; font-weight:bold;">Tự Động:</div>
+        <button class="quick-btn" onclick="setAutoAction('fold')">Tự Động Bỏ</button>
+        <button class="quick-btn" onclick="setAutoAction('check_fold')">Xem/Bỏ</button>
+        <button class="quick-btn" onclick="setAutoAction('check')">Tự Động Xem</button>
+        <button class="quick-btn" onclick="setAutoAction('call_any')">Theo Mọi Cược</button>
+        <button class="quick-btn" onclick="setAutoAction(null)">Hủy Tự Động</button>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div id="chat-panel">
+        <div id="chat-header">💬 Trò Chuyện</div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." maxlength="200">
+            <button id="chat-send" onclick="sendChat()">Gửi</button>
+        </div>
+    </div>
+
+    <!-- WIN OVERLAY -->
+    <div id="win-overlay">
+        <div id="win-details"></div>
+    </div>
+
+    <script src="poker.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G18-GAME - 8BIT</title>
+    <!-- RETRO FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a0524;
+            --neon-pink: #ff00cc;
+            --neon-green: #33ff00;
+            --neon-blue: #00ccff;
+            --crt-line: rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- CRT SCANLINE EFFECT --- */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'VT323', monospace;
+            background-color: var(--bg-color);
+            color: var(--neon-green);
+            min-height: 100vh;
+            text-transform: uppercase;
+            overflow-x: hidden;
+            font-size: 24px;
+        }
+
+        /* Glitchy Text Effect */
+        @keyframes glitch {
+
+            2%,
+            64% {
+                transform: translate(2px, 0) skew(0deg);
+            }
+
+            4%,
+            60% {
+                transform: translate(-2px, 0) skew(0deg);
+            }
+
+            62% {
+                transform: translate(0, 0) skew(5deg);
+            }
+        }
+
+        /* Blink Animation */
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 4px solid var(--neon-pink);
+            background: #000;
+            position: relative;
+            z-index: 10000;
+            /* Above CRT scanlines */
+        }
+
+        .brand {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 24px;
+            color: var(--neon-pink);
+            text-shadow: 3px 3px 0px var(--neon-blue);
+            cursor: pointer;
+            letter-spacing: 2px;
+            /* animation: glitch 2s infinite; REMOVED FOR READABILITY */
+        }
+
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+        }
+
+        .balance-box {
+            border: 2px solid var(--neon-green);
+            padding: 10px;
+            background: #000;
+            box-shadow: 4px 4px 0 var(--neon-green);
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--neon-blue);
+            vertical-align: middle;
+            margin-right: 10px;
+            background: #fff;
+        }
+
+        .btn-retro {
+            background: #000;
+            color: var(--neon-pink);
+            border: 2px solid var(--neon-pink);
+            padding: 8px 16px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 var(--neon-pink);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-retro:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--neon-pink);
+            background: var(--neon-pink);
+            color: #000;
+        }
+
+        /* --- MAIN --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .insert-coin {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--neon-green);
+            margin-bottom: 50px;
+            animation: blink 1s step-end infinite;
+            font-size: 18px;
+        }
+
+        /* --- GAME GRID --- */
+        .game-grid {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .arcade-cabinet {
+            width: 350px;
+            border: 4px solid #fff;
+            background: #000;
+            padding: 10px;
+            box-shadow: 10px 10px 0 #333;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .arcade-cabinet:hover {
+            transform: scale(1.05);
+            border-color: var(--neon-green);
+            box-shadow: 10px 10px 0 var(--neon-green);
+        }
+
+        .screen {
+            height: 200px;
+            background: #222;
+            border: 4px inset #555;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Thumbnail Style (Pixel Art approximation via CSS/Images) */
+        .thumb-meono {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(45deg, #e67e22 0, #e67e22 10px, #d35400 10px, #d35400 20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+        }
+
+        .thumb-taixiu {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(45deg, #2980b9 0, #2980b9 10px, #3498db 10px, #3498db 20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+        }
+
+        .cabinet-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 10px;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .cabinet-desc {
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            /* Larger for readability */
+            line-height: 1.2;
+            color: #aaa;
+            text-align: left;
+            margin-bottom: 20px;
+            height: 50px;
+        }
+
+        .btn-play {
+            display: block;
+            width: 100%;
+            background: var(--neon-green);
+            color: #000;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            padding: 15px 0;
+            text-decoration: none;
+            border: 2px solid #fff;
+        }
+
+        .btn-play:hover {
+            background: #fff;
+            color: #000;
+            border-color: var(--neon-green);
+        }
+
+        /* LOADING SCREEN */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 20px;
+            border: 2px solid var(--neon-green);
+            margin-top: 20px;
+            padding: 2px;
+        }
+
+        .loading-fill {
+            height: 100%;
+            background: var(--neon-green);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .login-alert {
+            background: #e74c3c;
+            color: #fff;
+            padding: 10px;
+            font-family: 'VT323', monospace;
+            /* Supports Vietnamese */
+            font-size: 20px;
+            /* Increased size for VT323 */
+            text-transform: uppercase;
+            display: none;
+            border-bottom: 4px solid #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            animation: marquee 15s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* --- RETRO SYSTEM MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            display: none;
+        }
+
+        .retro-box {
+            background: #000;
+            border: 4px solid var(--neon-pink);
+            box-shadow: 0 0 20px var(--neon-pink), inset 0 0 20px var(--neon-pink);
+            padding: 5px;
+            /* Inner spacing */
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            position: relative;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .box-inner {
+            border: 2px solid var(--neon-blue);
+            padding: 30px 20px;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, #111 3px);
+        }
+
+        .modal-title {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--neon-pink);
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 #fff;
+        }
+
+        .modal-msg {
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .btn-modal {
+            background: var(--neon-green);
+            color: #000;
+            font-family: 'Press Start 2P', cursive;
+            border: none;
+            padding: 15px 30px;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 #fff;
+            transition: 0.2s;
+        }
+
+        .btn-modal:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #fff;
+            background: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading">
+        <div style="color:var(--neon-green); font-size:20px;">LOADING SYSTEM...</div>
+        <div class="loading-bar">
+            <div class="loading-fill" id="load-fill"></div>
+        </div>
+    </div>
+
+    <!-- RETRO MODAL -->
+    <div id="modal-login" class="modal-overlay">
+        <div class="retro-box">
+            <div class="box-inner">
+                <div class="modal-title">⛔ SYSTEM ALERT</div>
+                <div class="modal-msg">BẠN CẦN ĐĂNG NHẬP ĐỂ TRUY CẬP HỆ THỐNG GAME!</div>
+                <button class="btn-modal" onclick="closeModal()">ĐÃ RÕ (OK)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WARNING BANNER -->
+    <div id="login-warning" class="login-alert">
+        <span class="marquee-text">⚠️ WARNING: GUEST MODE DETECTED. PLEASE LOGIN TO ACCESS GAMES. ⚠️ BẠN CẦN ĐĂNG NHẬP
+            ĐỂ CHƠI!</span>
+    </div>
+
+    <nav class="navbar">
+        <div class="brand" onclick="location.reload()">G18-GAME</div>
+        <div id="auth-check"></div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1 id="welcome-msg">WELCOME PLAYER 1</h1>
+            <div class="insert-coin">INSERT COIN TO START</div>
+        </div>
+
+        <div class="game-grid">
+
+
+            <!-- TÀI XỈU CART -->
+            <div class="arcade-cabinet" onclick="enterGame('/taixiu')">
+                <div class="screen">
+                    <div class="thumb-taixiu">🎲</div>
+                </div>
+                <div class="cabinet-title">TAI XIU (HOT)</div>
+                <div class="cabinet-desc">High stakes. Big Wins.</div>
+                <div class="btn-play">ENTER ROOM</div>
+            </div>
+
+            <!-- POKER CART -->
+            <div class="arcade-cabinet" onclick="enterGame('/poker')">
+                <div class="screen">
+                    <div
+                        style="width:100%;height:100%;font-size:60px;background:#35654d;display:flex;align-items:center;justify-content:center;">
+                        ♠️</div>
+                </div>
+                <div class="cabinet-title">POKER (NEW)</div>
+                <div class="cabinet-desc">Texas Hold'em Table.</div>
+                <div class="btn-play">JOIN TABLE</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fake Loading Logic
+        const fill = document.getElementById('load-fill');
+        const loadScreen = document.getElementById('loading');
+        let width = 0;
+        const int = setInterval(() => {
+            width += Math.random() * 20;
+            if (width > 100) width = 100;
+            fill.style.width = width + '%';
+            if (width === 100) {
+                clearInterval(int);
+                setTimeout(() => {
+                    loadScreen.style.display = 'none';
+                }, 500);
+            }
+        }, 100);
+
+        let isLoggedIn = false;
+
+        // Auth Logic
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.status === 401) {
+                    isLoggedIn = false;
+                    document.getElementById('auth-check').innerHTML = `
+                        <a href="/auth/discord" class="btn-retro">LOGIN (DISCORD)</a>
+                    `;
+                    document.getElementById('welcome-msg').innerText = "GUEST MODE";
+                    // SHOW WARNING BANNER
+                    document.getElementById('login-warning').style.display = 'block';
+                } else {
+                    isLoggedIn = true;
+                    const u = await res.json();
+                    document.getElementById('auth-check').innerHTML = `
+                        <div class="user-panel">
+                            <div class="balance-box">${u.balance} $</div>
+                            <div class="user-info">
+                                <img src="${u.avatar || 'https://ui-avatars.com/api/?background=random'}" alt="avt">
+                                <span>${u.username}</span>
+                            </div>
+                            <button onclick="logout()" class="btn-retro" style="border-color:red; color:red;">EXIT</button>
+                        </div>
+                    `;
+                    document.getElementById('welcome-msg').innerText = `READY P1: ${u.username}`;
+                    document.getElementById('login-warning').style.display = 'none';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function enterGame(url) {
+            if (!isLoggedIn) {
+                // Show Retro Modal
+                document.getElementById('modal-login').style.display = 'flex';
+                return;
+            }
+            window.location.href = url;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-login').style.display = 'none';
+        }
+
+        function logout() {
+            if (confirm("QUIT GAME?")) {
+                document.cookie = "user_id=; expires=Thu, 01 Dec 1990 00:00:00 UTC; path=/;";
+                location.reload();
+            }
+        }
+
+        checkAuth();
+    </script>
+</body>
+
+</html>
