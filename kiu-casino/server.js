@@ -1,5 +1,5 @@
 const dotenv = require('dotenv');
-dotenv.config({ path: __dirname + '/.env', override: true });
+dotenv.config({ path: __dirname + '/.env' });
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
