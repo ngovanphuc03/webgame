@@ -30,14 +30,14 @@ const SFX = {
 // Preload all sounds
 Object.values(SFX).forEach(audio => {
     audio.load();
-    audio.volume = 0.6;
+    audio.volume = 0.48; // 80% of original 0.6
 });
 
 function playSound(key) {
     if (!state.soundEnabled || !SFX[key]) return;
     try {
         const audio = SFX[key].cloneNode(); // Clone for simultaneous plays
-        audio.volume = 0.6;
+        audio.volume = 0.48; // 80% of original 0.6
         audio.play().catch(() => { });
     } catch (e) { }
 }
@@ -740,3 +740,28 @@ window.addEventListener('DOMContentLoaded', () => {
     if (inp) inp.addEventListener('keypress', e => { if (e.key === 'Enter') sendChat(); });
 
 });
+
+// --- TOGGLE RAISE POPUP ---
+function toggleRaise() {
+    const popup = document.getElementById('raise-popup');
+    if (!popup) return;
+
+    // Bật/Tắt hiển thị
+    if (popup.style.display === 'block') {
+        popup.style.display = 'none';
+    } else {
+        popup.style.display = 'block';
+        // Reset thanh kéo về mức tối thiểu khi mở lên
+        const slider = document.getElementById('raise-slider');
+        if (slider) {
+            slider.value = slider.min;
+            updateRaiseBtn(slider.value); // Cập nhật số hiển thị
+        }
+    }
+}
+
+// Hàm cập nhật số tiền hiển thị khi kéo
+function updateRaiseBtn(val) {
+    const display = document.getElementById('raise-val');
+    if (display) display.innerText = `Tố: $${parseInt(val).toLocaleString()}`;
+}

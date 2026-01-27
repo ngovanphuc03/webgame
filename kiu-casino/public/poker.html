@@ -1182,7 +1182,7 @@
         <div class="main-actions">
             <button class="btn-game btn-fold" onclick="doAction('fold')">Bỏ Bài</button>
             <button class="btn-game btn-check" id="btn-check-call">Xem</button>
-            <button class="btn-game btn-raise" id="btn-raise" onclick="doAction('raise')">Tố</button>
+            <button class="btn-game btn-raise" id="btn-raise" onclick="toggleRaise()">Tố</button>
             <button class="btn-game btn-allin" id="btn-allin" onclick="doAction('allin')">Tất Tay</button>
         </div>
     </div>
@@ -1213,6 +1213,9 @@
     </div>
 
     <script src="poker.js"></script>
+
+    <!-- Mobile Detection & Redirect -->
+    <script src="/mobile-detect.js"></script>
 </body>
 
 </html>

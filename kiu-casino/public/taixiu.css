@@ -882,7 +882,7 @@ input[type=range]:active::-webkit-slider-thumb {
         0 0 80px rgba(255, 215, 0, 0.2),
         0 30px 100px rgba(0, 0, 0, 0.9);
     z-index: 9999;
-    /* overflow: hidden;  <-- REMOVED TO FIX TOOLTIP */
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     opacity: 0;
@@ -947,7 +947,7 @@ input[type=range]:active::-webkit-slider-thumb {
     grid-template-columns: repeat(20, 1fr);
     gap: 4px;
     padding: 20px;
-    overflow-y: auto;
+    overflow: visible;
     flex: 1;
 }
 

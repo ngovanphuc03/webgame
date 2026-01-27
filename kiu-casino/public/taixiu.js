@@ -23,7 +23,10 @@ const SoundManager = {
         if (!this.sounds[name] && this.paths[name]) {
             this.sounds[name] = new Audio(this.paths[name]);
             if (name === 'shaking' || name === 'bgm') this.sounds[name].loop = true;
+            // Set volumes - BGM at 50%, sound effects at 80%
             if (name === 'bgm') this.sounds[name].volume = 0.5;
+            else if (name === 'shaking') this.sounds[name].volume = 0.8;
+            else this.sounds[name].volume = 0.8; // bet, open, win, lose
             this.initialized[name] = true;
         }
         return this.sounds[name];

@@ -1,0 +1,303 @@
+/* ====================================================================
+   MOBILE COMMON STYLES - Shared across all mobile game pages
+   ==================================================================== */
+
+:root {
+    --gold: #ffd700;
+    --gold-dark: #b8860b;
+    --gold-light: #fff8dc;
+    --royal-purple: #1a0f2e;
+    --royal-dark: #0a0612;
+    --felt-green: #0a4d27;
+    --accent-red: #dc3545;
+    --accent-green: #28a745;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    touch-action: manipulation;
+}
+
+body {
+    font-family: 'Be Vietnam Pro', 'Outfit', sans-serif;
+    background: var(--royal-dark);
+    color: #fff;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ====================================================================
+   LANDSCAPE ORIENTATION ENFORCEMENT
+   ==================================================================== */
+
+/* Portrait Warning Overlay */
+.portrait-warning {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 999999;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Show warning in portrait mode */
+@media (orientation: portrait) {
+    .portrait-warning {
+        display: flex !important;
+    }
+}
+
+.portrait-warning-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: rotate-phone 2s ease-in-out infinite;
+}
+
+@keyframes rotate-phone {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-15deg);
+    }
+
+    75% {
+        transform: rotate(15deg);
+    }
+}
+
+.portrait-warning-title {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    color: var(--gold);
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.portrait-warning-text {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 300px;
+    line-height: 1.6;
+}
+
+/* ====================================================================
+   MOBILE-OPTIMIZED TOUCH CONTROLS
+   ==================================================================== */
+
+/* Minimum touch target size */
+button,
+.btn,
+.clickable {
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+/* Remove hover effects on touch devices */
+@media (hover: none) {
+    *:hover {
+        transform: none !important;
+    }
+}
+
+/* Active state for touch feedback */
+button:active,
+.btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+/* ====================================================================
+   COMMON MOBILE COMPONENTS
+   ==================================================================== */
+
+/* Top Bar */
+.mobile-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    z-index: 1000;
+}
+
+.mobile-back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 8px 15px;
+    color: #fff;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mobile-balance {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 700;
+    color: var(--gold);
+    font-size: 16px;
+}
+
+/* Loading State */
+.mobile-loading {
+    position: fixed;
+    inset: 0;
+    background: var(--royal-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100000;
+}
+
+.mobile-loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 215, 0, 0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Notification Toast */
+.mobile-toast {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--gold);
+    border-radius: 15px;
+    padding: 12px 25px;
+    color: var(--gold);
+    font-weight: 600;
+    z-index: 10000;
+    display: none;
+    animation: toast-in 0.3s ease;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ====================================================================
+   RESPONSIVE BREAKPOINTS
+   ==================================================================== */
+
+/* Extra small phones (< 375px) */
+@media (max-width: 374px) {
+    html {
+        font-size: 14px;
+    }
+
+    .mobile-back-btn,
+    .mobile-balance {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
+/* Small phones (375px - 414px) - iPhone SE, iPhone 12/13 mini */
+@media (min-width: 375px) and (max-width: 414px) {
+    html {
+        font-size: 15px;
+    }
+}
+
+/* Medium phones (415px - 767px) - Most modern phones */
+@media (min-width: 415px) and (max-width: 767px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+/* Tablets in landscape */
+@media (min-width: 768px) {
+    html {
+        font-size: 18px;
+    }
+}
+
+/* ====================================================================
+   SAFE AREA SUPPORT (for notched devices)
+   ==================================================================== */
+
+@supports (padding: env(safe-area-inset-top)) {
+    .mobile-top-bar {
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+        padding-top: env(safe-area-inset-top);
+        height: calc(50px + env(safe-area-inset-top));
+    }
+}
+
+/* ====================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ==================================================================== */
+
+/* GPU acceleration for animations */
+.animate {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Disable animations if user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

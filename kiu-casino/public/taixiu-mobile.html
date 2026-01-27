@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Force Landscape Orientation -->
+    <meta name="screen-orientation" content="landscape">
+    <meta name="x5-orientation" content="landscape">
+
+    <title>TÀI XỈU VIP - Mobile</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Common Mobile Styles -->
+    <link rel="stylesheet" href="mobile-common.css">
+
+    <style>
+        /* Mobile-Specific Tai Xiu Styles */
+        body {
+            background-image: url('/images/ui/bg-bamboo.jpg');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Compact Top Bar for Mobile */
+        .mobile-top-bar {
+            height: 45px;
+            padding: 0 10px;
+        }
+
+        .mobile-game-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .mobile-timer {
+            background: rgba(0, 0, 0, 0.8);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--gold);
+        }
+
+        /* Game Board - Landscape Optimized */
+        .game-board {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            align-items: center;
+        }
+
+        /* Betting Boxes - Compact for Mobile */
+        .bet-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bet-board-img {
+            width: 100%;
+            max-width: 150px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+        }
+
+        .bet-board-img:active {
+            transform: scale(0.95);
+        }
+
+        .bet-stats {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 5px 12px;
+            font-size: 11px;
+            color: var(--gold);
+            text-align: center;
+        }
+
+        .my-bet-mobile {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 6px 15px;
+            font-weight: 700;
+            color: var(--gold);
+            min-height: 30px;
+            font-size: 14px;
+        }
+
+        /* Center Stage - Bowl & Dice */
+        .center-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .dice-area {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .plate {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .dice-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 5px;
+            z-index: 5;
+        }
+
+        .dice {
+            width: 35px;
+            height: 35px;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
+        }
+
+        .bowl-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 220px;
+            height: 220px;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            cursor: grab;
+        }
+
+        .bowl-img {
+            width: 100%;
+            height: 100%;
+            background-image: url('/images/dice/bowl.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .shaking {
+            animation: shake 0.1s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(-52%, -48%) rotate(3deg);
+            }
+
+            75% {
+                transform: translate(-48%, -52%) rotate(-3deg);
+            }
+        }
+
+        .result-toast {
+            background: linear-gradient(160deg, rgba(255, 248, 220, 0.98), rgba(255, 240, 200, 0.98));
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            padding: 10px 30px;
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: 900;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .result-toast.show {
+            opacity: 1;
+        }
+
+        /* Control Panel - Bottom */
+        .control-panel {
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.9));
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bet-amount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .bet-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+        }
+
+        .bet-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        /* Mobile Slider */
+        .slider-container {
+            padding: 0 15px;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            height: 40px;
+        }
+
+        .bet-slider {
+            width: 100%;
+            height: 10px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.4));
+            border-radius: 5px;
+            outline: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .bet-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle, #fff, var(--gold));
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #fff;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+
+        .quick-amounts {
+            display: flex;
+            gap: 8px;
+            justify-content: space-around;
+            padding: 0 10px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--gold);
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            min-height: 44px;
+        }
+
+        .quick-btn:active {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* History Button */
+        .history-btn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 500;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Mobile History Grid */
+        .history-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            padding: 15px;
+        }
+
+        .history-overlay.active {
+            display: flex;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            color: var(--gold);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+        }
+
+        .history-grid-mobile {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .history-cell {
+            aspect-ratio: 1;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .history-cell.tai {
+            background: linear-gradient(135deg, #ef5350, #c62828);
+        }
+
+        .history-cell.xiu {
+            background: linear-gradient(135deg, #42a5f5, #1565c0);
+        }
+
+        .history-cell.bao {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        }
+
+        /* Notification */
+        .notification-mobile {
+            position: fixed;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            padding: 12px 25px;
+            color: var(--gold);
+            font-weight: 700;
+            z-index: 9999;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Portrait Warning -->
+    <div class="portrait-warning">
+        <div class="portrait-warning-icon">📱</div>
+        <div class="portrait-warning-title">Vui Lòng Quay Ngang</div>
+        <div class="portrait-warning-text">
+            Để có trải nghiệm tốt nhất, vui lòng quay điện thoại sang chế độ ngang (landscape).
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container">
+        <!-- Top Bar -->
+        <div class="mobile-top-bar">
+            <a href="/index-mobile.html" class="mobile-back-btn">
+                ← Thoát
+            </a>
+            <div class="mobile-game-info">
+                <div class="mobile-timer" id="timer-mobile">00</div>
+            </div>
+            <div class="mobile-balance" id="balance-mobile">...</div>
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board">
+            <!-- TAI Side -->
+            <div class="bet-box">
+                <img src="/images/ui/wood-board-red.png" class="bet-board-img" onclick="quickBet('tai')" id="board-tai">
+                <div class="bet-stats">
+                    <div id="tai-players-mobile">0 người</div>
+                    <div id="total-tai-mobile">0</div>
+                </div>
+                <div class="my-bet-mobile" id="my-tai-mobile"></div>
+            </div>
+
+            <!-- Center Stage -->
+            <div class="center-stage">
+                <div class="dice-area">
+                    <img src="/images/dice/plate.png" class="plate">
+                    <div class="dice-container">
+                        <img src="/images/dice/1.png" class="dice" id="d1">
+                        <img src="/images/dice/1.png" class="dice" id="d2">
+                        <img src="/images/dice/1.png" class="dice" id="d3">
+                    </div>
+                    <div class="bowl-container" id="bowl">
+                        <div class="bowl-img"></div>
+                    </div>
+                </div>
+                <div class="result-toast" id="result-toast">
+                    <span id="result-text">...</span>
+                </div>
+            </div>
+
+            <!-- XIU Side -->
+            <div class="bet-box">
+                <img src="/images/ui/wood-board-blue.png" class="bet-board-img" onclick="quickBet('xiu')"
+                    id="board-xiu">
+                <div class="bet-stats">
+                    <div id="xiu-players-mobile">0 người</div>
+                    <div id="total-xiu-mobile">0</div>
+                </div>
+                <div class="my-bet-mobile" id="my-xiu-mobile"></div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="bet-amount-row">
+                <div>
+                    <div class="bet-label">Đang Chọn</div>
+                    <div class="bet-value" id="selected-amount-mobile">1</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="bet-label">Tối Đa</div>
+                    <div class="bet-value" id="max-amount-mobile">...</div>
+                </div>
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-wrapper">
+                    <input type="range" class="bet-slider" id="bet-slider-mobile" min="1" max="1000" value="1" step="1">
+                </div>
+            </div>
+
+            <div class="quick-amounts">
+                <button class="quick-btn" onclick="jumpTo(0)">MIN</button>
+                <button class="quick-btn" onclick="jumpTo(0.25)">25%</button>
+                <button class="quick-btn" onclick="jumpTo(0.5)">50%</button>
+                <button class="quick-btn" onclick="jumpTo(0.75)">75%</button>
+                <button class="quick-btn" onclick="jumpTo(1)">MAX</button>
+            </div>
+        </div>
+
+        <!-- History Button -->
+        <button class="history-btn" onclick="toggleHistory()">📊 Lịch Sử</button>
+    </div>
+
+    <!-- History Overlay -->
+    <div class="history-overlay" id="history-overlay">
+        <div class="history-header">
+            <div class="history-title">📈 Lịch Sử 120 Ván</div>
+            <button class="close-btn" onclick="toggleHistory()">✕</button>
+        </div>
+        <div class="history-grid-mobile" id="history-grid-mobile"></div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification-mobile" id="notif-mobile">Thông báo</div>
+
+    <!-- Original Tai Xiu JS (reuse with minor modifications) -->
+    <script src="taixiu.js"></script>
+
+    <script>
+        // Mobile-specific overrides
+        function formatMoney(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // Override updateSliderMax for mobile display
+        const originalUpdateSliderMax = updateSliderMax;
+        updateSliderMax = function () {
+            const slider = document.getElementById('bet-slider-mobile');
+            if (!slider) return originalUpdateSliderMax();
+
+            let maxVal = currentBalance > 0 ? currentBalance : 1;
+            slider.max = maxVal;
+            document.getElementById('max-amount-mobile').innerText = formatMoney(maxVal);
+            document.getElementById('balance-mobile').innerText = formatMoney(currentBalance);
+
+            if (parseInt(slider.value) > maxVal) {
+                slider.value = maxVal;
+            }
+
+            const val = parseInt(slider.value);
+            selectedAmount = val;
+            document.getElementById('selected-amount-mobile').innerText = formatMoney(val);
+        };
+
+        // Mobile slider handler
+        document.getElementById('bet-slider-mobile')?.addEventListener('input', function (e) {
+            selectedAmount = parseInt(e.target.value);
+            document.getElementById('selected-amount-mobile').innerText = formatMoney(selectedAmount);
+            SoundManager.play('bet');
+        });
+
+        // Mobile timer display
+        socket.on('tx_timer', (t) => {
+            const timerEl = document.getElementById('timer-mobile');
+            if (timerEl) {
+                timerEl.innerText = t;
+                timerEl.style.color = t <= 5 ? '#e74c3c' : '#ffd700';
+            }
+        });
+
+        // History toggle
+        function toggleHistory() {
+            const overlay = document.getElementById('history-overlay');
+            overlay.classList.toggle('active');
+        }
+
+        // Render mobile history grid
+        socket.on('tx_history', (hist) => {
+            const grid = document.getElementById('history-grid-mobile');
+            if (!grid) return;
+
+            let cells = '';
+            for (let i = 0; i < 120; i++) {
+                const entry = hist[i];
+                if (entry) {
+                    cells += `<div class="history-cell ${entry.result}">${entry.total || '?'}</div>`;
+                } else {
+                    cells += `<div class="history-cell" style="opacity:0.2;">-</div>`;
+                }
+            }
+            grid.innerHTML = cells;
+        });
+
+        // Update mobile displays
+        socket.on('tx_totals', (d) => {
+            document.getElementById('total-tai-mobile').innerText = formatMoney(d.total_tai);
+            document.getElementById('total-xiu-mobile').innerText = formatMoney(d.total_xiu);
+        });
+
+        socket.on('tx_update', (data) => {
+            document.getElementById('tai-players-mobile').innerText = `${data.tai_count || 0} người`;
+            document.getElementById('xiu-players-mobile').innerText = `${data.xiu_count || 0} người`;
+        });
+
+        // Mobile notification
+        function showNotif(msg) {
+            const el = document.getElementById('notif-mobile');
+            el.innerText = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 2000);
+        }
+
+        // Lock orientation on load
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(err => {
+                console.log('Orientation lock not supported:', err);
+            });
+        }
+    </script>
+</body>
+
+</html>

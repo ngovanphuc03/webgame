@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="screen-orientation" content="landscape">
+    <title>POKER VIP - Mobile</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@600;700;900&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="mobile-common.css">
+
+    <style>
+        /* Simplified Poker Mobile Styles */
+        body {
+            background: linear-gradient(180deg, #0f0a1a 0%, #0a0612 100%);
+        }
+
+        .poker-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Bar */
+        .poker-top-bar {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.8));
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .poker-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .poker-state {
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--gold);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Table Area */
+        .table-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .felt-mobile {
+            width: 95%;
+            height: 85%;
+            background: radial-gradient(ellipse, #0a4d27 0%, #052e17 100%);
+            border-radius: 120px;
+            border: 8px solid #5d4037;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        /* Community Cards - Compact */
+        .community-mobile {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+        }
+
+        .card-mobile {
+            width: 55px;
+            height: 77px;
+            background-size: cover;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Pot */
+        .pot-mobile {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            padding: 8px 25px;
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        /* Seats - Simplified Layout */
+        .seat-mobile {
+            position: absolute;
+            width: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Position seats around table */
+        .seat-mobile[data-pos="0"] {
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .seat-mobile[data-pos="1"] {
+            bottom: -15px;
+            right: 8%;
+        }
+
+        .seat-mobile[data-pos="2"] {
+            top: 45%;
+            right: -50px;
+        }
+
+        .seat-mobile[data-pos="3"] {
+            top: 10px;
+            right: -25px;
+        }
+
+        .seat-mobile[data-pos="4"] {
+            top: -50px;
+            right: 25%;
+        }
+
+        .seat-mobile[data-pos="5"] {
+            top: -50px;
+            left: 25%;
+        }
+
+        .seat-mobile[data-pos="6"] {
+            top: 10px;
+            left: -25px;
+        }
+
+        .seat-mobile[data-pos="7"] {
+            top: 45%;
+            left: -50px;
+        }
+
+        .seat-mobile[data-pos="8"] {
+            bottom: -15px;
+            left: 8%;
+        }
+
+        .avatar-mobile {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            border: 3px solid #555;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .seat-mobile.active .avatar-mobile {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+        }
+
+        .player-name-mobile {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 5px 12px;
+            border-radius: 12px;
+            margin-top: -12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chips-mobile {
+            color: #28a745;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .hole-cards-mobile {
+            position: absolute;
+            top: -50px;
+            display: flex;
+            gap: 3px;
+        }
+
+        .mini-card-mobile {
+            width: 45px;
+            height: 63px;
+            background-size: cover;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Controls - Bottom */
+        .controls-mobile {
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85));
+            border-top: 2px solid var(--gold);
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .controls-mobile.active {
+            display: flex;
+        }
+
+        .raise-section {
+            text-align: center;
+        }
+
+        .raise-amount {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 5px;
+        }
+
+        .raise-slider-mobile {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .raise-slider-mobile::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 30px;
+            height: 30px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-poker-mobile {
+            flex: 1;
+            min-height: 50px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-fold-mobile {
+            background: linear-gradient(180deg, #e74c3c, #c0392b);
+            color: #fff;
+        }
+
+        .btn-check-mobile,
+        .btn-call-mobile {
+            background: linear-gradient(180deg, #3498db, #2471a3);
+            color: #fff;
+        }
+
+        .btn-raise-mobile {
+            background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Portrait Warning -->
+    <div class="portrait-warning">
+        <div class="portrait-warning-icon">📱</div>
+        <div class="portrait-warning-title">Vui Lòng Quay Ngang</div>
+        <div class="portrait-warning-text">
+            Poker chỉ chơi được ở chế độ ngang. Vui lòng quay điện thoại.
+        </div>
+    </div>
+
+    <!-- Poker Container -->
+    <div class="poker-container">
+        <!-- Top Bar -->
+        <div class="poker-top-bar">
+            <a href="/index-mobile.html" class="mobile-back-btn" style="font-size: 12px; padding: 6px 12px;">← Thoát</a>
+            <div class="poker-info">
+                <span id="table-name-mobile">VIP Table</span>
+                <span class="poker-state" id="game-state-mobile">WAITING</span>
+            </div>
+            <div class="mobile-balance" id="balance-poker-mobile" style="font-size: 14px; padding: 6px 15px;">...</div>
+        </div>
+
+        <!-- Table Area -->
+        <div class="table-area">
+            <div class="felt-mobile">
+                <!-- Community Cards -->
+                <div class="community-mobile" id="community-mobile"></div>
+
+                <!-- Pot -->
+                <div class="pot-mobile" id="pot-mobile">$0</div>
+
+                <!-- Seats (will be created dynamically) -->
+                <div id="seats-mobile"></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-mobile" id="controls-mobile">
+            <div class="raise-section">
+                <div class="raise-amount" id="raise-amount-mobile">$100</div>
+                <input type="range" class="raise-slider-mobile" id="raise-slider-mobile" min="20" max="1000"
+                    value="100">
+            </div>
+            <div class="action-buttons">
+                <button class="btn-poker-mobile btn-fold-mobile" onclick="Actions('fold')">BỎ</button>
+                <button class="btn-poker-mobile btn-check-mobile" id="btn-check-call-mobile"
+                    onclick="Actions('check')">XEM</button>
+                <button class="btn-poker-mobile btn-raise-mobile" onclick="Actions('raise')">TỐ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-toast" id="toast-poker-mobile">Thông báo</div>
+
+    <!-- Reuse Poker JS -->
+    <script src="poker.js"></script>
+
+    <script>
+        // Mobile-specific overrides and simplifications
+
+        // Simplified seat rendering
+        function renderSeats(data) {
+            const container = document.getElementById('seats-mobile');
+            if (!container) return;
+
+            const me = data.players.find(p => p && p.id === state.myId);
+            const mySeat = me ? me.seat : 0;
+
+            data.players.forEach((p, i) => {
+                if (!p) return;
+
+                const visualPos = (i - mySeat + 9) % 9;
+                let seat = container.querySelector(`[data-seat="${i}"]`);
+
+                if (!seat) {
+                    seat = document.createElement('div');
+                    seat.className = 'seat-mobile';
+                    seat.setAttribute('data-pos', visualPos);
+                    seat.setAttribute('data-seat', i);
+                    container.appendChild(seat);
+                }
+
+                const isActive = p.id === data.currentTurn;
+                seat.className = `seat-mobile ${isActive ? 'active' : ''}`;
+
+                seat.innerHTML = `
+                    <img src="${p.avatar || 'https://ui-avatars.com/api/?name=' + p.name}" class="avatar-mobile">
+                    <div class="player-name-mobile">
+                        <div style="font-size:11px;color:#fff;">${p.name}</div>
+                        <div class="chips-mobile">$${p.chips}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // Simplified community cards
+        function renderCommunityCards(data) {
+            const container = document.getElementById('community-mobile');
+            container.innerHTML = '';
+            data.communityCards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = 'card-mobile';
+                el.style.backgroundImage = getCardBg(card);
+                container.appendChild(el);
+            });
+        }
+
+        // Simplified pot
+        function renderPot(data) {
+            const pot = data.pots?.reduce((sum, p) => sum + p.amount, 0) || data.pot || 0;
+            document.getElementById('pot-mobile').innerText = `$${pot}`;
+        }
+
+        // Simplified controls
+        function renderControls(data) {
+            const controls = document.getElementById('controls-mobile');
+            const me = data.players.find(p => p && p.id === state.myId);
+
+            if (!me || me.id !== data.currentTurn || me.status !== 'PLAYING') {
+                controls.classList.remove('active');
+                return;
+            }
+
+            controls.classList.add('active');
+
+            // Update check/call button
+            const toCall = (data.currentBet || 0) - me.bet;
+            const btnCheckCall = document.getElementById('btn-check-call-mobile');
+            if (toCall > 0) {
+                btnCheckCall.innerText = `THEO $${toCall}`;
+                btnCheckCall.onclick = () => doAction('call');
+            } else {
+                btnCheckCall.innerText = 'XEM';
+                btnCheckCall.onclick = () => doAction('check');
+            }
+
+            // Update slider
+            const slider = document.getElementById('raise-slider-mobile');
+            const minRaise = (data.currentBet || 0) + (data.lastRaiseSize || data.bigBlind || 20);
+            slider.min = minRaise;
+            slider.max = me.chips + me.bet;
+            slider.value = minRaise;
+            document.getElementById('raise-amount-mobile').innerText = `$${minRaise}`;
+        }
+
+        // Helper actions
+        function Actions(action) {
+            if (action === 'raise') {
+                const amount = parseInt(document.getElementById('raise-slider-mobile').value);
+                doAction('raise', amount);
+            } else {
+                doAction(action);
+            }
+        }
+
+        // Slider handler
+        document.getElementById('raise-slider-mobile')?.addEventListener('input', function (e) {
+            document.getElementById('raise-amount-mobile').innerText = `$${e.target.value}`;
+        });
+
+        // Lock orientation
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(err => console.log('Orientation lock failed:', err));
+        }
+
+        // Override showToast for mobile
+        const originalShowToast = showToast;
+        showToast = function (message, type) {
+            const toast = document.getElementById('toast-poker-mobile');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 2500);
+        };
+    </script>
+</body>
+
+</html>
