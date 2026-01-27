@@ -8,606 +8,174 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- Force Landscape Orientation -->
     <meta name="screen-orientation" content="landscape">
-    <meta name="x5-orientation" content="landscape">
 
-    <title>TÀI XỈU VIP - Mobile</title>
+    <title>ROYAL CASINO - Tài Xỉu VIP</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="desktop-redirect.js"></script> <!-- Prevent desktop users from accessing mobile pages -->
+    <script src="desktop-redirect.js"></script>
 
-    <!-- Fonts -->
+    <!-- Vietnamese-Optimized Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
-    <!-- Common Mobile Styles -->
-    <link rel="stylesheet" href="mobile-common.css">
-
-    <style>
-        /* Mobile-Specific Tai Xiu Styles */
-        body {
-            background-image: url('/images/ui/bg-bamboo.jpg');
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: cover;
-        }
-
-        .game-container {
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            /* Dynamic viewport height for mobile */
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            /* Prevent scrolling */
-        }
-
-        /* Compact Top Bar for Mobile */
-        .mobile-top-bar {
-            height: 40px;
-            padding: 0 10px;
-            flex-shrink: 0;
-            /* Don't shrink */
-        }
-
-        .mobile-game-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-        }
-
-        .mobile-timer {
-            background: rgba(0, 0, 0, 0.8);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 16px;
-            color: var(--gold);
-        }
-
-        /* Game Board - Landscape Optimized */
-        .game-board {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1.2fr 1fr;
-            /* Reduce center width */
-            gap: 8px;
-            padding: 8px;
-            align-items: center;
-            min-height: 0;
-            /* Allow shrinking */
-        }
-
-        /* Betting Boxes - Compact for Mobile */
-        .bet-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .bet-board-img {
-            width: 100%;
-            max-width: 150px;
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
-            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
-            /* Expand hit area */
-            padding: 10px;
-            margin: -10px;
-        }
-
-        .bet-board-img:active {
-            transform: scale(0.95);
-            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.8)) brightness(1.1);
-        }
-
-        .bet-stats {
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 10px;
-            padding: 5px 12px;
-            font-size: 11px;
-            color: var(--gold);
-            text-align: center;
-        }
-
-        .my-bet-mobile {
-            background: rgba(255, 215, 0, 0.2);
-            border: 1px solid var(--gold);
-            border-radius: 12px;
-            padding: 6px 15px;
-            font-weight: 700;
-            color: var(--gold);
-            min-height: 30px;
-            font-size: 14px;
-        }
-
-        /* Center Stage - Bowl & Dice */
-        .center-stage {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .dice-area {
-            position: relative;
-            width: 200px;
-            height: 200px;
-        }
-
-        .plate {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-        }
-
-        .dice-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            gap: 5px;
-            z-index: 5;
-        }
-
-        .dice {
-            width: 35px;
-            height: 35px;
-            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
-        }
-
-        .bowl-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 220px;
-            height: 220px;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            cursor: grab;
-        }
-
-        .bowl-img {
-            width: 100%;
-            height: 100%;
-            background-image: url('/images/dice/bowl.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        .shaking {
-            animation: shake 0.1s infinite;
-        }
-
-        @keyframes shake {
-
-            0%,
-            100% {
-                transform: translate(-50%, -50%) rotate(0deg);
-            }
-
-            25% {
-                transform: translate(-52%, -48%) rotate(3deg);
-            }
-
-            75% {
-                transform: translate(-48%, -52%) rotate(-3deg);
-            }
-        }
-
-        .result-toast {
-            background: linear-gradient(160deg, rgba(255, 248, 220, 0.98), rgba(255, 240, 200, 0.98));
-            border: 2px solid var(--gold);
-            border-radius: 15px;
-            padding: 10px 30px;
-            margin-top: 10px;
-            font-size: 20px;
-            font-weight: 900;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .result-toast.show {
-            opacity: 1;
-        }
-
-        /* Control Panel - Bottom */
-        .control-panel {
-            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.9));
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex-shrink: 0;
-            /* Don't shrink */
-        }
-
-        .bet-amount-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 10px;
-        }
-
-        .bet-label {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-            text-transform: uppercase;
-        }
-
-        .bet-value {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--gold);
-        }
-
-        /* Mobile Slider */
-        .slider-container {
-            padding: 0 15px;
-        }
-
-        .slider-wrapper {
-            position: relative;
-            height: 40px;
-        }
-
-        .bet-slider {
-            width: 100%;
-            height: 10px;
-            -webkit-appearance: none;
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.4));
-            border-radius: 5px;
-            outline: none;
-            position: relative;
-            z-index: 2;
-        }
-
-        .bet-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 42px;
-            /* Larger for easier grabbing */
-            height: 42px;
-            background: radial-gradient(circle, #fff, var(--gold));
-            border-radius: 50%;
-            cursor: grab;
-            border: 4px solid #fff;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 4px 8px rgba(0, 0, 0, 0.4);
-            transition: transform 0.1s;
-        }
-
-        .bet-slider:active::-webkit-slider-thumb {
-            cursor: grabbing;
-            transform: scale(1.15);
-        }
-
-        .quick-amounts {
-            display: flex;
-            gap: 8px;
-            justify-content: space-around;
-            padding: 0 10px;
-        }
-
-        .quick-btn {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            color: var(--gold);
-            padding: 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 600;
-            min-height: 44px;
-        }
-
-        .quick-btn:active {
-            background: var(--gold);
-            color: #000;
-        }
-
-        /* History Button */
-        .history-btn {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid var(--gold);
-            color: var(--gold);
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
-            z-index: 500;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Mobile History Grid */
-        .history-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 10000;
-            display: none;
-            flex-direction: column;
-            padding: 15px;
-        }
-
-        .history-overlay.active {
-            display: flex;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .history-title {
-            color: var(--gold);
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .close-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 20px;
-        }
-
-        .history-grid-mobile {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 5px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .history-cell {
-            aspect-ratio: 1;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .history-cell.tai {
-            background: linear-gradient(135deg, #ef5350, #c62828);
-        }
-
-        .history-cell.xiu {
-            background: linear-gradient(135deg, #42a5f5, #1565c0);
-        }
-
-        .history-cell.bao {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-        }
-
-        /* Notification */
-        .notification-mobile {
-            position: fixed;
-            top: 55px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid var(--gold);
-            border-radius: 15px;
-            padding: 12px 25px;
-            color: var(--gold);
-            font-weight: 700;
-            z-index: 9999;
-            display: none;
-        }
-    </style>
+    <!-- Use Desktop CSS + Mobile Overrides -->
+    <link rel="stylesheet" href="taixiu.css">
+    <link rel="stylesheet" href="taixiu-mobile-override.css">
 </head>
 
 <body>
-    <!-- Rotation Warning (Works on all platforms including iOS) -->
+    <!-- Rotation Warning -->
     <div id="rotate-warning">
         <div style="font-size: 80px; margin-bottom: 20px;">📱➡️</div>
-        <p style="font-size: 20px; font-weight: 700; color: var(--gold);">Vui lòng xoay ngang thiết bị</p>
+        <p style="font-size: 20px; font-weight: 700; color: #ffd700;">Vui lòng xoay ngang thiết bị</p>
         <p style="font-size: 14px; color: rgba(255,255,255,0.7);">Để có trải nghiệm chơi game tốt nhất</p>
     </div>
 
-    <!-- Portrait Warning (Legacy fallback) -->
-    <div class="portrait-warning">
-        <div class="portrait-warning-icon">📱</div>
-        <div class="portrait-warning-title">Vui Lòng Quay Ngang</div>
-        <div class="portrait-warning-text">
-            Để có trải nghiệm tốt nhất, vui lòng quay điện thoại sang chế độ ngang (landscape).
+    <!-- Ambient Effects (same as desktop) -->
+    <div class="ambient-container">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <div class="notification" id="notif">Thông báo</div>
+
+    <div class="header">
+        <a href="/index-mobile.html" class="back-btn-img">
+            <img src="/images/ui/btn-wood.png" alt="Rời Bàn" class="btn-wood-img">
+        </a>
+        <div class="header-right">
+            <button id="music-btn" onclick="toggleMusic()" class="icon-btn">🎵</button>
+            <div class="user-money">
+                <span class="money-icon">💰</span>
+                <span id="balance">...</span>
+            </div>
         </div>
     </div>
 
-    <!-- Game Container -->
-    <div class="game-container">
-        <!-- Top Bar -->
-        <div class="mobile-top-bar">
-            <a href="/index-mobile.html" class="mobile-back-btn">
-                ← Thoát
-            </a>
-            <div class="mobile-game-info">
-                <div class="mobile-timer" id="timer">00</div>
+    <div class="game-board">
+        <div class="side-panel">
+            <div class="bet-circle-img" id="box-tai" onclick="quickBet('tai')">
+                <img src="/images/ui/wood-board-red.png" alt="TÀI" class="board-img">
+                <div class="bet-overlay">
+                    <div class="rate">1 : 1.98</div>
+                    <div class="player-count" id="tai-players">0 người</div>
+                </div>
             </div>
-            <div class="mobile-balance" id="balance">...</div>
+            <div class="total-bet" id="total-tai">
+                <span class="total-icon">💵</span>
+                <span>0</span>
+            </div>
+            <div class="my-bet" id="my-tai"></div>
         </div>
 
-        <!-- Game Board -->
-        <div class="game-board">
-            <!-- TAI Side -->
-            <div class="bet-box">
-                <img src="/images/ui/wood-board-red.png" class="bet-board-img" onclick="quickBet('tai')" id="board-tai">
-                <div class="bet-stats">
-                    <div id="tai-players">0 người</div>
-                    <div id="total-tai">0</div>
-                </div>
-                <div class="my-bet-mobile" id="my-tai"></div>
+        <div class="center-stage">
+            <div class="timer-container" id="timer-container">
+                <div class="timer-ring"></div>
+                <div class="timer" id="timer">00</div>
             </div>
-
-            <!-- Center Stage -->
-            <div class="center-stage">
-                <div class="dice-area">
-                    <img src="/images/dice/plate.png" class="plate">
-                    <div class="dice-container">
-                        <img src="/images/dice/1.png" class="dice" id="d1">
-                        <img src="/images/dice/1.png" class="dice" id="d2">
-                        <img src="/images/dice/1.png" class="dice" id="d3">
-                    </div>
-                    <div class="bowl-container" id="bowl">
-                        <div class="bowl-img"></div>
-                    </div>
-                </div>
-                <div class="result-toast" id="result-toast">
-                    <span id="result-text">...</span>
-                </div>
+            <img src="/images/dice/plate.png" class="plate">
+            <div class="dice-container">
+                <img src="/images/dice/1.png" class="dice" id="d1">
+                <img src="/images/dice/1.png" class="dice" id="d2">
+                <img src="/images/dice/1.png" class="dice" id="d3">
             </div>
-
-            <!-- XIU Side -->
-            <div class="bet-box">
-                <img src="/images/ui/wood-board-blue.png" class="bet-board-img" onclick="quickBet('xiu')"
-                    id="board-xiu">
-                <div class="bet-stats">
-                    <div id="xiu-players">0 người</div>
-                    <div id="total-xiu">0</div>
+            <div class="bowl-container" id="bowl">
+                <div class="bowl-img"></div>
+            </div>
+            <div id="result-toast">
+                <div class="toast-content">
+                    <div class="toast-text" id="toast-text">...</div>
                 </div>
-                <div class="my-bet-mobile" id="my-xiu"></div>
             </div>
         </div>
 
-        <!-- Control Panel -->
-        <div class="control-panel">
-            <div class="bet-amount-row">
-                <div>
-                    <div class="bet-label">Đang Chọn</div>
-                    <div class="bet-value" id="selected-amount">1</div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="bet-label">Tối Đa</div>
-                    <div class="bet-value" id="max-display">...</div>
+        <div class="side-panel">
+            <div class="bet-circle-img" id="box-xiu" onclick="quickBet('xiu')">
+                <img src="/images/ui/wood-board-blue.png" alt="XỈU" class="board-img">
+                <div class="bet-overlay">
+                    <div class="rate">1 : 1.98</div>
+                    <div class="player-count" id="xiu-players">0 người</div>
                 </div>
             </div>
-
-            <div class="slider-container">
-                <div class="slider-wrapper">
-                    <input type="range" class="bet-slider" id="bet-slider" min="1" max="1000" value="1" step="1">
-                    <div id="slider-fill"
-                        style="position: absolute; left: 0; bottom: 0; height: 100%; background: var(--gold); opacity: 0.3; pointer-events: none; width: 0%; border-radius: 5px;">
-                    </div>
-                </div>
+            <div class="total-bet" id="total-xiu">
+                <span class="total-icon">💵</span>
+                <span>0</span>
             </div>
-
-            <div class="quick-amounts">
-                <button class="quick-btn" onclick="jumpTo(0)">MIN</button>
-                <button class="quick-btn" onclick="jumpTo(0.25)">25%</button>
-                <button class="quick-btn" onclick="jumpTo(0.5)">50%</button>
-                <button class="quick-btn" onclick="jumpTo(0.75)">75%</button>
-                <button class="quick-btn" onclick="jumpTo(1)">MAX</button>
-            </div>
+            <div class="my-bet" id="my-xiu"></div>
         </div>
-
-        <!-- History Button -->
-        <button class="history-btn" onclick="toggleHistory()">📊 Lịch Sử</button>
     </div>
 
-    <!-- History Overlay -->
-    <div class="history-overlay" id="history-overlay">
-        <div class="history-header">
-            <div class="history-title">📈 Lịch Sử 120 Ván</div>
-            <button class="close-btn" onclick="toggleHistory()">✕</button>
+    <div class="footer">
+        <!-- History Toggle -->
+        <button id="toggle-history-btn" onclick="toggleHistoryBoard()" class="history-toggle-btn">
+            <span class="toggle-icon">📊</span> Xem Cầu
+        </button>
+
+        <!-- History Board -->
+        <div id="history-board" class="history-board hidden">
+            <div class="history-board-header">
+                <span>📈 BẢNG CẦU - 120 VÁN GẦN NHẤT</span>
+                <button onclick="toggleHistoryBoard()" class="close-btn">✕</button>
+            </div>
+            <div id="history-grid" class="history-grid"></div>
+            <div class="history-legend">
+                <span class="legend-item"><span class="dot tai"></span> Tài (11-17)</span>
+                <span class="legend-item"><span class="dot xiu"></span> Xỉu (4-10)</span>
+                <span class="legend-item"><span class="dot bao"></span> Bão (3 giống)</span>
+            </div>
         </div>
-        <div class="history-grid-mobile" id="history-grid-mobile"></div>
+
+        <div class="bet-info-row">
+            <div class="info-block">
+                <div class="info-label">ĐANG CHỌN</div>
+                <div class="info-value" id="selected-amount-display">1</div>
+            </div>
+            <div class="info-block right">
+                <div class="info-label">SỐ DƯ TỐI ĐA</div>
+                <div class="info-value" id="max-display">...</div>
+            </div>
+        </div>
+
+        <div class="slider-wrapper">
+            <div class="slider-track-bg"></div>
+            <div class="slider-fill" id="slider-fill"></div>
+            <input type="range" id="bet-slider" min="1" max="1000" step="1" value="1" oninput="handleSliderInput(this)">
+            <div class="ticks">
+                <div class="tick" onclick="jumpTo(0)">MIN</div>
+                <div class="tick" onclick="jumpTo(0.25)">25%</div>
+                <div class="tick" onclick="jumpTo(0.5)">50%</div>
+                <div class="tick" onclick="jumpTo(0.75)">75%</div>
+                <div class="tick" onclick="jumpTo(1)">ALL</div>
+            </div>
+        </div>
     </div>
-
-    <!-- Notification -->
-    <div class="notification-mobile" id="notif">Thông báo</div>
-
-    <!-- Original Tai Xiu JS (reuse with minor modifications) -->
-    <script src="taixiu.js"></script>
 
     <script>
-        // Mobile-specific enhancements
-        function formatMoney(num) {
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toString();
-        }
-
-        // Mobile bet slider handler
-        const betSlider = document.getElementById('bet-slider');
-        if (betSlider) {
-            betSlider.addEventListener('input', function (e) {
-                selectedAmount = parseInt(e.target.value);
-                const selectedEl = document.getElementById('selected-amount');
-                if (selectedEl) {
-                    selectedEl.innerText = formatMoney(selectedAmount);
-                }
-                SoundManager.play('bet');
-            });
-        }
-
-        // History toggle for mobile
-        function toggleHistory() {
-            const overlay = document.getElementById('history-overlay');
-            if (overlay) overlay.classList.toggle('active');
-        }
-
-        // Mobile notification helper
-        function showNotif(msg) {
-            const el = document.getElementById('notif');
-            if (el) {
-                el.innerText = msg;
-                el.style.display = 'block';
-                setTimeout(() => el.style.display = 'none', 2000);
+        // Generate floating particles (same as desktop)
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < 20; i++) { // Fewer on mobile for performance
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = (2 + Math.random() * 3) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (12 + Math.random() * 10) + 's';
+                container.appendChild(particle);
             }
         }
-
-        // CRITICAL: Initialize balance from server
-        fetch('/api/me')
-            .then(r => r.json())
-            .then(user => {
-                if (user.error) {
-                    window.location.href = '/';
-                    return;
-                }
-                currentBalance = user.balance || 0;
-                updateSliderMax(); // Update slider with fetched balance
-            })
-            .catch(err => {
-                console.error('Failed to fetch balance:', err);
-                currentBalance = 0;
-                updateSliderMax();
-            });
-
-        // Lock orientation on load
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(err => {
-                console.log('Orientation lock not supported:', err);
-            });
-        }
+        createParticles();
     </script>
+
+    <!-- Game Logic (same as desktop) -->
+    <script src="taixiu.js"></script>
 </body>
 
 </html>
