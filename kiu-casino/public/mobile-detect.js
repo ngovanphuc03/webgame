@@ -30,19 +30,19 @@
 
     // Detect mobile device
     function isMobileDevice() {
-        // Check 1: User Agent (most reliable)
-        const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-        const isMobileUA = mobileRegex.test(navigator.userAgent);
+        // 1. Check User Agent (Cũ nhưng vẫn cần)
+        const ua = navigator.userAgent;
+        const isAndroid = /Android/i.test(ua);
+        const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-        // Check 2: Touch capability
-        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        // 2. Check iPadOS 13+ (Giả dạng Mac)
+        const isIPadOS = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-        // Check 3: Screen size (mobile typically < 768px width)
-        const isSmallScreen = window.innerWidth < 768;
+        // 3. Check Touch Points (Chuẩn nhất cho thiết bị cảm ứng hiện đại)
+        const hasTouch = (navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
 
-        // More strict: Require mobile UA AND (small screen OR touch)
-        // This prevents desktop browsers with touch from being detected as mobile
-        return isMobileUA && (isSmallScreen || hasTouch);
+        // 4. Kết luận: Là Mobile nếu là Android/iOS/iPadOS HOẶC là màn hình cảm ứng nhỏ
+        return isAndroid || isIOS || isIPadOS || (hasTouch && window.innerWidth < 1024);
     }
 
     // Redirect to mobile version

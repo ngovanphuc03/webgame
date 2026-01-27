@@ -43,7 +43,55 @@ body {
    LANDSCAPE ORIENTATION ENFORCEMENT
    ==================================================================== */
 
-/* Portrait Warning Overlay */
+/* Rotation Warning Overlay - Better UX than forcing lock */
+#rotate-warning {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 999999;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+    color: white;
+}
+
+/* Show rotation warning in portrait mode */
+@media (orientation: portrait) {
+    #rotate-warning {
+        display: flex !important;
+    }
+}
+
+#rotate-warning img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    animation: rotate-device 2s ease-in-out infinite;
+}
+
+@keyframes rotate-device {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(90deg);
+    }
+}
+
+#rotate-warning p {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 300px;
+    line-height: 1.6;
+    font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+/* Legacy portrait warning (keep for compatibility) */
 .portrait-warning {
     position: fixed;
     inset: 0;

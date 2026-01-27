@@ -296,7 +296,14 @@
 </head>
 
 <body>
-    <!-- Portrait Warning -->
+    <!-- Rotation Warning (Works on all platforms including iOS) -->
+    <div id="rotate-warning">
+        <div style="font-size: 80px; margin-bottom: 20px;">🃏➡️</div>
+        <p style="font-size: 20px; font-weight: 700; color: var(--gold);">Vui lòng xoay ngang thiết bị</p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.7);">Poker chỉ chơi được ở chế độ ngang</p>
+    </div>
+
+    <!-- Portrait Warning (Legacy fallback) -->
     <div class="portrait-warning">
         <div class="portrait-warning-icon">📱</div>
         <div class="portrait-warning-title">Vui Lòng Quay Ngang</div>

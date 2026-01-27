@@ -93,12 +93,16 @@
             width: 100%;
             max-width: 150px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, filter 0.2s;
             filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+            /* Expand hit area */
+            padding: 10px;
+            margin: -10px;
         }
 
         .bet-board-img:active {
             transform: scale(0.95);
+            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.8)) brightness(1.1);
         }
 
         .bet-stats {
@@ -265,13 +269,21 @@
 
         .bet-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 35px;
-            height: 35px;
+            appearance: none;
+            width: 42px;
+            /* Larger for easier grabbing */
+            height: 42px;
             background: radial-gradient(circle, #fff, var(--gold));
             border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid #fff;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+            cursor: grab;
+            border: 4px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 4px 8px rgba(0, 0, 0, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .bet-slider:active::-webkit-slider-thumb {
+            cursor: grabbing;
+            transform: scale(1.15);
         }
 
         .quick-amounts {
@@ -402,7 +414,14 @@
 </head>
 
 <body>
-    <!-- Portrait Warning -->
+    <!-- Rotation Warning (Works on all platforms including iOS) -->
+    <div id="rotate-warning">
+        <div style="font-size: 80px; margin-bottom: 20px;">📱➡️</div>
+        <p style="font-size: 20px; font-weight: 700; color: var(--gold);">Vui lòng xoay ngang thiết bị</p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.7);">Để có trải nghiệm chơi game tốt nhất</p>
+    </div>
+
+    <!-- Portrait Warning (Legacy fallback) -->
     <div class="portrait-warning">
         <div class="portrait-warning-icon">📱</div>
         <div class="portrait-warning-title">Vui Lòng Quay Ngang</div>

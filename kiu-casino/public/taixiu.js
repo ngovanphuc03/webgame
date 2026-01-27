@@ -5,6 +5,26 @@ let selectedAmount = 1;
 let canNan = false;
 let isBettingPhase = false;
 
+// --- SAFE DOM HELPERS (prevents null errors on mobile) ---
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = text;
+}
+
+function safeSetHTML(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+}
+
+function safeSetStyle(id, prop, value) {
+    const el = document.getElementById(id);
+    if (el) el.style[prop] = value;
+}
+
+function safeGetElement(id) {
+    return document.getElementById(id);
+}
+
 // --- SOUND MANAGER WITH LAZY LOADING ---
 const SoundManager = {
     paths: {
@@ -91,10 +111,12 @@ function handleSliderInput(el) {
 // Actually, 'bet' sound is "leng keng".
 
 function updateSliderMax() {
-    const slider = document.getElementById('bet-slider');
+    const slider = safeGetElement('bet-slider');
+    if (!slider) return; // Exit if slider doesn't exist (mobile page)
+
     let maxVal = currentBalance > 0 ? currentBalance : 1;
     slider.max = maxVal;
-    document.getElementById('max-display').innerText = formatMoney(maxVal);
+    safeSetText('max-display', formatMoney(maxVal));
 
     if (parseInt(slider.value) > maxVal) {
         slider.value = maxVal;
@@ -113,12 +135,14 @@ function updateSliderMax() {
     } else {
         percent = 100;
     }
-    document.getElementById('slider-fill').style.width = percent + "%";
+    safeSetStyle('slider-fill', 'width', percent + "%");
 }
 
 function jumpTo(percent) {
     if (currentBalance <= 0) return;
-    const slider = document.getElementById('bet-slider');
+    const slider = safeGetElement('bet-slider');
+    if (!slider) return; // Exit if slider doesn't exist (mobile page)
+
     let val = Math.floor(currentBalance * percent);
     if (val < 1) val = 1;
     slider.value = val;
