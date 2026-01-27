@@ -22,12 +22,6 @@
         }
     }
 
-    // Check localStorage preference (allow users to force desktop on mobile)
-    const forcedMode = localStorage.getItem('casino_force_desktop');
-    if (forcedMode === 'true') {
-        return; // User explicitly wants desktop version
-    }
-
     // Detect mobile device
     function isMobileDevice() {
         // 1. Check User Agent (Cũ nhưng vẫn cần)
