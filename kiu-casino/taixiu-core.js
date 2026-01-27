@@ -76,6 +76,7 @@ class TaiXiuGame {
             this.currentState = this.STATE.RESULT;
             await this.processPayout();
             this.io.emit('tx_force_open'); // Hết giờ nặn, lật bát
+            this.io.emit('tx_history', this.history); // GỬI CẦU SAU KHI HẾT 15s MỞ BÁT
             this.broadcastState(null, 0);
 
             await this.sleep(5000);
@@ -130,9 +131,9 @@ class TaiXiuGame {
         else winnerSide = totalPoint >= 11 ? 'tai' : 'xiu';
 
         this.history.push({ result: winnerSide, dice: [...this.dice], total: totalPoint });
-        if (this.history.length > 120) this.history.shift(); // Tăng lên 120 cho bảng cầu pro 6x20
+        if (this.history.length > 120) this.history.shift();
         this.tempResult = { winnerSide, total: totalPoint };
-        this.io.emit('tx_history', this.history);
+        // Không gửi tx_history ở đây nữa - sẽ gửi sau khi hết 15s mở bát
     }
 
     async processPayout() {

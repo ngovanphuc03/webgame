@@ -676,26 +676,42 @@ input[type=range]:active::-webkit-slider-thumb {
 
 .history-toggle-btn {
     position: absolute;
-    top: -40px;
+    top: -45px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(180deg, #5d4037 0%, #3e2723 100%);
-    border: 2px solid #8d6e63;
+    background: linear-gradient(180deg, #7c4a3a 0%, #4a2c24 100%);
+    border: 2px solid #ffd700;
     color: #ffd700;
-    font-family: 'Cinzel', serif;
+    /* Font Lora hỗ trợ Tiếng Việt */
+    font-family: 'Lora', serif;
     font-weight: 700;
-    font-size: 14px;
-    padding: 8px 20px;
-    border-radius: 20px;
+    font-size: 15px;
+    padding: 10px 25px;
+    border-radius: 25px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
     z-index: 100;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    animation: btn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes btn-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 4px 25px rgba(255, 215, 0, 0.6), 0 6px 25px rgba(0, 0, 0, 0.6);
+    }
 }
 
 .history-toggle-btn:hover {
-    background: linear-gradient(180deg, #6d5047 0%, #4e3733 100%);
-    transform: translateX(-50%) scale(1.05);
+    background: linear-gradient(180deg, #9c5a4a 0%, #5a3c34 100%);
+    transform: translateX(-50%) scale(1.08);
+    box-shadow: 0 6px 25px rgba(255, 215, 0, 0.5), 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 
 .history-toggle-btn:active {
@@ -706,18 +722,42 @@ input[type=range]:active::-webkit-slider-thumb {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 700px;
-    max-height: 80vh;
-    background: linear-gradient(180deg, rgba(62, 39, 35, 0.98) 0%, rgba(30, 20, 18, 0.98) 100%);
-    border: 3px solid #8d6e63;
-    border-radius: 15px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 92%;
+    max-width: 750px;
+    max-height: 85vh;
+    /* Glassmorphism background */
+    background: linear-gradient(160deg,
+            rgba(80, 50, 40, 0.97) 0%,
+            rgba(40, 25, 20, 0.98) 50%,
+            rgba(30, 18, 15, 0.99) 100%);
+    backdrop-filter: blur(10px);
+    border: 3px solid transparent;
+    border-image: linear-gradient(135deg, #ffd700, #8d6e63, #ffd700) 1;
+    border-radius: 20px;
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.9),
+        0 0 40px rgba(255, 215, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
     z-index: 9999;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    animation: board-slide-in 0.4s ease-out forwards;
+}
+
+@keyframes board-slide-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.85) translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
 }
 
 .history-board.hidden {
@@ -728,14 +768,16 @@ input[type=range]:active::-webkit-slider-thumb {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    background: linear-gradient(180deg, #5d4037 0%, #4e342e 100%);
-    border-bottom: 2px solid #8d6e63;
+    padding: 18px 25px;
+    background: linear-gradient(180deg, rgba(100, 65, 50, 0.95) 0%, rgba(60, 40, 35, 0.95) 100%);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.4);
     color: #ffd700;
-    font-family: 'Cinzel', serif;
+    /* Font Lora hỗ trợ Tiếng Việt */
+    font-family: 'Lora', serif;
     font-weight: 700;
-    font-size: 16px;
-    text-shadow: 2px 2px 4px #000;
+    font-size: 18px;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
 }
 
 .history-board-header .close-btn {

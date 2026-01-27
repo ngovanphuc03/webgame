@@ -172,8 +172,12 @@ io.on('connection', (socket) => {
     // KẾT NỐI POKER
     if (userInfo.id) pokerGame.handleSocket(socket, userInfo);
 
-    // txGame integration skipped when taixiu-core is not available
-    if (typeof txGame !== 'undefined' && txGame && userId) { socket.join(`user_${userId}`); if (txGame.sendCurrentState) socket.on('tx_bet', async d => socket.emit((await txGame.handleBet(userId, d.side, +d.amount)).success ? 'tx_bet_success' : 'tx_bet_error', { msg: 'Done' })); }
+    // KẾT NỐI TAI XIU - FIX: Gọi sendCurrentState ngay khi connect
+    if (typeof txGame !== 'undefined' && txGame && userId) {
+        socket.join(`user_${userId}`);
+        if (txGame.sendCurrentState) txGame.sendCurrentState(socket); // FIX: Thực sự gọi hàm
+        socket.on('tx_bet', async d => socket.emit((await txGame.handleBet(userId, d.side, +d.amount)).success ? 'tx_bet_success' : 'tx_bet_error', { msg: 'Done' }));
+    }
 });
 
 const PORT = process.env.PORT || 3000;

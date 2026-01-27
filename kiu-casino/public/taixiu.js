@@ -305,15 +305,7 @@ document.addEventListener('click', () => {
 socket.on('tx_force_open', () => { if (bowlWrap.style.opacity != 0) openBowl(); });
 
 socket.on('tx_history', (hist) => {
-    // 1. Simple bar (giữ nguyên)
-    let barHtml = '';
-    hist.forEach(h => {
-        let c = h.result === 'tai' ? '#e74c3c' : (h.result === 'xiu' ? '#3498db' : '#ffd700');
-        barHtml += `<div style="width:12px;height:12px;border-radius:50%;background:${c}; margin:2px; box-shadow:0 0 5px ${c};"></div>`;
-    });
-    document.getElementById('history-bar').innerHTML = barHtml;
-
-    // 2. Pro Grid (6 rows x 20 cols = 120 cells)
+    // Chỉ render Pro Grid (đã bỏ history-bar chấm)
     renderHistoryGrid(hist);
 });
 
