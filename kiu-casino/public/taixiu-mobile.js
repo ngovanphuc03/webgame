@@ -143,14 +143,19 @@ if (bowlWrap && typeof Hammer !== 'undefined') {
     hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL, threshold: 0 });
 
     hammer.on("panstart", () => { if (!canNan) return; bowlWrap.style.transition = 'none'; });
-    hammer.on("panmove", (ev) => { if (!canNan) return; bowlWrap.style.transform = `translate(calc(-50% + ${ev.deltaX}px), calc(-50% + ${ev.deltaY}px))`; cx = ev.deltaX; cy = ev.deltaY; });
-    hammer.on("panend", () => { if (!canNan) return; if (Math.sqrt(cx * cx + cy * cy) > 150) openBowl(); else resetBowlPosition(); });
+    hammer.on("panmove", (ev) => {
+        if (!canNan) return;
+        bowlWrap.style.transform = `translate(${ev.deltaX}px, ${ev.deltaY}px)`;
+        cx = ev.deltaX;
+        cy = ev.deltaY;
+    });
+    hammer.on("panend", () => { if (!canNan) return; if (Math.sqrt(cx * cx + cy * cy) > 100) openBowl(); else resetBowlPosition(); });
 }
 
 function openBowl() {
     if (!bowlWrap) return;
     bowlWrap.style.transition = 'all 0.5s ease-out';
-    bowlWrap.style.transform = 'translate(-50%, -500px)';
+    bowlWrap.style.transform = 'translateY(-300px)';
     bowlWrap.style.opacity = 0;
 
     const resultToast = safeGetElement('result-toast');
@@ -172,7 +177,7 @@ function resetBowl() {
     if (!bowlWrap) return;
     cx = 0; cy = 0;
     bowlWrap.style.transition = 'none';
-    bowlWrap.style.transform = 'translate(-50%, -50%)';
+    bowlWrap.style.transform = 'translate(0, 0)';
     bowlWrap.style.opacity = 1;
 
     const resultToast = safeGetElement('result-toast');
@@ -186,7 +191,7 @@ function resetBowl() {
 function resetBowlPosition() {
     if (!bowlWrap) return;
     bowlWrap.style.transition = 'transform 0.3s ease-out';
-    bowlWrap.style.transform = 'translate(-50%, -50%)';
+    bowlWrap.style.transform = 'translate(0, 0)';
 }
 
 // --- SOCKET EVENTS ---
@@ -380,14 +385,13 @@ function renderHistoryGrid(hist) {
 
 function toggleHistoryBoard() {
     const board = safeGetElement('history-board');
-    const btn = safeGetElement('toggle-history-btn');
 
-    if (board && board.classList.contains('hidden')) {
-        board.classList.remove('hidden');
-        if (btn) btn.innerHTML = '✕ Đóng';
-    } else if (board) {
-        board.classList.add('hidden');
-        if (btn) btn.innerHTML = '📊 Xem Cầu';
+    if (board) {
+        if (board.classList.contains('show')) {
+            board.classList.remove('show');
+        } else {
+            board.classList.add('show');
+        }
     }
 }
 
@@ -405,9 +409,9 @@ socket.on('tx_totals', (d) => {
 
 // --- FLYING COINS EFFECT ---
 function spawnFlyingCoins() {
-    const coinCount = 15; // Less for mobile performance
+    const coinCount = 15;
     const centerStage = document.querySelector('.center-stage');
-    const target = document.querySelector('.user-money');
+    const target = document.querySelector('.balance-display');
 
     if (!centerStage || !target) return;
 

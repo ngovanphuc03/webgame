@@ -8,173 +8,786 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="screen-orientation" content="landscape">
 
-    <title>ROYAL CASINO - Tài Xỉu VIP</title>
+    <title>TÀI XỈU VIP - Mobile</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="desktop-redirect.js"></script>
 
-    <!-- Vietnamese-Optimized Font -->
+    <!-- Premium Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
-    <!-- Use Desktop CSS + Mobile Overrides -->
-    <link rel="stylesheet" href="taixiu.css">
-    <link rel="stylesheet" href="taixiu-mobile-override.css">
+    <style>
+        /* ============================================= */
+        /* MOBILE PREMIUM DESIGN - TÀI XỈU */
+        /* ============================================= */
+
+        :root {
+            --gold: #ffd700;
+            --gold-dark: #b8860b;
+            --gold-light: #fff8dc;
+            --tai-red: #dc3545;
+            --tai-red-glow: rgba(220, 53, 69, 0.5);
+            --xiu-blue: #0d6efd;
+            --xiu-blue-glow: rgba(13, 110, 253, 0.5);
+            --glass-bg: rgba(0, 0, 0, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f0618 50%, #16213e 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Background Image Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url('/images/ui/bg-bamboo.jpg') center/cover no-repeat;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        /* ============================================= */
+        /* ROTATION WARNING */
+        /* ============================================= */
+        #rotate-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f0618 100%);
+            z-index: 999999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media (orientation: portrait) {
+            #rotate-warning {
+                display: flex !important;
+            }
+
+            body>*:not(#rotate-warning) {
+                display: none !important;
+            }
+        }
+
+        .rotate-icon {
+            font-size: 80px;
+            animation: rotate-bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes rotate-bounce {
+
+            0%,
+            100% {
+                transform: rotate(-10deg);
+            }
+
+            50% {
+                transform: rotate(10deg);
+            }
+        }
+
+        .rotate-text {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .rotate-sub {
+            margin-top: 8px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* ============================================= */
+        /* MAIN CONTAINER - LANDSCAPE */
+        /* ============================================= */
+        .game-wrapper {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: var(--safe-top) 0 var(--safe-bottom) 0;
+        }
+
+        /* ============================================= */
+        /* HEADER - Compact & Premium */
+        /* ============================================= */
+        .header {
+            height: 50px;
+            padding: 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+            border: 3px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .timer-badge.urgent {
+            border-color: #e74c3c;
+            color: #e74c3c;
+            animation: pulse-urgent 0.5s ease infinite;
+        }
+
+        @keyframes pulse-urgent {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .balance-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--gold);
+        }
+
+        .balance-icon {
+            font-size: 16px;
+        }
+
+        /* ============================================= */
+        /* GAME BOARD - Landscape Grid */
+        /* ============================================= */
+        .game-board {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr 1fr;
+            gap: 10px;
+            padding: 10px 15px;
+            align-items: center;
+            min-height: 0;
+        }
+
+        /* ============================================= */
+        /* BET BOXES - TAI & XIU */
+        /* ============================================= */
+        .bet-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+            justify-content: center;
+        }
+
+        .bet-box {
+            position: relative;
+            width: 100%;
+            max-width: 140px;
+            aspect-ratio: 1;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .bet-box.tai {
+            background: linear-gradient(145deg, #c62828 0%, #8e0000 100%);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(198, 40, 40, 0.4);
+        }
+
+        .bet-box.xiu {
+            background: linear-gradient(145deg, #1565c0 0%, #002984 100%);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(21, 101, 192, 0.4);
+        }
+
+        .bet-box:active {
+            transform: scale(0.95);
+        }
+
+        .bet-box.selected {
+            animation: bet-pulse 0.3s ease;
+        }
+
+        @keyframes bet-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .bet-box.winner-glow.tai {
+            box-shadow: 0 0 40px rgba(255, 87, 87, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.2);
+            animation: winner-glow 1s ease infinite;
+        }
+
+        .bet-box.winner-glow.xiu {
+            box-shadow: 0 0 40px rgba(87, 161, 255, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.2);
+            animation: winner-glow 1s ease infinite;
+        }
+
+        @keyframes winner-glow {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+        }
+
+        .bet-label {
+            font-size: 28px;
+            font-weight: 900;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .bet-rate {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .bet-players {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .bet-total {
+            background: var(--glass-bg);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+
+        .my-bet {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gold);
+            min-height: 18px;
+        }
+
+        /* ============================================= */
+        /* CENTER STAGE - Bowl & Dice */
+        /* ============================================= */
+        .center-stage {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .dice-area {
+            position: relative;
+            width: 100%;
+            max-width: 200px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plate {
+            position: absolute;
+            width: 100%;
+            height: auto;
+            z-index: 1;
+        }
+
+        .dice-row {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            gap: 5px;
+        }
+
+        .dice {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .dice.dice-reveal {
+            animation: dice-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes dice-pop {
+            0% {
+                transform: scale(0) rotate(-180deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .bowl {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            background: url('/images/dice/bowl.png') center/contain no-repeat;
+            z-index: 3;
+            cursor: grab;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .bowl.shaking {
+            animation: shake 0.15s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translate(-2px, 0) rotate(-1deg);
+            }
+
+            50% {
+                transform: translate(2px, 0) rotate(1deg);
+            }
+        }
+
+        .result-toast {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 800;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ============================================= */
+        /* CONTROLS - Bottom Panel */
+        /* ============================================= */
+        .controls {
+            padding: 10px 15px;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
+            flex-shrink: 0;
+        }
+
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .amount-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .amount-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+        }
+
+        .amount-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        .slider-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-track {
+            position: relative;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .slider-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+            border-radius: 4px;
+            transition: width 0.1s ease;
+        }
+
+        input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .quick-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .quick-btn {
+            padding: 8px 12px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:active {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: var(--gold);
+        }
+
+        .history-btn {
+            padding: 10px 16px;
+            background: linear-gradient(145deg, #2d1f3d, #1a1025);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ============================================= */
+        /* HISTORY OVERLAY */
+        /* ============================================= */
+        .history-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .history-overlay.show {
+            display: flex;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .history-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 3px;
+            overflow-y: auto;
+        }
+
+        .history-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .history-cell.tai {
+            background: var(--tai-red);
+        }
+
+        .history-cell.xiu {
+            background: var(--xiu-blue);
+        }
+
+        .history-cell.bao {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .history-cell.empty {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ============================================= */
+        /* NOTIFICATION */
+        /* ============================================= */
+        .notification {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7));
+            border: 1px solid var(--gold);
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gold);
+            z-index: 100;
+            display: none;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Flying Coins Effect */
+        .flying-coin {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--gold);
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
 </head>
 
 <body>
     <!-- Rotation Warning -->
     <div id="rotate-warning">
-        <div style="font-size: 80px; margin-bottom: 20px;">📱➡️</div>
-        <p style="font-size: 20px; font-weight: 700; color: #ffd700;">Vui lòng xoay ngang thiết bị</p>
-        <p style="font-size: 14px; color: rgba(255,255,255,0.7);">Để có trải nghiệm chơi game tốt nhất</p>
+        <div class="rotate-icon">📱➡️</div>
+        <p class="rotate-text">Vui lòng xoay ngang thiết bị</p>
+        <p class="rotate-sub">Để có trải nghiệm chơi game tốt nhất</p>
     </div>
 
-    <!-- Ambient Effects (same as desktop) -->
-    <div class="ambient-container">
-        <div class="ambient-orb orb-1"></div>
-        <div class="ambient-orb orb-2"></div>
-        <div class="particles" id="particles"></div>
-    </div>
+    <!-- Main Game -->
+    <div class="game-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <a href="/index-mobile.html" class="back-btn">
+                ← Rời Bàn
+            </a>
 
-    <div class="notification" id="notif">Thông báo</div>
+            <div class="header-center">
+                <div class="timer-badge" id="timer-container">
+                    <span id="timer">00</span>
+                </div>
+            </div>
 
-    <div class="header">
-        <a href="/index-mobile.html" class="back-btn-img">
-            <img src="/images/ui/btn-wood.png" alt="Rời Bàn" class="btn-wood-img">
-        </a>
-        <div class="header-right">
-            <button id="music-btn" onclick="toggleMusic()" class="icon-btn">🎵</button>
-            <div class="user-money">
-                <span class="money-icon">💰</span>
+            <div class="balance-display">
+                <span class="balance-icon">💰</span>
                 <span id="balance">...</span>
             </div>
-        </div>
-    </div>
+        </header>
 
-    <div class="game-board">
-        <div class="side-panel">
-            <div class="bet-circle-img" id="box-tai" onclick="quickBet('tai')">
-                <img src="/images/ui/wood-board-red.png" alt="TÀI" class="board-img">
-                <div class="bet-overlay">
-                    <div class="rate">1 : 1.98</div>
-                    <div class="player-count" id="tai-players">0 người</div>
+        <!-- Game Board -->
+        <main class="game-board">
+            <!-- TAI Panel -->
+            <div class="bet-panel">
+                <div class="bet-box tai" id="box-tai" onclick="quickBet('tai')">
+                    <div class="bet-label">TÀI</div>
+                    <div class="bet-rate">1 : 1.98</div>
+                    <div class="bet-players" id="tai-players">0 người</div>
+                </div>
+                <div class="bet-total" id="total-tai">💰 0</div>
+                <div class="my-bet" id="my-tai"></div>
+            </div>
+
+            <!-- Center Stage -->
+            <div class="center-stage">
+                <div class="dice-area">
+                    <img src="/images/dice/plate.png" class="plate" alt="">
+                    <div class="dice-row">
+                        <img src="/images/dice/1.png" class="dice" id="d1" alt="">
+                        <img src="/images/dice/1.png" class="dice" id="d2" alt="">
+                        <img src="/images/dice/1.png" class="dice" id="d3" alt="">
+                    </div>
+                    <div class="bowl" id="bowl"></div>
+                </div>
+                <div class="result-toast" id="result-toast">
+                    <span id="toast-text">...</span>
                 </div>
             </div>
-            <div class="total-bet" id="total-tai">
-                <span class="total-icon">💵</span>
-                <span>0</span>
-            </div>
-            <div class="my-bet" id="my-tai"></div>
-        </div>
 
-        <div class="center-stage">
-            <div class="timer-container" id="timer-container">
-                <div class="timer-ring"></div>
-                <div class="timer" id="timer">00</div>
-            </div>
-            <img src="/images/dice/plate.png" class="plate">
-            <div class="dice-container">
-                <img src="/images/dice/1.png" class="dice" id="d1">
-                <img src="/images/dice/1.png" class="dice" id="d2">
-                <img src="/images/dice/1.png" class="dice" id="d3">
-            </div>
-            <div class="bowl-container" id="bowl">
-                <div class="bowl-img"></div>
-            </div>
-            <div id="result-toast">
-                <div class="toast-content">
-                    <div class="toast-text" id="toast-text">...</div>
+            <!-- XIU Panel -->
+            <div class="bet-panel">
+                <div class="bet-box xiu" id="box-xiu" onclick="quickBet('xiu')">
+                    <div class="bet-label">XỈU</div>
+                    <div class="bet-rate">1 : 1.98</div>
+                    <div class="bet-players" id="xiu-players">0 người</div>
                 </div>
+                <div class="bet-total" id="total-xiu">💰 0</div>
+                <div class="my-bet" id="my-xiu"></div>
             </div>
-        </div>
+        </main>
 
-        <div class="side-panel">
-            <div class="bet-circle-img" id="box-xiu" onclick="quickBet('xiu')">
-                <img src="/images/ui/wood-board-blue.png" alt="XỈU" class="board-img">
-                <div class="bet-overlay">
-                    <div class="rate">1 : 1.98</div>
-                    <div class="player-count" id="xiu-players">0 người</div>
+        <!-- Controls -->
+        <footer class="controls">
+            <div class="controls-row">
+                <div class="amount-display">
+                    <span class="amount-label">Cược</span>
+                    <span class="amount-value" id="selected-amount-display">1</span>
                 </div>
+
+                <div class="slider-container">
+                    <div class="slider-track">
+                        <div class="slider-fill" id="slider-fill"></div>
+                        <input type="range" id="bet-slider" min="1" max="1000" step="1" value="1"
+                            oninput="handleSliderInput(this)">
+                    </div>
+                    <div class="quick-btns">
+                        <button class="quick-btn" onclick="jumpTo(0)">MIN</button>
+                        <button class="quick-btn" onclick="jumpTo(0.25)">25%</button>
+                        <button class="quick-btn" onclick="jumpTo(0.5)">50%</button>
+                        <button class="quick-btn" onclick="jumpTo(0.75)">75%</button>
+                        <button class="quick-btn" onclick="jumpTo(1)">ALL</button>
+                    </div>
+                </div>
+
+                <div class="amount-display">
+                    <span class="amount-label">Tối đa</span>
+                    <span class="amount-value" id="max-display">...</span>
+                </div>
+
+                <button class="history-btn" onclick="toggleHistoryBoard()">
+                    📊 Cầu
+                </button>
             </div>
-            <div class="total-bet" id="total-xiu">
-                <span class="total-icon">💵</span>
-                <span>0</span>
-            </div>
-            <div class="my-bet" id="my-xiu"></div>
-        </div>
+        </footer>
     </div>
 
-    <div class="footer">
-        <!-- History Toggle -->
-        <button id="toggle-history-btn" onclick="toggleHistoryBoard()" class="history-toggle-btn">
-            <span class="toggle-icon">📊</span> Xem Cầu
-        </button>
-
-        <!-- History Board -->
-        <div id="history-board" class="history-board hidden">
-            <div class="history-board-header">
-                <span>📈 BẢNG CẦU - 120 VÁN GẦN NHẤT</span>
-                <button onclick="toggleHistoryBoard()" class="close-btn">✕</button>
-            </div>
-            <div id="history-grid" class="history-grid"></div>
-            <div class="history-legend">
-                <span class="legend-item"><span class="dot tai"></span> Tài (11-17)</span>
-                <span class="legend-item"><span class="dot xiu"></span> Xỉu (4-10)</span>
-                <span class="legend-item"><span class="dot bao"></span> Bão (3 giống)</span>
-            </div>
+    <!-- History Overlay -->
+    <div class="history-overlay" id="history-board">
+        <div class="history-header">
+            <span class="history-title">📈 Lịch Sử 120 Ván</span>
+            <button class="close-btn" onclick="toggleHistoryBoard()">✕</button>
         </div>
-
-        <div class="bet-info-row">
-            <div class="info-block">
-                <div class="info-label">ĐANG CHỌN</div>
-                <div class="info-value" id="selected-amount-display">1</div>
-            </div>
-            <div class="info-block right">
-                <div class="info-label">SỐ DƯ TỐI ĐA</div>
-                <div class="info-value" id="max-display">...</div>
-            </div>
-        </div>
-
-        <div class="slider-wrapper">
-            <div class="slider-track-bg"></div>
-            <div class="slider-fill" id="slider-fill"></div>
-            <input type="range" id="bet-slider" min="1" max="1000" step="1" value="1" oninput="handleSliderInput(this)">
-            <div class="ticks">
-                <div class="tick" onclick="jumpTo(0)">MIN</div>
-                <div class="tick" onclick="jumpTo(0.25)">25%</div>
-                <div class="tick" onclick="jumpTo(0.5)">50%</div>
-                <div class="tick" onclick="jumpTo(0.75)">75%</div>
-                <div class="tick" onclick="jumpTo(1)">ALL</div>
-            </div>
-        </div>
+        <div class="history-grid" id="history-grid"></div>
     </div>
 
-    <script>
-        // Generate floating particles (same as desktop)
-        function createParticles() {
-            const container = document.getElementById('particles');
-            if (!container) return;
-            for (let i = 0; i < 20; i++) { // Fewer on mobile for performance
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.width = (2 + Math.random() * 3) + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.animationDelay = Math.random() * 15 + 's';
-                particle.style.animationDuration = (12 + Math.random() * 10) + 's';
-                container.appendChild(particle);
-            }
-        }
-        createParticles();
-    </script>
+    <!-- Notification -->
+    <div class="notification" id="notif">Thông báo</div>
 
-    <!-- Game Logic (same as desktop) -->
+    <!-- Game Logic -->
     <script src="taixiu-mobile.js"></script>
 </body>
 
