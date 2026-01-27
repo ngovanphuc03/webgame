@@ -48,12 +48,14 @@
     // Redirect to mobile version
     function redirectToMobile() {
         let mobilePath = '';
+        const path = window.location.pathname; // Get current path
 
-        if (currentPath.includes('poker.html')) {
+        // Check both route names and file names for server compatibility
+        if (path === '/poker' || path.includes('poker.html')) {
             mobilePath = '/poker-mobile.html' + window.location.search;
-        } else if (currentPath.includes('taixiu.html')) {
+        } else if (path === '/taixiu' || path.includes('taixiu.html')) {
             mobilePath = '/taixiu-mobile.html' + window.location.search;
-        } else if (currentPath === '/' || currentPath.includes('index.html')) {
+        } else if (path === '/' || path.includes('index.html')) {
             mobilePath = '/index-mobile.html';
         } else {
             return; // Unknown page, don't redirect
