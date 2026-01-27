@@ -29,9 +29,9 @@
     <div class="notification" id="notif">Thông báo</div>
 
     <div class="header">
-        <a href="/" class="back-btn">
-            <span class="btn-icon">🚪</span>
-            <span class="btn-text">RỜI BÀN</span>
+        <!-- Sử dụng btn-wood.png làm nút Rời Bàn -->
+        <a href="/" class="back-btn-img">
+            <img src="/images/ui/btn-wood.png" alt="Rời Bàn" class="btn-wood-img">
         </a>
         <div class="header-right">
             <button id="music-btn" onclick="toggleMusic()" class="icon-btn">🎵</button>
@@ -44,10 +44,13 @@
 
     <div class="game-board">
         <div class="side-panel">
-            <div class="bet-circle tai" id="box-tai" onclick="quickBet('tai')">
-                <div class="bet-label">TÀI</div>
-                <div class="rate">1 : 1.98</div>
-                <div class="player-count" id="tai-players">0 người</div>
+            <!-- Sử dụng wood-board-red.png - đã có chữ TÀI sẵn -->
+            <div class="bet-circle-img" id="box-tai" onclick="quickBet('tai')">
+                <img src="/images/ui/wood-board-red.png" alt="TÀI" class="board-img">
+                <div class="bet-overlay">
+                    <div class="rate">1 : 1.98</div>
+                    <div class="player-count" id="tai-players">0 người</div>
+                </div>
             </div>
             <div class="total-bet" id="total-tai">
                 <span class="total-icon">💵</span>
@@ -78,10 +81,13 @@
         </div>
 
         <div class="side-panel">
-            <div class="bet-circle xiu" id="box-xiu" onclick="quickBet('xiu')">
-                <div class="bet-label">XỈU</div>
-                <div class="rate">1 : 1.98</div>
-                <div class="player-count" id="xiu-players">0 người</div>
+            <!-- Sử dụng wood-board-blue.png - đã có chữ XỈU sẵn -->
+            <div class="bet-circle-img" id="box-xiu" onclick="quickBet('xiu')">
+                <img src="/images/ui/wood-board-blue.png" alt="XỈU" class="board-img">
+                <div class="bet-overlay">
+                    <div class="rate">1 : 1.98</div>
+                    <div class="player-count" id="xiu-players">0 người</div>
+                </div>
             </div>
             <div class="total-bet" id="total-xiu">
                 <span class="total-icon">💵</span>
@@ -92,7 +98,7 @@
     </div>
 
     <div class="footer">
-        <!-- BẢNG CẦU PRO - Toggle Button -->
+        <!-- BẢNG CẦU PRO - Toggle Button sử dụng wood-frame -->
         <button id="toggle-history-btn" onclick="toggleHistoryBoard()" class="history-toggle-btn">
             <span class="toggle-icon">📊</span> Xem Cầu
         </button>
