@@ -39,35 +39,41 @@
         .game-container {
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
+            /* Dynamic viewport height for mobile */
             display: flex;
             flex-direction: column;
             position: relative;
+            overflow: hidden;
+            /* Prevent scrolling */
         }
 
         /* Compact Top Bar for Mobile */
         .mobile-top-bar {
-            height: 45px;
+            height: 40px;
             padding: 0 10px;
+            flex-shrink: 0;
+            /* Don't shrink */
         }
 
         .mobile-game-info {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 12px;
+            gap: 8px;
+            font-size: 11px;
         }
 
         .mobile-timer {
             background: rgba(0, 0, 0, 0.8);
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             border: 2px solid var(--gold);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--gold);
         }
 
@@ -75,10 +81,13 @@
         .game-board {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
-            gap: 10px;
-            padding: 10px;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            /* Reduce center width */
+            gap: 8px;
+            padding: 8px;
             align-items: center;
+            min-height: 0;
+            /* Allow shrinking */
         }
 
         /* Betting Boxes - Compact for Mobile */
@@ -221,10 +230,12 @@
         /* Control Panel - Bottom */
         .control-panel {
             background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.9));
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
+            flex-shrink: 0;
+            /* Don't shrink */
         }
 
         .bet-amount-row {
@@ -617,6 +628,23 @@
             el.style.display = 'block';
             setTimeout(() => el.style.display = 'none', 2000);
         }
+
+        // CRITICAL: Initialize balance from server
+        fetch('/api/me')
+            .then(r => r.json())
+            .then(user => {
+                if (user.error) {
+                    window.location.href = '/';
+                    return;
+                }
+                currentBalance = user.balance || 0;
+                updateSliderMax(); // Update slider with fetched balance
+            })
+            .catch(err => {
+                console.error('Failed to fetch balance:', err);
+                currentBalance = 0;
+                updateSliderMax();
+            });
 
         // Lock orientation on load
         if (screen.orientation && screen.orientation.lock) {

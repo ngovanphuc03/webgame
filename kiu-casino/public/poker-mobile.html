@@ -462,6 +462,24 @@
             document.getElementById('raise-amount-mobile').innerText = `$${e.target.value}`;
         });
 
+        // CRITICAL: Initialize balance from server
+        fetch('/api/me')
+            .then(r => r.json())
+            .then(user => {
+                if (user.error) {
+                    window.location.href = '/';
+                    return;
+                }
+                // Update balance display
+                const balanceEl = document.getElementById('balance-poker-mobile');
+                if (balanceEl) {
+                    balanceEl.innerText = `$${user.balance || 0}`;
+                }
+            })
+            .catch(err => {
+                console.error('Failed to fetch balance:', err);
+            });
+
         // Lock orientation
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(err => console.log('Orientation lock failed:', err));
