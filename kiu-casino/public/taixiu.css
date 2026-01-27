@@ -1115,3 +1115,195 @@ input[type=range]:active::-webkit-slider-thumb {
         height: 45px;
     }
 }
+
+/* ============================================= */
+/* 14. ULTRA-PREMIUM EFFECTS - 10/10 QUALITY */
+/* ============================================= */
+
+/* Idle Glow Animation on Bet Buttons */
+.bet-circle-img {
+    animation: idle-glow 3s ease-in-out infinite;
+}
+
+@keyframes idle-glow {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.6));
+    }
+
+    50% {
+        filter: drop-shadow(0 10px 35px rgba(255, 215, 0, 0.3)) drop-shadow(0 10px 25px rgba(0, 0, 0, 0.6));
+    }
+}
+
+.bet-circle-img:hover {
+    animation: none;
+}
+
+/* Shimmer Effect on Gold Text */
+@keyframes text-shimmer {
+    0% {
+        background-position: -200% center;
+    }
+
+    100% {
+        background-position: 200% center;
+    }
+}
+
+.user-money #balance,
+#selected-amount-display {
+    background: linear-gradient(90deg,
+            var(--gold) 0%,
+            #fff9c4 25%,
+            var(--gold) 50%,
+            #fff9c4 75%,
+            var(--gold) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: text-shimmer 4s linear infinite;
+}
+
+/* Enhanced Winner Celebration */
+.winner-glow {
+    animation: winner-celebration 0.8s ease-in-out infinite;
+}
+
+@keyframes winner-celebration {
+
+    0%,
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+    }
+
+    25% {
+        transform: scale(1.05) rotate(-2deg);
+        filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1));
+    }
+
+    75% {
+        transform: scale(1.05) rotate(2deg);
+        filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1));
+    }
+}
+
+/* Ultra-Smooth Button Press */
+.bet-circle-img:active {
+    transform: scale(0.92) translateY(2px);
+    transition: transform 0.1s cubic-bezier(0.2, 0, 0.3, 1);
+}
+
+/* Premium Toast Animation */
+#result-toast.show {
+    opacity: 1;
+    animation: toast-reveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes toast-reveal {
+    0% {
+        transform: translateY(20px) scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Enhanced Dice Bounce */
+@keyframes dice-premium-bounce {
+    0% {
+        transform: translateY(-100px) rotate(720deg) scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: translateY(15px) rotate(0) scale(1.1);
+        opacity: 1;
+    }
+
+    70% {
+        transform: translateY(-10px) scale(0.95);
+    }
+
+    85% {
+        transform: translateY(5px) scale(1.02);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.dice.dice-reveal {
+    animation: dice-premium-bounce 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Pulse Ring on Timer */
+.timer-container::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    opacity: 0;
+    animation: timer-pulse 2s ease-out infinite;
+}
+
+@keyframes timer-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Smooth Number Count Animation */
+@keyframes count-pop {
+    0% {
+        transform: scale(0.8);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.my-bet:not(:empty) {
+    animation: count-pop 0.3s ease-out;
+}
+
+/* Ultra-Premium Slider Thumb */
+input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow:
+        0 0 30px rgba(255, 215, 0, 0.9),
+        0 0 60px rgba(255, 215, 0, 0.4),
+        0 8px 30px rgba(0, 0, 0, 0.9);
+}
+
+/* History Cell Hover Glow */
+.history-cell.tai:hover {
+    box-shadow: 0 0 20px rgba(198, 40, 40, 0.8), 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.history-cell.xiu:hover {
+    box-shadow: 0 0 20px rgba(21, 101, 192, 0.8), 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.history-cell.bao:hover {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 5px 20px rgba(0, 0, 0, 0.5);
+}

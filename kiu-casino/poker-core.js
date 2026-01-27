@@ -526,6 +526,7 @@ class PokerTable {
 
                     p.chips += amount;
                     results.push({
+                        playerId: p.id, // ✅ Added for UI highlighting
                         playerName: p.name,
                         amount: amount,
                         handDesc: w.descr,
@@ -553,7 +554,7 @@ class PokerTable {
         const p = this.getPlayer(wid);
         if (p) {
             p.chips += total;
-            this.io.to(this.id).emit('pk_win', { winnerName: p.name, amount: total, desc: 'Fold Win' });
+            this.io.to(this.id).emit('pk_win', { winnerId: p.id, winnerName: p.name, amount: total, desc: 'Fold Win' });
         }
         setTimeout(() => this.startNewHand(), 3000);
     }

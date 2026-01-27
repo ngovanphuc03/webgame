@@ -81,6 +81,26 @@ function handleGameUpdate(data) {
     });
 }
 
+function findSeatByPlayerId(pid) {
+    if (!state.tableData) return null;
+    const p = state.tableData.players.find(pl => pl && pl.id === pid);
+    if (!p) return null;
+
+    // Calculate visual position
+    // logic from buildSeatHTML/renderSeats but simplified lookup
+    // Actually we need to search DOM elements
+    const myPos = state.tableData.players.findIndex(pl => pl && pl.id === state.myId);
+    const offset = (myPos === -1) ? 0 : myPos;
+    const visualPos = (p.seat - offset + 9) % 9;
+
+    return document.querySelector(`.seat[data-pos="${visualPos}"]`);
+}
+
+function spawnFlyingChips(targetSeat) {
+    // Simple visual effect function - can be expanded
+    // For now relies on winner-glow css
+}
+
 // QUICK UPDATE (no animations)
 function handleQuickUpdate(data) {
     if (data.me) state.myId = data.me;
@@ -156,25 +176,36 @@ function renderCommunityCards(data) {
     const currentCount = container.children.length;
 
     if (data.communityCards.length > currentCount) {
-        // New cards - stagger animation
+        // New cards - smooth stagger animation
         for (let i = currentCount; i < data.communityCards.length; i++) {
             const card = createCard(data.communityCards[i]);
             container.appendChild(card);
 
-            playSound('deal');
+            // Stagger sound for each card
+            setTimeout(() => playSound('deal'), (i - currentCount) * 150);
 
             if (window.gsap && state.animationsEnabled) {
-                gsap.from(card, {
-                    y: -200,
-                    x: Math.random() * 100 - 50,
-                    opacity: 0,
-                    scale: 1.5,
-                    rotation: 360,
-                    duration: 0.5,
-                    delay: (i - currentCount) * 0.1,
-                    ease: 'back.out(1.2)',
-                    clearProps: 'transform,rotation'
-                });
+                // Smoother dealing animation - card slides from deck position
+                gsap.fromTo(card,
+                    {
+                        y: -150,
+                        x: -100,
+                        opacity: 0,
+                        scale: 0.8,
+                        rotationY: 180  // Start flipped
+                    },
+                    {
+                        y: 0,
+                        x: 0,
+                        opacity: 1,
+                        scale: 1,
+                        rotationY: 0,  // Flip to show face
+                        duration: 0.6,
+                        delay: (i - currentCount) * 0.15,
+                        ease: 'power2.out',
+                        clearProps: 'transform'
+                    }
+                );
             }
         }
     } else if (data.communityCards.length === 0) {
@@ -219,7 +250,7 @@ function renderSeats(data) {
             updateSeatElement(seatEl, p, data, visualPos);
         }
 
-        // Animate Cards if New Deal
+        // Animate Cards if New Deal - Smoother dealing from center
         if (isNewDeal && state.animationsEnabled && window.gsap) {
             const cards = seatEl.querySelectorAll('.mini-card');
             if (cards.length > 0) {
@@ -229,18 +260,34 @@ function renderSeats(data) {
                 const seatX = rect.left + rect.width / 2;
                 const seatY = rect.top + rect.height / 2;
 
-                gsap.from(cards, {
-                    x: centerX - seatX,
-                    y: centerY - seatY,
-                    scale: 0.1,
-                    opacity: 0,
-                    rotation: 0,
-                    duration: 0.6,
-                    stagger: 0.1,
-                    ease: 'power3.out',
-                    clearProps: 'transform,rotation'
+                // Calculate flight path
+                const deltaX = centerX - seatX;
+                const deltaY = centerY - seatY;
+
+                cards.forEach((card, idx) => {
+                    gsap.fromTo(card,
+                        {
+                            x: deltaX,
+                            y: deltaY,
+                            scale: 0.3,
+                            opacity: 0,
+                            rotationY: 180  // Card back showing
+                        },
+                        {
+                            x: 0,
+                            y: 0,
+                            scale: 1,
+                            opacity: 1,
+                            rotationY: 0,  // Flip to reveal
+                            duration: 0.5,
+                            delay: idx * 0.12,
+                            ease: 'power2.out',
+                            clearProps: 'transform'
+                        }
+                    );
                 });
-                playSound('deal');
+
+                setTimeout(() => playSound('deal'), 50);
             }
         }
     });
@@ -513,6 +560,18 @@ function leaveTable() {
 // WIN/SHOWDOWN
 function handleWin(data) {
     playSound('win');
+
+    // ✅ Highlight Winner Seat
+    if (data.winnerId) {
+        const winnerSeat = findSeatByPlayerId(data.winnerId);
+        if (winnerSeat) {
+            winnerSeat.classList.add('winner-glow');
+            setTimeout(() => winnerSeat.classList.remove('winner-glow'), 5000);
+
+            // Spawn coins/chips effect towards winner
+            spawnFlyingChips(winnerSeat);
+        }
+    }
 
     const overlay = document.getElementById('win-overlay');
     const details = document.getElementById('win-details');
