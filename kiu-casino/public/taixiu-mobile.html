@@ -449,9 +449,9 @@
                 ← Thoát
             </a>
             <div class="mobile-game-info">
-                <div class="mobile-timer" id="timer-mobile">00</div>
+                <div class="mobile-timer" id="timer">00</div>
             </div>
-            <div class="mobile-balance" id="balance-mobile">...</div>
+            <div class="mobile-balance" id="balance">...</div>
         </div>
 
         <!-- Game Board -->
@@ -460,10 +460,10 @@
             <div class="bet-box">
                 <img src="/images/ui/wood-board-red.png" class="bet-board-img" onclick="quickBet('tai')" id="board-tai">
                 <div class="bet-stats">
-                    <div id="tai-players-mobile">0 người</div>
-                    <div id="total-tai-mobile">0</div>
+                    <div id="tai-players">0 người</div>
+                    <div id="total-tai">0</div>
                 </div>
-                <div class="my-bet-mobile" id="my-tai-mobile"></div>
+                <div class="my-bet-mobile" id="my-tai"></div>
             </div>
 
             <!-- Center Stage -->
@@ -489,10 +489,10 @@
                 <img src="/images/ui/wood-board-blue.png" class="bet-board-img" onclick="quickBet('xiu')"
                     id="board-xiu">
                 <div class="bet-stats">
-                    <div id="xiu-players-mobile">0 người</div>
-                    <div id="total-xiu-mobile">0</div>
+                    <div id="xiu-players">0 người</div>
+                    <div id="total-xiu">0</div>
                 </div>
-                <div class="my-bet-mobile" id="my-xiu-mobile"></div>
+                <div class="my-bet-mobile" id="my-xiu"></div>
             </div>
         </div>
 
@@ -501,17 +501,20 @@
             <div class="bet-amount-row">
                 <div>
                     <div class="bet-label">Đang Chọn</div>
-                    <div class="bet-value" id="selected-amount-mobile">1</div>
+                    <div class="bet-value" id="selected-amount">1</div>
                 </div>
                 <div style="text-align: right;">
                     <div class="bet-label">Tối Đa</div>
-                    <div class="bet-value" id="max-amount-mobile">...</div>
+                    <div class="bet-value" id="max-display">...</div>
                 </div>
             </div>
 
             <div class="slider-container">
                 <div class="slider-wrapper">
-                    <input type="range" class="bet-slider" id="bet-slider-mobile" min="1" max="1000" value="1" step="1">
+                    <input type="range" class="bet-slider" id="bet-slider" min="1" max="1000" value="1" step="1">
+                    <div id="slider-fill"
+                        style="position: absolute; left: 0; bottom: 0; height: 100%; background: var(--gold); opacity: 0.3; pointer-events: none; width: 0%; border-radius: 5px;">
+                    </div>
                 </div>
             </div>
 
@@ -538,95 +541,46 @@
     </div>
 
     <!-- Notification -->
-    <div class="notification-mobile" id="notif-mobile">Thông báo</div>
+    <div class="notification-mobile" id="notif">Thông báo</div>
 
     <!-- Original Tai Xiu JS (reuse with minor modifications) -->
     <script src="taixiu.js"></script>
 
     <script>
-        // Mobile-specific overrides
+        // Mobile-specific enhancements
         function formatMoney(num) {
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
             return num.toString();
         }
 
-        // Override updateSliderMax for mobile display
-        const originalUpdateSliderMax = updateSliderMax;
-        updateSliderMax = function () {
-            const slider = document.getElementById('bet-slider-mobile');
-            if (!slider) return originalUpdateSliderMax();
-
-            let maxVal = currentBalance > 0 ? currentBalance : 1;
-            slider.max = maxVal;
-            document.getElementById('max-amount-mobile').innerText = formatMoney(maxVal);
-            document.getElementById('balance-mobile').innerText = formatMoney(currentBalance);
-
-            if (parseInt(slider.value) > maxVal) {
-                slider.value = maxVal;
-            }
-
-            const val = parseInt(slider.value);
-            selectedAmount = val;
-            document.getElementById('selected-amount-mobile').innerText = formatMoney(val);
-        };
-
-        // Mobile slider handler
-        document.getElementById('bet-slider-mobile')?.addEventListener('input', function (e) {
-            selectedAmount = parseInt(e.target.value);
-            document.getElementById('selected-amount-mobile').innerText = formatMoney(selectedAmount);
-            SoundManager.play('bet');
-        });
-
-        // Mobile timer display
-        socket.on('tx_timer', (t) => {
-            const timerEl = document.getElementById('timer-mobile');
-            if (timerEl) {
-                timerEl.innerText = t;
-                timerEl.style.color = t <= 5 ? '#e74c3c' : '#ffd700';
-            }
-        });
-
-        // History toggle
-        function toggleHistory() {
-            const overlay = document.getElementById('history-overlay');
-            overlay.classList.toggle('active');
+        // Mobile bet slider handler
+        const betSlider = document.getElementById('bet-slider');
+        if (betSlider) {
+            betSlider.addEventListener('input', function (e) {
+                selectedAmount = parseInt(e.target.value);
+                const selectedEl = document.getElementById('selected-amount');
+                if (selectedEl) {
+                    selectedEl.innerText = formatMoney(selectedAmount);
+                }
+                SoundManager.play('bet');
+            });
         }
 
-        // Render mobile history grid
-        socket.on('tx_history', (hist) => {
-            const grid = document.getElementById('history-grid-mobile');
-            if (!grid) return;
+        // History toggle for mobile
+        function toggleHistory() {
+            const overlay = document.getElementById('history-overlay');
+            if (overlay) overlay.classList.toggle('active');
+        }
 
-            let cells = '';
-            for (let i = 0; i < 120; i++) {
-                const entry = hist[i];
-                if (entry) {
-                    cells += `<div class="history-cell ${entry.result}">${entry.total || '?'}</div>`;
-                } else {
-                    cells += `<div class="history-cell" style="opacity:0.2;">-</div>`;
-                }
-            }
-            grid.innerHTML = cells;
-        });
-
-        // Update mobile displays
-        socket.on('tx_totals', (d) => {
-            document.getElementById('total-tai-mobile').innerText = formatMoney(d.total_tai);
-            document.getElementById('total-xiu-mobile').innerText = formatMoney(d.total_xiu);
-        });
-
-        socket.on('tx_update', (data) => {
-            document.getElementById('tai-players-mobile').innerText = `${data.tai_count || 0} người`;
-            document.getElementById('xiu-players-mobile').innerText = `${data.xiu_count || 0} người`;
-        });
-
-        // Mobile notification
+        // Mobile notification helper
         function showNotif(msg) {
-            const el = document.getElementById('notif-mobile');
-            el.innerText = msg;
-            el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 2000);
+            const el = document.getElementById('notif');
+            if (el) {
+                el.innerText = msg;
+                el.style.display = 'block';
+                setTimeout(() => el.style.display = 'none', 2000);
+            }
         }
 
         // CRITICAL: Initialize balance from server

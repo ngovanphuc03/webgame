@@ -215,7 +215,7 @@ socket.on('tx_win_notify', (d) => {
     spawnFlyingCoins();
     fetch('/api/me').then(r => r.json()).then(u => {
         currentBalance = u.balance;
-        document.getElementById('balance').innerText = formatMoney(currentBalance);
+        safeSetText('balance', formatMoney(currentBalance));
         updateSliderMax();
     });
 });
@@ -227,7 +227,7 @@ fetch('/api/me').then(r => r.json()).then(u => {
         return;
     }
     currentBalance = u.balance;
-    document.getElementById('balance').innerText = formatMoney(currentBalance);
+    safeSetText('balance', formatMoney(currentBalance));
     updateSliderMax();
     // Initialize slider UI without playing sound
     const slider = document.getElementById('bet-slider');
@@ -237,11 +237,15 @@ fetch('/api/me').then(r => r.json()).then(u => {
 });
 
 socket.on('tx_timer', (t) => {
-    document.getElementById('timer').innerText = t;
+    safeSetText('timer', t);
     const color = (t <= 5) ? '#e74c3c' : '#ffd700';
-    document.getElementById('timer').style.color = color;
-    document.querySelector('.timer-container').style.borderColor = color;
-    document.querySelector('.timer-container').style.boxShadow = `0 0 15px ${color}`;
+    safeSetStyle('timer', 'color', color);
+
+    const timerContainer = safeGetElement('timer-container');
+    if (timerContainer) {
+        timerContainer.style.borderColor = color;
+        timerContainer.style.boxShadow = `0 0 15px ${color}`;
+    }
 
     // Countdown sound logic? 
     // "Tiếng xóc đĩa: Âm thanh lách cách của sứ va chạm khi đếm ngược 5s đầu."
@@ -251,8 +255,8 @@ socket.on('tx_timer', (t) => {
 });
 
 socket.on('tx_update', (data) => {
-    document.getElementById('total-tai').innerText = formatMoney(data.total_tai);
-    document.getElementById('total-xiu').innerText = formatMoney(data.total_xiu);
+    safeSetText('total-tai', formatMoney(data.total_tai));
+    safeSetText('total-xiu', formatMoney(data.total_xiu));
     if (data.msg) showNotif(data.msg);
 
     if (data.phase === 'shaking') {
