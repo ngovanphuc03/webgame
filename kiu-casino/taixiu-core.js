@@ -108,6 +108,11 @@ class TaiXiuGame {
                 total: this.tempResult.total, result: this.tempResult.winnerSide
             });
         }
+
+        // FIX BUG 2: Gửi history cho người mới vào
+        if (this.history.length > 0) {
+            socket.emit('tx_history', this.history);
+        }
     }
 
     startNewRound() {
@@ -124,8 +129,8 @@ class TaiXiuGame {
         if (this.dice[0] === this.dice[1] && this.dice[1] === this.dice[2]) winnerSide = 'bao';
         else winnerSide = totalPoint >= 11 ? 'tai' : 'xiu';
 
-        this.history.push({ result: winnerSide, dice: [...this.dice] });
-        if (this.history.length > 20) this.history.shift();
+        this.history.push({ result: winnerSide, dice: [...this.dice], total: totalPoint });
+        if (this.history.length > 120) this.history.shift(); // Tăng lên 120 cho bảng cầu pro 6x20
         this.tempResult = { winnerSide, total: totalPoint };
         this.io.emit('tx_history', this.history);
     }
@@ -133,19 +138,25 @@ class TaiXiuGame {
     async processPayout() {
         if (!this.tempResult) return;
         const { winnerSide } = this.tempResult;
+
+        // FIX BUG 1: BÃO = nhà cái thắng, không ai được trả thưởng
+        if (winnerSide === 'bao') {
+            console.log('BÃO - Nhà cái thắng, không ai được thưởng');
+            return;
+        }
+
         const winners = this.bets[winnerSide] || {};
 
         for (const [userId, amount] of Object.entries(winners)) {
-            const profit = amount * 2; // Tạm tính tỉ lệ 1:1 (x2 vốn)
+            const profit = amount * 2; // Tỉ lệ 1:1 (x2 vốn)
             try {
-                // Logic cộng tiền vào DB (giả lập)
                 await this.db.execute(
                     'UPDATE wallet SET balance = balance + ? WHERE guild_id = ? AND user_id = ?',
                     [profit, this.guildId, userId]
                 );
                 this.io.to(`user_${userId}`).emit('tx_win_notify', { amount: profit });
                 this.updateBalance(userId);
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error('[Payout Error]', err); }
         }
     }
 
@@ -195,9 +206,14 @@ class TaiXiuGame {
         }
     }
 
+    // FIX BUG 3: Wrap trong try-catch để không crash server
     async updateBalance(userId) {
-        const [rows] = await this.db.execute('SELECT balance FROM wallet WHERE guild_id = ? AND user_id = ?', [this.guildId, userId]);
-        if (rows.length > 0) this.io.to(`user_${userId}`).emit('balance_update', { new_balance: rows[0].balance });
+        try {
+            const [rows] = await this.db.execute('SELECT balance FROM wallet WHERE guild_id = ? AND user_id = ?', [this.guildId, userId]);
+            if (rows.length > 0) this.io.to(`user_${userId}`).emit('balance_update', { new_balance: rows[0].balance });
+        } catch (err) {
+            console.error('[updateBalance Error]', err);
+        }
     }
 
     broadcastState(msg, timeLeft) {

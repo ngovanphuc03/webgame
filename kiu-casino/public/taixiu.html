@@ -73,6 +73,27 @@
     </div>
 
     <div class="footer">
+        <!-- BẢNG CẦU PRO - Toggle Button -->
+        <button id="toggle-history-btn" onclick="toggleHistoryBoard()" class="history-toggle-btn">
+            📊 Xem Cầu
+        </button>
+
+        <!-- BẢNG CẦU PRO - Grid 6x20 -->
+        <div id="history-board" class="history-board hidden">
+            <div class="history-board-header">
+                <span>BẢNG CẦU - 120 VÁN GẦN NHẤT</span>
+                <button onclick="toggleHistoryBoard()" class="close-btn">✕</button>
+            </div>
+            <div id="history-grid" class="history-grid">
+                <!-- JS sẽ render 120 ô ở đây -->
+            </div>
+            <div class="history-legend">
+                <span class="legend-item"><span class="dot tai"></span> Tài (11-17)</span>
+                <span class="legend-item"><span class="dot xiu"></span> Xỉu (4-10)</span>
+                <span class="legend-item"><span class="dot bao"></span> Bão (3 giống)</span>
+            </div>
+        </div>
+
         <div id="history-bar" class="history-bar"></div>
 
         <div class="bet-info-row">

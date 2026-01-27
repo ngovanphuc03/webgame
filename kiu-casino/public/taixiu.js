@@ -305,13 +305,58 @@ document.addEventListener('click', () => {
 socket.on('tx_force_open', () => { if (bowlWrap.style.opacity != 0) openBowl(); });
 
 socket.on('tx_history', (hist) => {
-    let html = '';
+    // 1. Simple bar (giữ nguyên)
+    let barHtml = '';
     hist.forEach(h => {
         let c = h.result === 'tai' ? '#e74c3c' : (h.result === 'xiu' ? '#3498db' : '#ffd700');
-        html += `<div style="width:12px;height:12px;border-radius:50%;background:${c}; margin:2px; box-shadow:0 0 5px ${c};"></div>`;
+        barHtml += `<div style="width:12px;height:12px;border-radius:50%;background:${c}; margin:2px; box-shadow:0 0 5px ${c};"></div>`;
     });
-    document.getElementById('history-bar').innerHTML = html;
+    document.getElementById('history-bar').innerHTML = barHtml;
+
+    // 2. Pro Grid (6 rows x 20 cols = 120 cells)
+    renderHistoryGrid(hist);
 });
+
+// --- PRO HISTORY GRID ---
+function renderHistoryGrid(hist) {
+    const grid = document.getElementById('history-grid');
+    if (!grid) return;
+
+    let cells = '';
+    const maxCells = 120;
+
+    // Fill from oldest to newest (left-to-right, top-to-bottom)
+    for (let i = 0; i < maxCells; i++) {
+        const entry = hist[i];
+        if (entry) {
+            const diceStr = entry.dice ? entry.dice.join(' + ') : '?';
+            const total = entry.total || (entry.dice ? entry.dice.reduce((a, b) => a + b, 0) : '?');
+            const resultLabel = entry.result === 'tai' ? 'TÀI' : (entry.result === 'xiu' ? 'XỈU' : 'BÃO');
+
+            cells += `<div class="history-cell ${entry.result}" title="${resultLabel}: ${total} điểm (${diceStr})">
+                ${total}
+                <span class="tooltip">🎲 ${diceStr}<br>${resultLabel} (${total} điểm)</span>
+            </div>`;
+        } else {
+            cells += `<div class="history-cell empty"></div>`;
+        }
+    }
+
+    grid.innerHTML = cells;
+}
+
+function toggleHistoryBoard() {
+    const board = document.getElementById('history-board');
+    const btn = document.getElementById('toggle-history-btn');
+
+    if (board.classList.contains('hidden')) {
+        board.classList.remove('hidden');
+        btn.innerHTML = '✕ Đóng';
+    } else {
+        board.classList.add('hidden');
+        btn.innerHTML = '📊 Xem Cầu';
+    }
+}
 
 socket.on('tx_bet_success', () => {
     showNotif("ĐÃ CƯỢC THÀNH CÔNG!");
