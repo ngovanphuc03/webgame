@@ -219,20 +219,22 @@ body::after {
     transform: scale(1.1);
 }
 
-/* SỐ DƯ - SỬ DỤNG wood-frame.png */
+/* SỐ DƯ - GLASS STYLE (không dùng wood-frame) */
 .user-money {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: url('/images/ui/wood-frame.png') center/contain no-repeat;
-    min-width: 180px;
-    height: 60px;
-    padding: 0 25px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--gold);
+    border-radius: 30px;
+    min-width: 160px;
+    padding: 12px 25px;
     justify-content: center;
     font-weight: 800;
     font-size: 20px;
     color: var(--gold);
-    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), 0 5px 20px rgba(0, 0, 0, 0.5);
 }
 
 .money-icon {

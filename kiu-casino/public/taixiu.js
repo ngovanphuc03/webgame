@@ -5,36 +5,47 @@ let selectedAmount = 1;
 let canNan = false;
 let isBettingPhase = false;
 
-// --- SOUND MANAGER ---
+// --- SOUND MANAGER WITH LAZY LOADING ---
 const SoundManager = {
-    sounds: {
-        shaking: new Audio('/sounds/shaking.mp3'),
-        bet: new Audio('/sounds/bet.mp3'),
-        open: new Audio('/sounds/open.mp3'),
-        win: new Audio('/sounds/win.mp3'),
-        lose: new Audio('/sounds/lose.mp3'),
-        bgm: new Audio('/sounds/bgm.mp3')
+    paths: {
+        shaking: '/sounds/shaking.mp3',
+        bet: '/sounds/bet.mp3',
+        open: '/sounds/open.mp3',
+        win: '/sounds/win.mp3',
+        lose: '/sounds/lose.mp3',
+        bgm: '/sounds/bgm.mp3'
     },
-    init() {
-        // Preload settings or volume if needed
-        this.sounds.shaking.loop = true;
-        this.sounds.bgm.loop = true;
-        this.sounds.bgm.volume = 0.5; // Lower BGM volume
+    sounds: {},
+    initialized: {},
+
+    getSound(name) {
+        // Lazy create Audio object on first use
+        if (!this.sounds[name] && this.paths[name]) {
+            this.sounds[name] = new Audio(this.paths[name]);
+            if (name === 'shaking' || name === 'bgm') this.sounds[name].loop = true;
+            if (name === 'bgm') this.sounds[name].volume = 0.5;
+            this.initialized[name] = true;
+        }
+        return this.sounds[name];
     },
+
     play(name) {
-        if (this.sounds[name]) {
-            this.sounds[name].currentTime = 0;
-            this.sounds[name].play().catch(e => console.log('Sound error:', e));
+        const sound = this.getSound(name);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Sound error:', e));
         }
     },
+
     stop(name) {
-        if (this.sounds[name]) {
-            this.sounds[name].pause();
-            this.sounds[name].currentTime = 0;
+        const sound = this.sounds[name];
+        if (sound) {
+            sound.pause();
+            sound.currentTime = 0;
         }
     }
 };
-SoundManager.init();
+
 
 // --- 1. XỬ LÝ SLIDER ---
 function handleSliderInput(el) {

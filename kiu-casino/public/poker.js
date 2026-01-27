@@ -169,10 +169,11 @@ function renderCommunityCards(data) {
                     x: Math.random() * 100 - 50,
                     opacity: 0,
                     scale: 1.5,
-                    rotation: 720,
+                    rotation: 360,
                     duration: 0.5,
-                    delay: (i - currentCount) * 0.1, // Faster stagger
-                    ease: 'back.out(1.2)'
+                    delay: (i - currentCount) * 0.1,
+                    ease: 'back.out(1.2)',
+                    clearProps: 'transform,rotation'
                 });
             }
         }
@@ -233,10 +234,11 @@ function renderSeats(data) {
                     y: centerY - seatY,
                     scale: 0.1,
                     opacity: 0,
-                    rotation: 180,
+                    rotation: 0,
                     duration: 0.6,
                     stagger: 0.1,
-                    ease: 'power3.out'
+                    ease: 'power3.out',
+                    clearProps: 'transform,rotation'
                 });
                 playSound('deal');
             }

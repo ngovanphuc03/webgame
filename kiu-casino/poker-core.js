@@ -236,6 +236,15 @@ class PokerTable {
         const remaining = this.getInHandPlayers();
         if (remaining.length === 1) {
             this.handleWin(remaining[0].id);
+        } else if (remaining.length === 0) {
+            // EDGE CASE: ALL players disconnected mid-hand
+            // Reset pot and state cleanly - no one wins the pot (returned to house/void)
+            console.log('[Poker] All players disconnected - resetting table');
+            this.pots = [];
+            this.communityCards = [];
+            this.deck = [];
+            this.state = 'WAITING';
+            this.broadcast();
         } else {
             this.state = 'WAITING';
             this.broadcast();
