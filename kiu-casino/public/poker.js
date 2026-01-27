@@ -295,7 +295,8 @@ function renderSeats(data) {
 
 function createSeatElement(player, data, visualPos) {
     const el = document.createElement('div');
-    el.className = `seat ${player.id === data.currentTurn ? 'active' : ''}`;
+    const isDisconnected = (player.connected === false);
+    el.className = `seat ${player.id === data.currentTurn ? 'active' : ''} ${isDisconnected ? 'disconnected' : ''}`;
     el.setAttribute('data-pos', visualPos);
     el.setAttribute('data-seat', player.seat);
     el.setAttribute('data-player-id', player.id);
@@ -306,7 +307,8 @@ function createSeatElement(player, data, visualPos) {
 
 function updateSeatElement(el, player, data, visualPos) {
     // Update class
-    el.className = `seat ${player.id === data.currentTurn ? 'active' : ''}`;
+    const isDisconnected = (player.connected === false);
+    el.className = `seat ${player.id === data.currentTurn ? 'active' : ''} ${isDisconnected ? 'disconnected' : ''}`;
     el.setAttribute('data-pos', visualPos);
 
     // Update content
@@ -571,6 +573,27 @@ function handleWin(data) {
             // Spawn coins/chips effect towards winner
             spawnFlyingChips(winnerSeat);
         }
+    }
+
+    // ✅ Clean Wipe for Heads-up Disconnect (Instant Clear)
+    if (data.cleanWipe) {
+        // Clear Community Cards
+        const cc = document.getElementById('community-cards');
+        if (cc) cc.innerHTML = '';
+
+        // Clear Pot
+        const pa = document.getElementById('pot-amount');
+        if (pa) pa.textContent = '$0';
+
+        // Clear All Hands (Visual Only)
+        document.querySelectorAll('.seat .cards').forEach(el => el.innerHTML = '');
+        document.querySelectorAll('.mini-card').forEach(el => el.remove());
+
+        // Dont show overlay too long
+        setTimeout(() => {
+            const overlay = document.getElementById('win-overlay');
+            if (overlay) overlay.classList.remove('active');
+        }, 1500);
     }
 
     const overlay = document.getElementById('win-overlay');

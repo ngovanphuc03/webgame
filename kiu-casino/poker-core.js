@@ -37,6 +37,14 @@ class PokerManager {
         socket.on('pk_chat', (d) => this.handleChat(socket, user, d));
         socket.on('pk_auto_action', (d) => this.setAutoAction(socket, user, d));
         socket.on('pk_start', () => this.forceStart(socket, user));
+        // ✅ Smart Disconnect Handling
+        socket.on('disconnect', () => this.handleDisconnect(socket, user));
+    }
+
+    handleDisconnect(socket, user) {
+        // Find table where user is playing
+        const table = Object.values(this.tables).find(t => t.getPlayer(user.id));
+        if (table) table.handlePlayerDisconnect(user.id);
     }
 
     forceStart(socket, user) {
@@ -200,6 +208,31 @@ class PokerTable {
         }
     }
 
+    // ✅ SMART DISCONNECT HANDLING
+    handlePlayerDisconnect(uid) {
+        const p = this.getPlayer(uid);
+        if (!p) return;
+
+        console.log(`🔌 Player Disconnected: ${p.name}`);
+        p.connected = false;
+
+        // Notify others
+        this.sendChatMessage('system', `🔌 ${p.name} mất kết nối.`);
+
+        // CASE 1: Đang trong ván -> Auto Fold (Smart Logic)
+        if (p.status === 'PLAYING' || p.status === 'ALLIN') {
+            // Immediate Action: Fold to prevent stalling
+            // System will handle endHandEarly if needed
+            this.handleAction(uid, 'fold');
+            p.status = 'SITTING_OUT'; p.pendingKick = true; // Mark as sitting out & to be kicked
+        } else {
+            // CASE 2: Không chơi -> Chuyển sang Sitting Out
+            p.status = 'SITTING_OUT'; p.pendingKick = true;
+        }
+
+        this.broadcast();
+    }
+
     togglePlayerSitOut(uid) {
         const p = this.getPlayer(uid);
         if (!p) return;
@@ -260,10 +293,18 @@ class PokerTable {
 
         // ✅ Process pending sit outs
         this.players.forEach(p => {
-            if (p && p.pendingSitOut) {
-                p.status = 'SITTING_OUT';
-                p.pendingSitOut = false;
-                this.sendChatMessage('system', `💤 ${p.name} đã chuyển sang Tạm Nghỉ.`);
+            if (p) {
+                // KICK DISCONNECTED PLAYERS
+                if (p.pendingKick || p.connected === false) {
+                    this.removePlayer(p.id);
+                    return; // Player removed, skip sit out check
+                }
+
+                if (p.pendingSitOut) {
+                    p.status = 'SITTING_OUT';
+                    p.pendingSitOut = false;
+                    this.sendChatMessage('system', `💤 ${p.name} đã chuyển sang Tạm Nghỉ.`);
+                }
             }
         });
 
@@ -551,12 +592,33 @@ class PokerTable {
         this.calculatePot();
         const total = this.pots.reduce((s, p) => s + p.amount, 0);
 
-        const p = this.getPlayer(wid);
         if (p) {
             p.chips += total;
-            this.io.to(this.id).emit('pk_win', { winnerId: p.id, winnerName: p.name, amount: total, desc: 'Fold Win' });
+            // CHECK HEADS-UP DISCONNECT WIN
+            // If winner is the ONLY player left with connection, and others are disconnected
+            // We want a "Clean Wipe" effect
+            const onlinePlayers = this.players.filter(pl => pl && pl.connected);
+            if (onlinePlayers.length <= 1) {
+                // Immediate Clean Wipe for remaining player
+                this.io.to(this.id).emit('pk_win', {
+                    winnerId: p.id,
+                    winnerName: p.name,
+                    amount: total,
+                    desc: 'Opponent Disconnected',
+                    cleanWipe: true // Signal client to clear board immediately
+                });
+                // Clear board state immediately on server side too for next handshake
+                this.communityCards = [];
+                this.pots = [];
+
+                setTimeout(() => this.startNewHand(), 2000); // Faster restart
+            } else {
+                this.io.to(this.id).emit('pk_win', { winnerId: p.id, winnerName: p.name, amount: total, desc: 'Fold Win' });
+                setTimeout(() => this.startNewHand(), 3000);
+            }
+        } else {
+            setTimeout(() => this.startNewHand(), 3000);
         }
-        setTimeout(() => this.startNewHand(), 3000);
     }
 
     // --- THÊM HÀM NÀY VÀO TRONG CLASS PokerTable ---
@@ -673,6 +735,7 @@ class PokerTable {
             players: this.players.map(p => p ? {
                 id: p.id, name: p.name, avatar: p.avatar, chips: p.chips,
                 bet: p.bet, status: p.status, seat: p.seat, lastAction: p.lastAction,
+                connected: p.connected, // ✅ Added for UI
                 hand: null
             } : null)
         };

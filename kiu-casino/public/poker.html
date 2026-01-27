@@ -304,6 +304,43 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .seat.disconnected {
+            filter: grayscale(100%) opacity(0.7);
+        }
+
+        .seat.disconnected::after {
+            content: '🔌';
+            position: absolute;
+            top: -15px;
+            right: 0;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #555;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: pulse-disconnect 2s infinite;
+        }
+
+        @keyframes pulse-disconnect {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
         .seat[data-pos="0"] {
             bottom: 25px;
             left: 50%;
