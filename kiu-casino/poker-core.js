@@ -167,14 +167,15 @@ class PokerTable {
         return { success: true };
     }
 
-    async removePlayer(uid) {
+    removePlayer(uid) {
         const idx = this.players.findIndex(p => p && p.id === uid);
         if (idx === -1) return;
         const p = this.players[idx];
 
+        // Fire-and-forget DB update to prevent blocking
         if (p.chips > 0 && this.db) {
-            try { await this.db.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [p.chips, this.guildId, uid]); }
-            catch (e) { console.error(e); }
+            this.db.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [p.chips, this.guildId, uid])
+                .catch(e => console.error('[DB] removePlayer error:', e));
         }
 
         // LƯU LẠI VỊ TRÍ NGƯỜI VỪA THOÁT
