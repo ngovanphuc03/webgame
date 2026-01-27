@@ -4,47 +4,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ROYAL CASINO - VIP</title>
+    <title>ROYAL CASINO - Tài Xỉu VIP</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
+    <!-- Vietnamese-Optimized Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
     <link rel="stylesheet" href="taixiu.css">
 </head>
 
 <body>
+    <!-- Ambient Effects -->
+    <div class="ambient-container">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
     <div class="notification" id="notif">Thông báo</div>
 
     <div class="header">
         <a href="/" class="back-btn">
-            <span style="font-size: 18px; margin-right: 5px; margin-bottom: 2px;"></span>
+            <span class="btn-icon">🚪</span>
+            <span class="btn-text">RỜI BÀN</span>
         </a>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <button id="music-btn" onclick="toggleMusic()"
-                style="background:none; border:none; cursor:pointer; font-size:24px; color:#ffd700; text-shadow: 2px 2px 0px #3e2723;">
-                🎵
-            </button>
-            <div class="user-money"><span id="balance">...</span></div>
+        <div class="header-right">
+            <button id="music-btn" onclick="toggleMusic()" class="icon-btn">🎵</button>
+            <div class="user-money">
+                <span class="money-icon">💰</span>
+                <span id="balance">...</span>
+            </div>
         </div>
     </div>
 
     <div class="game-board">
         <div class="side-panel">
             <div class="bet-circle tai" id="box-tai" onclick="quickBet('tai')">
-                <div class="rate" style="margin-top: 45px;">1 : 1.98</div>
+                <div class="bet-label">TÀI</div>
+                <div class="rate">1 : 1.98</div>
+                <div class="player-count" id="tai-players">0 người</div>
             </div>
-            <div class="total-bet" id="total-tai">0</div>
+            <div class="total-bet" id="total-tai">
+                <span class="total-icon">💵</span>
+                <span>0</span>
+            </div>
             <div class="my-bet" id="my-tai"></div>
         </div>
 
         <div class="center-stage">
             <div class="timer-container">
+                <div class="timer-ring"></div>
                 <div class="timer" id="timer">00</div>
             </div>
             <img src="/images/dice/plate.png" class="plate">
@@ -65,9 +79,14 @@
 
         <div class="side-panel">
             <div class="bet-circle xiu" id="box-xiu" onclick="quickBet('xiu')">
-                <div class="rate" style="margin-top: 45px;">1 : 1.98</div>
+                <div class="bet-label">XỈU</div>
+                <div class="rate">1 : 1.98</div>
+                <div class="player-count" id="xiu-players">0 người</div>
             </div>
-            <div class="total-bet" id="total-xiu">0</div>
+            <div class="total-bet" id="total-xiu">
+                <span class="total-icon">💵</span>
+                <span>0</span>
+            </div>
             <div class="my-bet" id="my-xiu"></div>
         </div>
     </div>
@@ -75,13 +94,13 @@
     <div class="footer">
         <!-- BẢNG CẦU PRO - Toggle Button -->
         <button id="toggle-history-btn" onclick="toggleHistoryBoard()" class="history-toggle-btn">
-            📊 Xem Cầu
+            <span class="toggle-icon">📊</span> Xem Cầu
         </button>
 
         <!-- BẢNG CẦU PRO - Grid 6x20 -->
         <div id="history-board" class="history-board hidden">
             <div class="history-board-header">
-                <span>BẢNG CẦU - 120 VÁN GẦN NHẤT</span>
+                <span>📈 BẢNG CẦU - 120 VÁN GẦN NHẤT</span>
                 <button onclick="toggleHistoryBoard()" class="close-btn">✕</button>
             </div>
             <div id="history-grid" class="history-grid">
@@ -94,15 +113,13 @@
             </div>
         </div>
 
-        <!-- Đã bỏ history-bar chấm đơn giản theo yêu cầu -->
-
         <div class="bet-info-row">
-            <div>
-                <div class="info-label">Đang chọn</div>
-                <div id="selected-amount-display">1</div>
+            <div class="info-block">
+                <div class="info-label">ĐANG CHỌN</div>
+                <div class="info-value" id="selected-amount-display">1</div>
             </div>
-            <div style="text-align: right;">
-                <div class="info-label">Số dư tối đa</div>
+            <div class="info-block right">
+                <div class="info-label">SỐ DƯ TỐI ĐA</div>
                 <div class="info-value" id="max-display">...</div>
             </div>
         </div>
@@ -121,6 +138,24 @@
         </div>
     </div>
 
+    <script>
+        // Generate floating particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = (2 + Math.random() * 3) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (12 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+    </script>
     <script src="taixiu.js"></script>
 </body>
 

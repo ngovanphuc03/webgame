@@ -1,14 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
-    <title>Sòng Bài VIP - Đẳng Cấp Poker</title>
+    <title>ROYAL POKER - Texas Hold'em VIP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:wght@400;600;700&family=Outfit:wght@400;600;700;900&display=swap"
+        rel="stylesheet">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+
     <style>
+        :root {
+            --gold: #ffd700;
+            --gold-dark: #b8860b;
+            --gold-light: #fff8dc;
+            --royal-purple: #1a0f2e;
+            --royal-dark: #0f0a1a;
+            --felt-green: #0a4d27;
+            --felt-dark: #052e17;
+            --accent-red: #dc3545;
+            --accent-green: #28a745;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,52 +39,95 @@
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: #0a0a0a;
+            background: var(--royal-dark);
             color: white;
             overflow: hidden;
             user-select: none;
         }
 
-        /* TABLE BACKGROUND */
+        /* === AMBIENT BACKGROUND === */
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
-            background: radial-gradient(circle at center, #1a1a1a, #000);
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(139, 69, 19, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(139, 69, 19, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, var(--royal-dark) 0%, #0a0612 100%);
         }
 
-        /* TOP BAR */
+        /* Ambient Light Effects */
+        .ambient-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-1 {
+            top: -200px;
+            left: 20%;
+            background: var(--gold);
+        }
+
+        .glow-2 {
+            bottom: -200px;
+            right: 20%;
+            background: #4a9;
+        }
+
+        /* === TOP BAR === */
         #top-bar {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 50px;
-            background: rgba(0, 0, 0, 0.8);
-            border-bottom: 2px solid #ffd700;
+            height: 60px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 30px;
             z-index: 100;
         }
 
         #table-info {
             display: flex;
-            gap: 30px;
+            gap: 25px;
             align-items: center;
         }
 
         #table-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ffd700;
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
+        #table-blinds,
         #hand-number,
         #game-state {
-            font-size: 14px;
-            color: #aaa;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Lora', serif;
+        }
+
+        #game-state {
+            background: rgba(255, 215, 0, 0.15);
+            padding: 5px 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--gold);
+            font-weight: 600;
         }
 
         #top-actions {
@@ -71,71 +136,109 @@
         }
 
         .top-btn {
-            padding: 8px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #555;
-            border-radius: 5px;
-            color: white;
+            padding: 10px 18px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.8);
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s ease;
+            font-family: 'Lora', serif;
+            font-size: 13px;
         }
 
         .top-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 215, 0, 0.15);
+            border-color: rgba(255, 215, 0, 0.4);
+            color: var(--gold);
         }
 
-        /* POKER TABLE */
+        /* === POKER TABLE === */
         .poker-table-container {
             position: absolute;
-            top: 55%;
+            top: 53%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 85%;
-            height: 70%;
-            max-width: 1200px;
-            max-height: 650px;
+            width: 88%;
+            height: 72%;
+            max-width: 1250px;
+            max-height: 680px;
         }
 
         .table-rail {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #3e2723, #1a0f0d);
+            background: linear-gradient(160deg, #5d4037 0%, #3e2723 30%, #2e1f1a 70%, #1a0f0d 100%);
             border-radius: 250px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            padding: 30px;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.8),
+                0 0 60px rgba(0, 0, 0, 0.5),
+                inset 0 2px 0 rgba(255, 255, 255, 0.05);
+            padding: 28px;
             position: relative;
+        }
+
+        .table-rail::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 245px;
+            border: 2px solid rgba(255, 215, 0, 0.15);
+            pointer-events: none;
         }
 
         .table-felt {
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, #2e7d32, #1b5e20);
+            background:
+                radial-gradient(ellipse at 50% 40%, var(--felt-green) 0%, var(--felt-dark) 80%),
+                linear-gradient(135deg, #0a4d27 0%, #052e17 100%);
             border-radius: 220px;
-            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+            box-shadow:
+                inset 0 0 80px rgba(0, 0, 0, 0.7),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
             position: relative;
-            border: 5px solid rgba(0, 0, 0, 0.2);
+            border: 4px solid rgba(0, 0, 0, 0.3);
         }
 
-        /* COMMUNITY CARDS */
+        /* Felt Pattern Overlay */
+        .table-felt::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 220px;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* === COMMUNITY CARDS === */
         .community-container {
             position: absolute;
             top: 35%;
             left: 50%;
             transform: translate(-50%, -50%);
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
         .card {
-            width: 80px;
-            height: 112px;
+            width: 85px;
+            height: 119px;
             background-size: cover;
             background-position: center;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            box-shadow:
+                0 8px 25px rgba(0, 0, 0, 0.6),
+                0 0 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
         }
 
-        /* POT */
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* === POT === */
         .pot-container {
             position: absolute;
             top: 60%;
@@ -145,108 +248,128 @@
         }
 
         .pot-value {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 25px;
-            border-radius: 25px;
-            border: 2px solid #ffd700;
+            background: linear-gradient(160deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 15, 10, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            padding: 12px 35px;
+            border-radius: 30px;
+            border: 2px solid var(--gold);
+            font-family: 'Cinzel', serif;
             font-size: 28px;
-            color: #ffd700;
+            color: var(--gold);
             font-weight: bold;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow:
+                0 0 30px rgba(255, 215, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: pot-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pot-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            }
         }
 
         #side-pots {
-            margin-top: 10px;
+            margin-top: 12px;
             display: none;
         }
 
         .side-pot {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 18px;
             border-radius: 15px;
-            font-size: 14px;
-            color: #ffd700;
-            margin: 3px 0;
+            font-size: 13px;
+            color: var(--gold);
+            margin: 4px 0;
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
-        /* SEATS */
+        /* === SEATS === */
         .seat {
             position: absolute;
-            width: 130px;
+            width: 140px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .seat[data-pos="0"] {
-            bottom: 20px;
-            /* Was -80px. Moved up to avoid covering cards with controls */
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
         }
 
         .seat[data-pos="1"] {
-            bottom: -50px;
-            right: 8%;
+            bottom: -45px;
+            right: 10%;
         }
 
         .seat[data-pos="2"] {
             top: 55%;
-            right: -100px;
+            right: -95px;
         }
 
         .seat[data-pos="3"] {
             top: 5%;
-            right: -60px;
+            right: -55px;
         }
 
         .seat[data-pos="4"] {
-            top: -100px;
+            top: -95px;
             right: 28%;
         }
 
         .seat[data-pos="5"] {
-            top: -100px;
+            top: -95px;
             left: 28%;
         }
 
         .seat[data-pos="6"] {
             top: 5%;
-            left: -60px;
+            left: -55px;
         }
 
         .seat[data-pos="7"] {
             top: 55%;
-            left: -100px;
+            left: -95px;
         }
 
         .seat[data-pos="8"] {
-            bottom: -50px;
-            left: 8%;
+            bottom: -45px;
+            left: 10%;
         }
 
         .avatar-wrapper {
             position: relative;
-            width: 90px;
-            height: 90px;
+            width: 95px;
+            height: 95px;
         }
 
         .avatar-img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 4px solid #444;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+            border: 4px solid rgba(80, 80, 80, 0.8);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
         }
 
         .seat.active .avatar-img {
-            border-color: #ffd700;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
-            animation: pulse 1.5s infinite;
+            border-color: var(--gold);
+            box-shadow:
+                0 0 35px rgba(255, 215, 0, 0.7),
+                0 0 60px rgba(255, 215, 0, 0.3);
+            animation: avatar-pulse 1.5s ease-in-out infinite;
         }
 
-        @keyframes pulse {
+        @keyframes avatar-pulse {
 
             0%,
             100% {
@@ -254,7 +377,7 @@
             }
 
             50% {
-                transform: scale(1.05);
+                transform: scale(1.03);
             }
         }
 
@@ -262,27 +385,27 @@
             position: absolute;
             top: 5px;
             right: 5px;
-            width: 28px;
-            height: 28px;
-            background: white;
-            border: 2px solid black;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #fff 0%, #ddd 100%);
+            border: 2px solid #333;
             border-radius: 50%;
-            color: black;
+            color: #1a0f2e;
             font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 16px;
+            font-size: 14px;
             z-index: 5;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
         .turn-timer-ring {
             position: absolute;
-            inset: -6px;
-            border: 4px solid transparent;
-            border-top-color: #f1c40f;
-            border-right-color: #f1c40f;
+            inset: -8px;
+            border: 5px solid transparent;
+            border-top-color: var(--gold);
+            border-right-color: var(--gold);
             border-radius: 50%;
             animation: spin-timer 30s linear forwards;
         }
@@ -300,21 +423,24 @@
         .sit-out-badge {
             position: absolute;
             bottom: 0;
-            background: rgba(255, 0, 0, 0.8);
-            padding: 2px 8px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 3px 10px;
+            border-radius: 12px;
             font-size: 10px;
             font-weight: bold;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
         }
 
         .player-label {
-            background: rgba(0, 0, 0, 0.85);
-            padding: 6px 14px;
-            border-radius: 15px;
-            margin-top: -20px;
-            min-width: 100px;
+            background: linear-gradient(160deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 15, 30, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            padding: 10px 18px;
+            border-radius: 18px;
+            margin-top: -18px;
+            min-width: 110px;
             text-align: center;
-            border: 1px solid #555;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
             z-index: 2;
         }
 
@@ -325,124 +451,141 @@
         .p-name {
             font-weight: bold;
             font-size: 14px;
+            color: #fff;
         }
 
         .p-chips {
-            color: #4caf50;
-            font-size: 13px;
+            color: var(--accent-green);
+            font-size: 14px;
+            font-weight: 600;
         }
 
         .p-stats {
             font-size: 11px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.5);
         }
 
+        /* Hole Cards */
         .hole-cards {
             position: absolute;
-            top: -60px;
+            top: -65px;
             display: flex;
-            gap: 3px;
+            gap: 4px;
         }
 
         .mini-card {
-            width: 55px;
-            height: 77px;
+            width: 58px;
+            height: 81px;
             background-size: cover;
-            border-radius: 5px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease;
+        }
+
+        .mini-card:hover {
+            transform: translateY(-3px) scale(1.05);
         }
 
         .bet-chip {
             position: absolute;
-            bottom: -35px;
-            background: rgba(0, 0, 0, 0.9);
-            color: #f1c40f;
-            padding: 4px 12px;
-            border-radius: 12px;
-            border: 2px solid #f1c40f;
+            bottom: -38px;
+            background: linear-gradient(160deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 15, 10, 0.95) 100%);
+            color: var(--gold);
+            padding: 6px 16px;
+            border-radius: 15px;
+            border: 2px solid var(--gold);
             font-weight: bold;
             font-size: 15px;
             z-index: 10;
-            box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
         }
 
         .action-bubble {
             position: absolute;
-            top: -45px;
-            background: white;
-            color: black;
-            padding: 6px 12px;
-            border-radius: 12px;
+            top: -50px;
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            color: #1a0f2e;
+            padding: 8px 16px;
+            border-radius: 15px;
             font-weight: bold;
             font-size: 13px;
-            animation: bubble-pop 0.4s;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
 
         @keyframes bubble-pop {
             from {
-                transform: scale(0);
+                transform: scale(0) translateY(10px);
             }
 
             to {
-                transform: scale(1);
+                transform: scale(1) translateY(0);
             }
         }
 
         .auto-action-indicator {
             position: absolute;
-            top: -25px;
-            left: -10px;
-            background: rgba(33, 150, 243, 0.9);
+            top: -28px;
+            left: -12px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
-            padding: 3px 8px;
-            border-radius: 8px;
+            padding: 4px 10px;
+            border-radius: 10px;
             font-size: 10px;
             text-transform: uppercase;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
         }
 
-        /* CONTROLS */
+        /* === CONTROLS === */
         #controls-bar {
             position: fixed;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.9));
-            border: 3px solid #ffd700;
-            border-radius: 50px;
-            padding: 20px 45px;
+            background: linear-gradient(160deg, rgba(15, 10, 25, 0.97) 0%, rgba(5, 0, 15, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--gold);
+            border-radius: 30px;
+            padding: 20px 50px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
-            transition: transform 0.3s;
+            gap: 15px;
+            box-shadow:
+                0 15px 50px rgba(0, 0, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
         }
 
         #controls-bar.hidden {
-            transform: translate(-50%, 200px);
+            transform: translate(-50%, 250px);
         }
 
         .quick-raise {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
         }
 
         .quick-raise button {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid #666;
-            color: #eee;
-            padding: 6px 14px;
-            border-radius: 20px;
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--gold-light);
+            padding: 8px 16px;
+            border-radius: 15px;
             cursor: pointer;
-            transition: 0.2s;
-            font-weight: bold;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-family: 'Lora', serif;
         }
 
         .quick-raise button:hover {
-            background: #f1c40f;
-            color: #000;
+            background: var(--gold);
+            color: #1a0f2e;
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
         }
 
         .raise-wrapper {
@@ -450,180 +593,233 @@
         }
 
         #raise-bubble {
+            font-family: 'Cinzel', serif;
             font-weight: bold;
-            color: #ffd700;
-            font-size: 20px;
-            margin-bottom: 8px;
+            color: var(--gold);
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
         }
 
         #raise-slider {
-            width: 250px;
-            accent-color: #ffd700;
+            width: 280px;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.4));
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #raise-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
         }
 
         .main-actions {
             display: flex;
-            gap: 15px;
+            gap: 12px;
+            justify-content: center;
         }
 
         .btn-game {
-            min-width: 110px;
-            height: 65px;
-            border-radius: 12px;
+            min-width: 115px;
+            height: 60px;
+            border-radius: 15px;
             border: none;
-            font-weight: 900;
-            font-size: 16px;
+            font-weight: 800;
+            font-size: 15px;
             cursor: pointer;
-            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.6);
             color: white;
-            transition: all 0.1s;
+            transition: all 0.15s ease;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4), 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         .btn-game:active {
             transform: translateY(6px);
-            box-shadow: none;
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
         }
 
         .btn-fold {
-            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+            background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
         }
 
         .btn-check {
-            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+            background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%);
         }
 
         .btn-call {
-            background: linear-gradient(to bottom, #3498db, #2980b9);
+            background: linear-gradient(180deg, #3498db 0%, #2471a3 100%);
         }
 
         .btn-raise {
-            background: linear-gradient(to bottom, #f1c40f, #f39c12);
-            color: #000;
+            background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #1a0f2e;
         }
 
         .btn-allin {
-            background: linear-gradient(to bottom, #e67e22, #d35400);
+            background: linear-gradient(180deg, #e67e22 0%, #d35400 100%);
         }
 
-        /* QUICK ACTIONS (when not your turn) */
+        /* === QUICK ACTIONS === */
         #quick-actions {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #555;
-            border-radius: 15px;
-            padding: 15px;
+            bottom: 25px;
+            right: 25px;
+            background: linear-gradient(160deg, rgba(15, 10, 25, 0.97) 0%, rgba(5, 0, 15, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            padding: 18px;
             z-index: 999;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         }
 
         #quick-actions.hidden {
             display: none;
         }
 
+        #quick-actions>div:first-child {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
         .quick-btn {
             display: block;
             width: 100%;
-            margin: 5px 0;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #666;
-            border-radius: 8px;
-            color: white;
+            margin: 6px 0;
+            padding: 10px 15px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.8);
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Lora', serif;
         }
 
         .quick-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 215, 0, 0.15);
+            border-color: rgba(255, 215, 0, 0.3);
+            color: var(--gold);
         }
 
-        /* CHAT */
+        /* === CHAT === */
         #chat-panel {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 300px;
-            height: 400px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid #555;
-            border-radius: 15px;
+            bottom: 25px;
+            left: 25px;
+            width: 320px;
+            height: 420px;
+            background: linear-gradient(160deg, rgba(15, 10, 25, 0.95) 0%, rgba(5, 0, 15, 0.97) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
             z-index: 999;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
         }
 
         #chat-header {
-            background: rgba(255, 215, 0, 0.2);
-            padding: 10px;
-            border-bottom: 1px solid #555;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Cinzel', serif;
             font-weight: bold;
-            border-radius: 13px 13px 0 0;
+            color: var(--gold);
         }
 
         #chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 15px;
             font-size: 13px;
         }
 
         .chat-msg {
-            margin: 5px 0;
-            padding: 5px 8px;
-            border-radius: 8px;
+            margin: 6px 0;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-family: 'Lora', serif;
         }
 
         .chat-system {
-            background: rgba(100, 100, 100, 0.3);
-            color: #aaa;
+            background: rgba(100, 100, 100, 0.2);
+            color: rgba(255, 255, 255, 0.6);
             font-style: italic;
         }
 
         .chat-me {
-            background: rgba(33, 150, 243, 0.3);
+            background: rgba(52, 152, 219, 0.3);
             text-align: right;
+            border: 1px solid rgba(52, 152, 219, 0.4);
         }
 
         .chat-other {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .chat-name {
             font-weight: bold;
-            margin-right: 5px;
+            margin-right: 6px;
+            color: var(--gold);
         }
 
         #chat-input-area {
             display: flex;
-            padding: 10px;
-            border-top: 1px solid #555;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 10px;
         }
 
         #chat-input {
             flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #555;
-            border-radius: 8px;
-            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 15px;
             color: white;
-            margin-right: 5px;
+            font-family: 'Lora', serif;
+            transition: border-color 0.2s ease;
+        }
+
+        #chat-input:focus {
+            outline: none;
+            border-color: rgba(255, 215, 0, 0.5);
         }
 
         #chat-send {
-            background: #ffd700;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
             border: none;
-            border-radius: 8px;
-            padding: 8px 15px;
+            border-radius: 12px;
+            padding: 12px 20px;
             cursor: pointer;
             font-weight: bold;
+            color: #1a0f2e;
+            transition: all 0.2s ease;
         }
 
-        /* WIN OVERLAY */
+        #chat-send:hover {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        /* === WIN OVERLAY === */
         #win-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -631,7 +827,7 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s;
+            transition: opacity 0.6s ease;
         }
 
         #win-overlay.active {
@@ -644,77 +840,103 @@
         }
 
         .winner-name {
-            font-size: 50px;
-            color: #ffd700;
+            font-family: 'Cinzel', serif;
+            font-size: 52px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .win-desc {
-            font-size: 24px;
-            color: #aaa;
             margin-bottom: 15px;
+            animation: title-glow 2s ease-in-out infinite;
         }
 
-        .win-amount {
-            font-size: 70px;
-            color: #4caf50;
-            font-weight: bold;
-            text-shadow: 0 0 50px rgba(76, 175, 80, 0.7);
-            animation: win-glow 1.5s infinite;
-        }
-
-        @keyframes win-glow {
+        @keyframes title-glow {
 
             0%,
             100% {
-                opacity: 1;
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
             }
 
             50% {
-                opacity: 0.7;
+                filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.8));
+            }
+        }
+
+        .win-desc {
+            font-family: 'Lora', serif;
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+        }
+
+        .win-amount {
+            font-family: 'Cinzel', serif;
+            font-size: 75px;
+            color: var(--accent-green);
+            font-weight: bold;
+            text-shadow: 0 0 60px rgba(40, 167, 69, 0.7);
+            animation: win-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes win-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.03);
             }
         }
 
         .showdown-result {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 10px;
-            border: 2px solid #ffd700;
+            background: linear-gradient(160deg, rgba(30, 20, 40, 0.9) 0%, rgba(15, 10, 25, 0.95) 100%);
+            padding: 25px;
+            border-radius: 20px;
+            margin: 15px;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
         }
 
         .result-name {
-            font-size: 24px;
-            color: #ffd700;
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            color: var(--gold);
         }
 
         .result-hand {
+            font-family: 'Lora', serif;
             font-size: 18px;
             color: #fff;
-            margin: 5px 0;
+            margin: 8px 0;
         }
 
         .result-amount {
-            font-size: 32px;
-            color: #4caf50;
+            font-family: 'Cinzel', serif;
+            font-size: 36px;
+            color: var(--accent-green);
             font-weight: bold;
         }
 
-        /* TOAST NOTIFICATIONS */
+        /* === TOAST === */
         .toast {
             position: fixed;
-            top: 70px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #ffd700;
-            border-radius: 10px;
-            padding: 15px 20px;
+            top: 80px;
+            right: 25px;
+            background: linear-gradient(160deg, rgba(15, 10, 25, 0.97) 0%, rgba(5, 0, 15, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            padding: 18px 25px;
             color: white;
             font-weight: bold;
             z-index: 10000;
-            transform: translateX(400px);
-            transition: transform 0.3s;
+            transform: translateX(450px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            font-family: 'Lora', serif;
         }
 
         .toast.show {
@@ -726,55 +948,59 @@
         }
 
         .toast-success {
-            border-color: #2ecc71;
+            border-color: #27ae60;
         }
 
         .toast-info {
             border-color: #3498db;
         }
 
-        /* RESPONSIVE */
+        /* === RESPONSIVE === */
         @media (max-width: 768px) {
             .poker-table-container {
-                width: 95%;
-                height: 60%;
+                width: 96%;
+                height: 62%;
             }
 
             #chat-panel {
-                width: 250px;
-                height: 300px;
+                width: 260px;
+                height: 320px;
             }
 
             #controls-bar {
-                padding: 15px 25px;
+                padding: 15px 30px;
+                border-radius: 25px;
             }
 
             .btn-game {
-                min-width: 90px;
-                height: 55px;
-                font-size: 14px;
+                min-width: 85px;
+                height: 52px;
+                font-size: 13px;
             }
 
             .seat[data-pos="0"] {
                 bottom: 22%;
-                /* Increased from 18% for better clearance */
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Ambient Effects -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
     <!-- TOP BAR -->
     <div id="top-bar">
         <div id="table-info">
-            <div id="table-name">Sòng Bài VIP</div>
-            <div id="table-blinds" style="color:#aaa; font-size:14px;">Blinds: --/--</div>
+            <div id="table-name">ROYAL POKER</div>
+            <div id="table-blinds">Blinds: --/--</div>
             <div id="hand-number">Ván #0</div>
             <div id="game-state">ĐANG CHỜ</div>
         </div>
         <div id="top-actions">
-            <button class="top-btn" id="btn-sound" onclick="toggleSound()">🔊</button>
-            <button class="top-btn" id="btn-animations" onclick="toggleAnimations()">✨</button>
+            <button class="top-btn" id="btn-sound" onclick="toggleSound()">🔊 Âm Thanh</button>
+            <button class="top-btn" id="btn-animations" onclick="toggleAnimations()">✨ Hiệu Ứng</button>
             <button class="top-btn" onclick="toggleSitOut()">💺 Tạm Rời</button>
             <button class="top-btn" onclick="leaveTable()">🚪 Rời Bàn</button>
         </div>
@@ -819,12 +1045,12 @@
 
     <!-- QUICK ACTIONS -->
     <div id="quick-actions" class="hidden">
-        <div style="margin-bottom:10px; font-weight:bold;">Tự Động:</div>
+        <div>🎯 Tự Động:</div>
         <button class="quick-btn" onclick="setAutoAction('fold')">Tự Động Bỏ</button>
         <button class="quick-btn" onclick="setAutoAction('check_fold')">Xem/Bỏ</button>
         <button class="quick-btn" onclick="setAutoAction('check')">Tự Động Xem</button>
         <button class="quick-btn" onclick="setAutoAction('call_any')">Theo Mọi Cược</button>
-        <button class="quick-btn" onclick="setAutoAction(null)">Hủy Tự Động</button>
+        <button class="quick-btn" onclick="setAutoAction(null)">❌ Hủy Tự Động</button>
     </div>
 
     <!-- CHAT PANEL -->
