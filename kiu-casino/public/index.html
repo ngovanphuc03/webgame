@@ -4,33 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G18-GAME - 8BIT</title>
-    <!-- RETRO FONTS -->
+    <title>ROYAL CASINO - VIP Gaming</title>
+
+    <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
-            --bg-color: #1a0524;
-            --neon-pink: #ff00cc;
-            --neon-green: #33ff00;
-            --neon-blue: #00ccff;
-            --crt-line: rgba(0, 0, 0, 0.2);
-        }
-
-        /* --- CRT SCANLINE EFFECT --- */
-        body::before {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            z-index: 9999;
-            pointer-events: none;
+            --gold: #ffd700;
+            --gold-dark: #b8860b;
+            --gold-light: #fff8dc;
+            --royal-purple: #2d1b4e;
+            --royal-dark: #1a0f2e;
+            --royal-deeper: #0f0a1a;
+            --accent-red: #dc3545;
+            --accent-green: #28a745;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -40,474 +34,701 @@
         }
 
         body {
-            font-family: 'VT323', monospace;
-            background-color: var(--bg-color);
-            color: var(--neon-green);
+            font-family: 'Lora', serif;
+            background: linear-gradient(135deg, var(--royal-deeper) 0%, var(--royal-dark) 50%, var(--royal-purple) 100%);
             min-height: 100vh;
-            text-transform: uppercase;
+            color: #fff;
             overflow-x: hidden;
-            font-size: 24px;
+            position: relative;
         }
 
-        /* Glitchy Text Effect */
-        @keyframes glitch {
-
-            2%,
-            64% {
-                transform: translate(2px, 0) skew(0deg);
-            }
-
-            4%,
-            60% {
-                transform: translate(-2px, 0) skew(0deg);
-            }
-
-            62% {
-                transform: translate(0, 0) skew(5deg);
-            }
+        /* Animated Background Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
 
-        /* Blink Animation */
-        @keyframes blink {
-            50% {
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+            opacity: 0.3;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
                 opacity: 0;
             }
         }
 
-        /* --- NAVBAR --- */
+        /* Ambient Light Effect */
+        .ambient-light {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ambient-1 {
+            top: -200px;
+            left: -200px;
+            background: var(--gold);
+            animation: pulse-light 8s ease-in-out infinite;
+        }
+
+        .ambient-2 {
+            bottom: -200px;
+            right: -200px;
+            background: #9b59b6;
+            animation: pulse-light 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse-light {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.15;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.25;
+            }
+        }
+
+        /* === NAVBAR === */
         .navbar {
+            position: relative;
+            z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 40px;
-            border-bottom: 4px solid var(--neon-pink);
-            background: #000;
-            position: relative;
-            z-index: 10000;
-            /* Above CRT scanlines */
+            padding: 20px 50px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .brand {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 24px;
-            color: var(--neon-pink);
-            text-shadow: 3px 3px 0px var(--neon-blue);
+            font-family: 'Cinzel', serif;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
             cursor: pointer;
-            letter-spacing: 2px;
-            /* animation: glitch 2s infinite; REMOVED FOR READABILITY */
+            letter-spacing: 3px;
+            position: relative;
+        }
+
+        .brand::after {
+            content: '♔';
+            position: absolute;
+            top: -10px;
+            right: -25px;
+            font-size: 16px;
+            -webkit-text-fill-color: var(--gold);
         }
 
         .user-panel {
             display: flex;
             align-items: center;
             gap: 20px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 12px;
         }
 
         .balance-box {
-            border: 2px solid var(--neon-green);
-            padding: 10px;
-            background: #000;
-            box-shadow: 4px 4px 0 var(--neon-green);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gold);
+            border-radius: 30px;
+            padding: 12px 25px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .user-info img {
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--neon-blue);
-            vertical-align: middle;
-            margin-right: 10px;
-            background: #fff;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
-        .btn-retro {
-            background: #000;
-            color: var(--neon-pink);
-            border: 2px solid var(--neon-pink);
-            padding: 8px 16px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 10px;
+        .user-info span {
+            font-family: 'Lora', serif;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+            color: #1a0f2e;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 14px;
+            border-radius: 25px;
             cursor: pointer;
-            box-shadow: 4px 4px 0 var(--neon-pink);
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
 
-        .btn-retro:hover {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0 var(--neon-pink);
-            background: var(--neon-pink);
-            color: #000;
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.5);
         }
 
-        /* --- MAIN --- */
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 40px 20px;
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 10px 20px;
+            font-family: 'Lora', serif;
+            font-size: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--accent-red);
+            color: #fff;
+        }
+
+        /* === HERO SECTION === */
+        .hero {
+            position: relative;
+            z-index: 10;
             text-align: center;
+            padding: 80px 20px 60px;
         }
 
         .hero h1 {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 32px;
-            color: var(--neon-blue);
-            margin-bottom: 20px;
-            line-height: 1.5;
+            font-family: 'Cinzel', serif;
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--gold-light) 50%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+            animation: title-glow 3s ease-in-out infinite;
         }
 
-        .insert-coin {
-            font-family: 'Press Start 2P', cursive;
-            color: var(--neon-green);
+        @keyframes title-glow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+            }
+
+            50% {
+                filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.6));
+            }
+        }
+
+        .hero-subtitle {
+            font-family: 'Lora', serif;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            letter-spacing: 2px;
+        }
+
+        /* === GAME GRID === */
+        .game-section {
+            position: relative;
+            z-index: 10;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: var(--gold);
             margin-bottom: 50px;
-            animation: blink 1s step-end infinite;
-            font-size: 18px;
+            letter-spacing: 3px;
+            position: relative;
         }
 
-        /* --- GAME GRID --- */
+        .section-title::before,
+        .section-title::after {
+            content: '◆';
+            margin: 0 20px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
         .game-grid {
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            justify-items: center;
         }
 
-        .arcade-cabinet {
-            width: 350px;
-            border: 4px solid #fff;
-            background: #000;
-            padding: 10px;
-            box-shadow: 10px 10px 0 #333;
-            cursor: pointer;
-            transition: 0.2s;
-            position: relative;
-        }
-
-        .arcade-cabinet:hover {
-            transform: scale(1.05);
-            border-color: var(--neon-green);
-            box-shadow: 10px 10px 0 var(--neon-green);
-        }
-
-        .screen {
-            height: 200px;
-            background: #222;
-            border: 4px inset #555;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* === GAME CARDS === */
+        .game-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
             overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }
 
-        /* Thumbnail Style (Pixel Art approximation via CSS/Images) */
-        .thumb-meono {
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
             width: 100%;
             height: 100%;
-            background: repeating-linear-gradient(45deg, #e67e22 0, #e67e22 10px, #d35400 10px, #d35400 20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 60px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transition: left 0.6s ease;
         }
 
-        .thumb-taixiu {
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(45deg, #2980b9 0, #2980b9 10px, #3498db 10px, #3498db 20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 60px;
+        .game-card:hover::before {
+            left: 100%;
         }
 
-        .cabinet-title {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--gold);
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .card-image {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image.taixiu {
+            background: linear-gradient(135deg, #1a3a5c 0%, #2c5282 50%, #1a3a5c 100%);
+        }
+
+        .card-image.poker {
+            background: linear-gradient(135deg, #1e4d3d 0%, #2d6a4f 50%, #1e4d3d 100%);
+        }
+
+        .card-icon {
+            font-size: 80px;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
+            animation: icon-float 3s ease-in-out infinite;
+        }
+
+        @keyframes icon-float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 15px;
+            letter-spacing: 1px;
+        }
+
+        .badge-hot {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: #fff;
+            animation: badge-pulse 2s ease-in-out infinite;
+        }
+
+        .badge-new {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #1a0f2e;
+        }
+
+        @keyframes badge-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+            }
+        }
+
+        .card-content {
+            padding: 25px 30px 30px;
+        }
+
+        .card-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 700;
             color: #fff;
             margin-bottom: 10px;
-            text-align: left;
+        }
+
+        .card-desc {
+            font-family: 'Lora', serif;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
             line-height: 1.5;
         }
 
-        .cabinet-desc {
-            font-family: 'VT323', monospace;
-            font-size: 24px;
-            /* Larger for readability */
-            line-height: 1.2;
-            color: #aaa;
-            text-align: left;
-            margin-bottom: 20px;
-            height: 50px;
-        }
-
-        .btn-play {
+        .card-btn {
             display: block;
             width: 100%;
-            background: var(--neon-green);
-            color: #000;
-            font-family: 'Press Start 2P', cursive;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+            color: #1a0f2e;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
             font-size: 14px;
-            padding: 15px 0;
+            text-align: center;
+            border-radius: 12px;
             text-decoration: none;
-            border: 2px solid #fff;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
         }
 
-        .btn-play:hover {
-            background: #fff;
-            color: #000;
-            border-color: var(--neon-green);
+        .card-btn:hover {
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+            transform: translateY(-2px);
         }
 
-        /* LOADING SCREEN */
+        /* === LOADING SCREEN === */
         #loading {
             position: fixed;
             inset: 0;
-            background: #000;
+            background: var(--royal-deeper);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            font-family: 'Press Start 2P', cursive;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
         }
 
-        .loading-bar {
-            width: 300px;
-            height: 20px;
-            border: 2px solid var(--neon-green);
-            margin-top: 20px;
-            padding: 2px;
+        #loading.fade-out {
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .loading-fill {
-            height: 100%;
-            background: var(--neon-green);
-            width: 0%;
-            transition: width 0.5s;
+        .loading-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 30px;
+            animation: title-glow 2s ease-in-out infinite;
         }
 
-        .login-alert {
-            background: #e74c3c;
-            color: #fff;
-            padding: 10px;
-            font-family: 'VT323', monospace;
-            /* Supports Vietnamese */
-            font-size: 20px;
-            /* Increased size for VT323 */
-            text-transform: uppercase;
-            display: none;
-            border-bottom: 4px solid #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            box-shadow: 0 0 10px #e74c3c;
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 215, 0, 0.2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .marquee-text {
-            display: inline-block;
-            animation: marquee 15s linear infinite;
-        }
-
-        @keyframes marquee {
-            0% {
-                transform: translateX(100%);
-            }
-
-            100% {
-                transform: translateX(-100%);
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
 
-        /* --- RETRO SYSTEM MODAL --- */
+        /* === MODAL === */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 20000;
-            display: none;
         }
 
-        .retro-box {
-            background: #000;
-            border: 4px solid var(--neon-pink);
-            box-shadow: 0 0 20px var(--neon-pink), inset 0 0 20px var(--neon-pink);
-            padding: 5px;
-            /* Inner spacing */
-            width: 400px;
-            max-width: 90%;
+        .modal-box {
+            background: linear-gradient(160deg, rgba(45, 27, 78, 0.95), rgba(26, 15, 46, 0.98));
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
             text-align: center;
-            position: relative;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
+            animation: modal-in 0.4s ease;
         }
 
-        @keyframes popIn {
+        @keyframes modal-in {
             from {
-                transform: scale(0.8);
+                transform: scale(0.8) translateY(20px);
                 opacity: 0;
             }
 
             to {
-                transform: scale(1);
+                transform: scale(1) translateY(0);
                 opacity: 1;
             }
         }
 
-        .box-inner {
-            border: 2px solid var(--neon-blue);
-            padding: 30px 20px;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, #111 3px);
-        }
-
         .modal-title {
-            font-family: 'Press Start 2P', cursive;
-            color: var(--neon-pink);
-            font-size: 18px;
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: var(--gold);
             margin-bottom: 20px;
-            text-shadow: 2px 2px 0 #fff;
         }
 
         .modal-msg {
-            font-family: 'VT323', monospace;
-            font-size: 24px;
-            color: #fff;
+            font-family: 'Lora', serif;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 30px;
-            line-height: 1.4;
+            line-height: 1.6;
         }
 
-        .btn-modal {
-            background: var(--neon-green);
-            color: #000;
-            font-family: 'Press Start 2P', cursive;
+        .modal-btn {
+            padding: 12px 40px;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: #1a0f2e;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
             border: none;
-            padding: 15px 30px;
-            font-size: 12px;
+            border-radius: 25px;
             cursor: pointer;
-            box-shadow: 4px 4px 0 #fff;
-            transition: 0.2s;
+            transition: all 0.3s ease;
         }
 
-        .btn-modal:hover {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0 #fff;
-            background: #fff;
+        .modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* === WARNING BANNER === */
+        .warning-banner {
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.9), rgba(180, 40, 55, 0.9));
+            color: #fff;
+            padding: 12px;
+            text-align: center;
+            font-family: 'Lora', serif;
+            font-size: 14px;
+            display: none;
+            position: relative;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .brand {
+                font-size: 22px;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .game-grid {
+                gap: 25px;
+            }
         }
     </style>
 </head>
 
 <body>
-
+    <!-- Loading Screen -->
     <div id="loading">
-        <div style="color:var(--neon-green); font-size:20px;">LOADING SYSTEM...</div>
-        <div class="loading-bar">
-            <div class="loading-fill" id="load-fill"></div>
-        </div>
+        <div class="loading-logo">ROYAL CASINO</div>
+        <div class="loading-spinner"></div>
     </div>
 
-    <!-- RETRO MODAL -->
+    <!-- Animated Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Ambient Lights -->
+    <div class="ambient-light ambient-1"></div>
+    <div class="ambient-light ambient-2"></div>
+
+    <!-- Login Modal -->
     <div id="modal-login" class="modal-overlay">
-        <div class="retro-box">
-            <div class="box-inner">
-                <div class="modal-title">⛔ SYSTEM ALERT</div>
-                <div class="modal-msg">BẠN CẦN ĐĂNG NHẬP ĐỂ TRUY CẬP HỆ THỐNG GAME!</div>
-                <button class="btn-modal" onclick="closeModal()">ĐÃ RÕ (OK)</button>
-            </div>
+        <div class="modal-box">
+            <div class="modal-title">⚠️ Yêu Cầu Đăng Nhập</div>
+            <div class="modal-msg">Vui lòng đăng nhập bằng Discord để truy cập vào sòng bài VIP.</div>
+            <button class="modal-btn" onclick="closeModal()">Đã Hiểu</button>
         </div>
     </div>
 
-    <!-- WARNING BANNER -->
-    <div id="login-warning" class="login-alert">
-        <span class="marquee-text">⚠️ WARNING: GUEST MODE DETECTED. PLEASE LOGIN TO ACCESS GAMES. ⚠️ BẠN CẦN ĐĂNG NHẬP
-            ĐỂ CHƠI!</span>
+    <!-- Warning Banner -->
+    <div id="login-warning" class="warning-banner">
+        ⚠️ Bạn đang ở chế độ KHÁCH. Vui lòng đăng nhập để chơi game!
     </div>
 
+    <!-- Navbar -->
     <nav class="navbar">
-        <div class="brand" onclick="location.reload()">G18-GAME</div>
+        <div class="brand" onclick="location.reload()">ROYAL CASINO</div>
         <div id="auth-check"></div>
     </nav>
 
-    <div class="container">
-        <div class="hero">
-            <h1 id="welcome-msg">WELCOME PLAYER 1</h1>
-            <div class="insert-coin">INSERT COIN TO START</div>
-        </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1 id="welcome-msg">CHÀO MỪNG ĐẾN VIP LOUNGE</h1>
+        <p class="hero-subtitle">Trải nghiệm cảm giác đẳng cấp thượng lưu</p>
+    </section>
+
+    <!-- Game Section -->
+    <section class="game-section">
+        <div class="section-title">CHỌN TRÒ CHƠI</div>
 
         <div class="game-grid">
-
-
-            <!-- TÀI XỈU CART -->
-            <div class="arcade-cabinet" onclick="enterGame('/taixiu')">
-                <div class="screen">
-                    <div class="thumb-taixiu">🎲</div>
+            <!-- Tai Xiu Card -->
+            <div class="game-card" onclick="enterGame('/taixiu')">
+                <div class="card-image taixiu">
+                    <div class="card-icon">🎲</div>
+                    <div class="card-badge badge-hot">HOT</div>
                 </div>
-                <div class="cabinet-title">TAI XIU (HOT)</div>
-                <div class="cabinet-desc">High stakes. Big Wins.</div>
-                <div class="btn-play">ENTER ROOM</div>
+                <div class="card-content">
+                    <div class="card-title">TÀI XỈU</div>
+                    <div class="card-desc">Trò chơi xúc xắc cổ điển với tỷ lệ cược hấp dẫn. Dự đoán kết quả và thắng
+                        lớn!</div>
+                    <div class="card-btn">VÀO PHÒNG</div>
+                </div>
             </div>
 
-            <!-- POKER CART -->
-            <div class="arcade-cabinet" onclick="enterGame('/poker')">
-                <div class="screen">
-                    <div
-                        style="width:100%;height:100%;font-size:60px;background:#35654d;display:flex;align-items:center;justify-content:center;">
-                        ♠️</div>
+            <!-- Poker Card -->
+            <div class="game-card" onclick="enterGame('/poker')">
+                <div class="card-image poker">
+                    <div class="card-icon">♠️</div>
+                    <div class="card-badge badge-new">NEW</div>
                 </div>
-                <div class="cabinet-title">POKER (NEW)</div>
-                <div class="cabinet-desc">Texas Hold'em Table.</div>
-                <div class="btn-play">JOIN TABLE</div>
+                <div class="card-content">
+                    <div class="card-title">POKER</div>
+                    <div class="card-desc">Texas Hold'em chuyên nghiệp. Thử thách bản lĩnh và chiến thuật của bạn!</div>
+                    <div class="card-btn">VÀO BÀN</div>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <script>
-        // Fake Loading Logic
-        const fill = document.getElementById('load-fill');
-        const loadScreen = document.getElementById('loading');
-        let width = 0;
-        const int = setInterval(() => {
-            width += Math.random() * 20;
-            if (width > 100) width = 100;
-            fill.style.width = width + '%';
-            if (width === 100) {
-                clearInterval(int);
-                setTimeout(() => {
-                    loadScreen.style.display = 'none';
-                }, 500);
+        // Generate Particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                container.appendChild(particle);
             }
-        }, 100);
+        }
+        createParticles();
+
+        // Loading Screen
+        setTimeout(() => {
+            document.getElementById('loading').classList.add('fade-out');
+        }, 1500);
 
         let isLoggedIn = false;
 
-        // Auth Logic
+        // Auth Check
         async function checkAuth() {
             try {
                 const res = await fetch('/api/me');
                 if (res.status === 401) {
                     isLoggedIn = false;
                     document.getElementById('auth-check').innerHTML = `
-                        <a href="/auth/discord" class="btn-retro">LOGIN (DISCORD)</a>
+                        <a href="/auth/discord" class="btn-premium">🔐 ĐĂNG NHẬP</a>
                     `;
-                    document.getElementById('welcome-msg').innerText = "GUEST MODE";
-                    // SHOW WARNING BANNER
+                    document.getElementById('welcome-msg').innerText = "CHẾ ĐỘ KHÁCH";
                     document.getElementById('login-warning').style.display = 'block';
                 } else {
                     isLoggedIn = true;
                     const u = await res.json();
                     document.getElementById('auth-check').innerHTML = `
                         <div class="user-panel">
-                            <div class="balance-box">${u.balance} $</div>
+                            <div class="balance-box">💰 ${u.balance.toLocaleString()} $</div>
                             <div class="user-info">
-                                <img src="${u.avatar || 'https://ui-avatars.com/api/?background=random'}" alt="avt">
+                                <img src="${u.avatar || 'https://ui-avatars.com/api/?background=2d1b4e&color=ffd700&name=' + u.username}" alt="Avatar">
                                 <span>${u.username}</span>
                             </div>
-                            <button onclick="logout()" class="btn-retro" style="border-color:red; color:red;">EXIT</button>
+                            <button onclick="logout()" class="btn-logout">Thoát</button>
                         </div>
                     `;
-                    document.getElementById('welcome-msg').innerText = `READY P1: ${u.username}`;
+                    document.getElementById('welcome-msg').innerText = `XIN CHÀO, ${u.username.toUpperCase()}`;
                     document.getElementById('login-warning').style.display = 'none';
                 }
             } catch (e) { console.error(e); }
@@ -515,7 +736,6 @@
 
         function enterGame(url) {
             if (!isLoggedIn) {
-                // Show Retro Modal
                 document.getElementById('modal-login').style.display = 'flex';
                 return;
             }
@@ -527,7 +747,7 @@
         }
 
         function logout() {
-            if (confirm("QUIT GAME?")) {
+            if (confirm("Bạn muốn đăng xuất?")) {
                 document.cookie = "user_id=; expires=Thu, 01 Dec 1990 00:00:00 UTC; path=/;";
                 location.reload();
             }
