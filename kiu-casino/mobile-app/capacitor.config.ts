@@ -10,7 +10,14 @@ const config: CapacitorConfig = {
         // Production URL
         url: 'https://g18game.onrender.com',
         cleartext: true,
-        androidScheme: 'https'
+        androidScheme: 'https',
+        allowNavigation: [
+            'g18game.onrender.com',
+            'discord.com',
+            '*.discord.com',
+            'discordapp.com',
+            '*.discordapp.com'
+        ]
     },
 
     // Android specific settings
