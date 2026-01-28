@@ -571,6 +571,13 @@
         </div>
     </div>
 
+    <!-- Win/Showdown Overlay -->
+    <div id="win-overlay" class="glass-panel"
+        style="display:none; position:fixed; inset:0; z-index:100; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.9);">
+        <div style="font-size:40px; margin-bottom:10px;">🏆</div>
+        <div id="win-details" style="text-align:center; color:var(--gold);"></div>
+    </div>
+
     <!-- Notification Toast -->
     <div class="mobile-toast" id="toast-poker-mobile"></div>
 
@@ -579,44 +586,92 @@
     <script>
         // --- MOBILE ADAPTER LOGIC ---
 
-        // Render Seats with new layout logic
+        // 1. Override Seat Finder for Mobile Structure
+        function findSeatByPlayerId(pid) {
+            // Mobile uses .seat-node and stores ID in data-player-id (if we add it)
+            // Or we check derived classes.
+            // Let's ensure renderSeats adds data-player-id
+            return document.querySelector(`.seat-node[data-player-id="${pid}"]`);
+        }
+
+        // 2. Override Handle Win to target Mobile Overlay
+        // The original handleWin targets #win-overlay which we just added.
+        // But we need to make sure class toggling works.
+        // Original uses .active class. We set display:none inline.
+        // Let's override to be safe and use flex/none.
+        const originalHandleWin = handleWin;
+        handleWin = function (data) {
+            playSound('win');
+            // Highlight Winner
+            if (data.winnerId) {
+                const seat = findSeatByPlayerId(data.winnerId);
+                if (seat) {
+                    seat.classList.add('winner-glow');
+                    setTimeout(() => seat.classList.remove('winner-glow'), 4000);
+                }
+            }
+
+            const overlay = document.getElementById('win-overlay');
+            const details = document.getElementById('win-details');
+            if (details) {
+                const name = data.winnerName || 'Winner';
+                const amt = data.amount || 0;
+                details.innerHTML = `
+                    <h2 style="font-size:24px; color:#fff">${name}</h2>
+                    <div style="font-size:32px; font-weight:bold; margin:10px 0">+$${amt}</div>
+                    <div style="opacity:0.8">${data.desc || ''}</div>
+                `;
+            }
+
+            if (overlay) {
+                overlay.style.display = 'flex';
+                setTimeout(() => overlay.style.display = 'none', 4000);
+            }
+        };
+
+        // 3. Override handleShowdown
+        handleShowdown = function (data) {
+            playSound('win');
+            const overlay = document.getElementById('win-overlay');
+            const details = document.getElementById('win-details');
+
+            if (data.results && details) {
+                const resultsHtml = data.results.map(r => `
+                    <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; margin:5px 0;">
+                        <div style="color:#fff; font-weight:bold">${r.playerName}</div>
+                        <div style="font-size:12px; opacity:0.8">${r.handDesc}</div>
+                        <div style="color:var(--gold); font-weight:bold; font-size:16px;">+$${r.amount}</div>
+                    </div>
+                `).join('');
+                details.innerHTML = `<h2 style="color:#fff">Showdown</h2>${resultsHtml}`;
+            }
+
+            if (overlay) {
+                overlay.style.display = 'flex';
+                setTimeout(() => overlay.style.display = 'none', 6000);
+            }
+        };
+
+        // 4. Override Render Seats to include data-player-id
         function renderSeats(data) {
             const container = document.getElementById('seats-mobile');
             if (!container) return;
 
             const me = data.players.find(p => p && p.id === state.myId);
             const mySeat = me ? me.seat : 0;
-
-            // Clear or update? For now clear and rebuild is safer for positioning
-            // Optimization: In a real app we would diff, but here we rebuild for simplicity
             container.innerHTML = '';
 
             data.players.forEach((p, i) => {
                 if (!p) return;
-
-                // Rotate visual position so 'me' is always at bottom center (pos 0)
-                // Total 9 seats usually. 
-                // Visual Index 0 = Bottom Center. 
                 const visualPos = (i - mySeat + 9) % 9;
 
                 const seatEl = document.createElement('div');
+                // Added data-player-id for the finder
+                seatEl.setAttribute('data-player-id', p.id);
                 seatEl.className = `seat-node pos-${visualPos} ${p.id === data.currentTurn ? 'active-turn' : ''}`;
                 if (p.status === 'FOLD') seatEl.classList.add('folded');
 
-                // Avatar & Info
                 const avatarUrl = p.avatar || `https://ui-avatars.com/api/?name=${p.name}&background=random`;
-
-                // Hole Cards (if visible) - Logic usually handled by main poker.js but we intercept or duplicate here?
-                // Actually `data` usually contains `holeCards` for 'me' or if shown at end.
-                // But typically `poker.js` handles card distribution animation.
-                // We'll add a simplified card container here.
-                let cardsHtml = '';
-                // Since this is just re-rendering state, we don't have animation context easily.
-                // If it's ME, show my cards.
-                if (p.id === state.myId && data.holeCards) { // Assuming data.holeCards exists passed from main
-                    // Wait, the main render usually calls with `data`.
-                    // We need to check if we have card info.
-                }
 
                 seatEl.innerHTML = `
                     <div class="seat-avatar">
@@ -630,37 +685,31 @@
                     ${p.bet > 0 ? `<div class="seat-bet glass-panel">$${p.bet}</div>` : ''}
                 `;
 
-                // Handled in a separate layer or append? 
-                // Let's rely on standard 'renderHoleCards' if available or add here.
-                // For 'me', cards are crucial.
                 if (p.id === state.myId) {
-                    // Create a dedicated "my-cards" container fixed at bottom if we want "Hand" view
-                    // Or attach to seat 0
                     seatEl.classList.add('is-me');
                 }
-
                 container.appendChild(seatEl);
             });
-
-            // Render Hole Cards separate or attached?
-            // Let's create a separate renderHoleCardsMobile function that appends to seats
             renderMobileHoleCards(data);
         }
 
+        // 4. Render Mobile Hole Cards
         function renderMobileHoleCards(data) {
             const me = data.players.find(p => p && p.id === state.myId);
             if (me && data.holeCards) {
                 const mySeatNode = document.querySelector('.seat-node.is-me');
                 if (mySeatNode) {
+                    // Remove old if any
+                    const old = mySeatNode.querySelector('.my-cards-container');
+                    if (old) old.remove();
+
                     let html = '<div class="my-cards-container">';
                     data.holeCards.forEach(c => {
-                        const bg = getCardBg(c); // Assumes getCardBg is global from poker.js
-                        html += `<div class="card-mobile hero-card" style="background-image: ${bg}"></div>`;
+                        const bg = getCardBg(c);
+                        // Use .hero-card class for sizing
+                        html += `<div class="hero-card" style="background-image: ${bg}; background-size:cover;"></div>`;
                     });
                     html += '</div>';
-                    // Check if already exists to avoid flicker?
-                    const existing = mySeatNode.querySelector('.my-cards-container');
-                    if (existing) existing.remove();
                     mySeatNode.insertAdjacentHTML('beforeend', html);
                 }
             }
@@ -676,6 +725,7 @@
                 const el = document.createElement('div');
                 el.className = 'card-mobile community-card';
                 el.style.backgroundImage = getCardBg(card);
+                el.style.backgroundSize = 'cover';
                 container.appendChild(el);
             });
         }
@@ -697,7 +747,7 @@
             if (toCall > 0) {
                 btnCheckCall.innerHTML = `<div class="btn-text-large">THEO</div><div class="btn-sub">$${toCall}</div>`;
                 btnCheckCall.onclick = () => doAction('call');
-                btnCheckCall.className = 'action-btn btn-call'; // Change style
+                btnCheckCall.className = 'action-btn btn-call';
             } else {
                 btnCheckCall.innerHTML = `<div class="btn-text-large">XEM</div>`;
                 btnCheckCall.onclick = () => doAction('check');
@@ -706,12 +756,16 @@
 
             // Slider Logic
             const slider = document.getElementById('raise-slider-mobile');
-            const minRaise = (data.currentBet || 0) + (data.lastRaiseSize || data.bigBlind || 20);
+            const bb = data.bigBlind || 20;
+            const minRaise = (data.currentBet || 0) + (data.lastRaiseSize || bb);
             const maxRaise = me.chips + me.bet;
 
             slider.min = minRaise;
             slider.max = maxRaise;
             slider.value = minRaise;
+
+            // Fix: Disable slider if logic implies simple all-in? 
+            // Keep simple for now.
 
             document.getElementById('raise-amount-mobile').innerText = `$${minRaise}`;
         }

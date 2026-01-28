@@ -321,6 +321,8 @@
             z-index: 10;
             background: url('/images/dice/bowl.png') center/contain no-repeat;
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            touch-action: none;
+            /* Critical for Hammer.js */
         }
 
         .bowl-3d.open {
