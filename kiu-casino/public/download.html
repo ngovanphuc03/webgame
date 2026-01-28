@@ -22,7 +22,11 @@
             flex-direction: column;
             color: white;
             padding: 0;
-            overflow-x: hidden;
+            overflow-y: auto !important;
+            /* Force scroll */
+            position: static !important;
+            /* Reset fixed body */
+            touch-action: auto !important;
         }
 
         .hero-section {
