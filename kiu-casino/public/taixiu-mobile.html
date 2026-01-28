@@ -636,36 +636,7 @@
 
     <script src="taixiu-mobile.js"></script>
     <script>
-        // Inline Fixes for new UI
-        function toggleHistoryBoard() {
-            const board = document.getElementById('history-board');
-            if (board.style.display === 'none') {
-                board.style.display = 'flex';
-                // Trigger render if needed
-                socket.emit('get_tx_history');
-            } else {
-                board.style.display = 'none';
-            }
-        }
-
-        // Ensure slider update visuals
-        function handleSliderInput(el) {
-            document.getElementById('selected-amount-display').innerText = el.value;
-        }
-
-        function jumpTo(percent) {
-            // Mock logic - strictly simpler than JS file for now
-            // Actual logic inside taixiu-mobile.js needs to read these buttons.
-            // Usually taixiu-mobile.js listens to event or we call function.
-            // We'll rely on global scope functions if they exist.
-            if (typeof window.jumpTo === 'function') {
-                window.jumpTo(percent);
-            } else {
-                // Fallback if js uses event listeners
-                // But since we just replaced HTML, we might break listeners if they attach on load.
-                // Ideally taixiu-mobile.js attaches efficiently.
-            }
-        }
+        // Inline Logic Removed - Handled by taixiu-mobile.js
     </script>
 </body>
 

@@ -693,10 +693,13 @@
             renderMobileHoleCards(data);
         }
 
-        // 4. Render Mobile Hole Cards
+        // 4. Render Mobile Hole Cards - CRITICAL FIX
         function renderMobileHoleCards(data) {
             const me = data.players.find(p => p && p.id === state.myId);
-            if (me && data.holeCards) {
+            // Check data.myHand first (standard protocol), then fallback to holeCards
+            const cards = data.myHand || data.holeCards;
+
+            if (me && cards && cards.length > 0) {
                 const mySeatNode = document.querySelector('.seat-node.is-me');
                 if (mySeatNode) {
                     // Remove old if any
@@ -704,7 +707,7 @@
                     if (old) old.remove();
 
                     let html = '<div class="my-cards-container">';
-                    data.holeCards.forEach(c => {
+                    cards.forEach(c => {
                         const bg = getCardBg(c);
                         // Use .hero-card class for sizing
                         html += `<div class="hero-card" style="background-image: ${bg}; background-size:cover;"></div>`;

@@ -321,10 +321,13 @@ function toggleHistoryBoard() {
     const board = safeGetElement('history-board');
 
     if (board) {
-        if (board.classList.contains('show')) {
+        if (board.classList.contains('show') || board.style.display === 'flex') {
             board.classList.remove('show');
+            board.style.display = 'none';
         } else {
             board.classList.add('show');
+            board.style.display = 'flex';
+            socket.emit('get_tx_history');
         }
     }
 }
