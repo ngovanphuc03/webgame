@@ -18,223 +18,312 @@
     <link rel="stylesheet" href="mobile-common.css">
 
     <style>
-        body {
-            background: linear-gradient(180deg, #0a0612 0%, #1a0f2e 100%);
+        /* DASHBOARD LAYOUT */
+        .app-container {
             display: flex;
             flex-direction: column;
-            padding: 0;
+            height: 100vh;
+            padding-bottom: var(--nav-height);
+            /* Make space for bottom nav */
+            background: radial-gradient(circle at 50% -20%, #1e1135 0%, #000 100%);
         }
 
-        .mobile-header {
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7));
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-        }
-
-        .mobile-logo {
-            font-family: 'Cinzel', serif;
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
-        }
-
-        .mobile-tagline {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: 'Be Vietnam Pro', sans-serif;
-        }
-
-        .user-info-mobile {
+        /* HEADER */
+        .dashboard-header {
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            height: var(--header-height);
         }
 
-        .user-name-mobile {
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .user-balance-mobile {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            border-radius: 15px;
-            padding: 8px 18px;
-            color: var(--gold);
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        .games-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 15px;
+        .user-pill {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .game-card-mobile {
-            background: linear-gradient(160deg, rgba(40, 30, 60, 0.8), rgba(20, 15, 35, 0.9));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            gap: 15px;
             align-items: center;
-            min-height: 120px;
-            text-decoration: none;
-            color: inherit;
-            transition: transform 0.2s;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px 4px 4px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        .game-card-mobile:active {
-            transform: scale(0.98);
-            border-color: var(--gold);
-        }
-
-        .game-icon-mobile {
-            font-size: 60px;
-            width: 80px;
-            height: 80px;
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ffd700, #ffae00);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 215, 0, 0.1);
-            border-radius: 15px;
-            flex-shrink: 0;
-        }
-
-        .game-info-mobile {
-            flex: 1;
-        }
-
-        .game-title-mobile {
-            font-family: 'Cinzel', serif;
-            font-size: 20px;
             font-weight: 700;
-            color: #fff;
+            color: #000;
+            font-size: 14px;
+        }
+
+        .balance-display {
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 14px;
+        }
+
+        /* CONTENT AREA */
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 20px;
+        }
+
+        /* PROMO BANNER */
+        .promo-banner {
+            width: 100%;
+            aspect-ratio: 16/7;
+            background: linear-gradient(135deg, #2d1b4e, #0f0a1e);
+            border-radius: 20px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .promo-text h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 18px;
             margin-bottom: 5px;
         }
 
-        .game-desc-mobile {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 8px;
-            line-height: 1.4;
-        }
-
-        .game-badge-mobile {
-            display: inline-block;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-            color: #fff;
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .badge-new {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-            color: #000;
-        }
-
-        .footer-mobile {
-            padding: 15px;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 11px;
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .logout-btn-mobile {
-            background: transparent;
-            border: 1px solid rgba(255, 100, 100, 0.5);
-            color: #ff6b6b;
-            padding: 10px 20px;
-            border-radius: 15px;
-            font-size: 14px;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        /* Landscape reminder */
-        .landscape-reminder {
-            background: linear-gradient(90deg, rgba(255, 193, 7, 0.9), rgba(255, 152, 0, 0.9));
-            color: #000;
-            padding: 10px;
-            text-align: center;
+        .promo-text p {
             font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .promo-visual {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 80px;
+            opacity: 0.2;
+        }
+
+        /* GAME GRID */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding-bottom: 20px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .game-card:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .game-icon-3d {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3a2a5e, #1a102a);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .game-card.hot::after {
+            content: 'HOT';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4757;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .game-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .game-sub {
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-height);
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            padding-bottom: var(--safe-bottom);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
             font-weight: 600;
+            width: 60px;
+        }
+
+        .nav-item.active {
+            color: var(--gold);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active .nav-icon {
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
         }
     </style>
 </head>
 
 <body>
-    <!-- Header -->
-    <div class="mobile-header">
-        <div class="mobile-logo">👑 ROYAL CASINO</div>
-        <div class="mobile-tagline">VIP Gaming Experience</div>
-    </div>
-
-    <!-- Landscape Reminder -->
-    <div class="landscape-reminder">
-        💡 Mẹo: Quay ngang điện thoại để có trải nghiệm tốt nhất khi chơi game!
-    </div>
-
-    <!-- User Info -->
-    <div class="user-info-mobile" id="user-info-mobile">
-        <div class="user-name-mobile" id="username-mobile">...</div>
-        <div class="user-balance-mobile" id="balance-index-mobile">...</div>
-    </div>
-
-    <!-- Games List -->
-    <div class="games-container">
-        <a href="/taixiu-mobile.html" class="game-card-mobile">
-            <div class="game-icon-mobile">🎲</div>
-            <div class="game-info-mobile">
-                <div class="game-title-mobile">TÀI XỈU</div>
-                <div class="game-desc-mobile">Xóc đĩa truyền thống, tỷ lệ 1:1.98</div>
-                <span class="game-badge-mobile">HOT</span>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="user-pill glass-panel">
+                <div class="avatar-circle">VIP</div>
+                <div id="username-mobile" style="font-size:12px; font-weight:600;">...</div>
             </div>
-        </a>
 
-        <a href="/poker-mobile.html?buyin=5000" class="game-card-mobile">
-            <div class="game-icon-mobile">🃏</div>
-            <div class="game-info-mobile">
-                <div class="game-title-mobile">POKER</div>
-                <div class="game-desc-mobile">Texas Hold'em No Limit</div>
-                <span class="game-badge-mobile badge-new">VIP</span>
+            <div class="user-pill glass-panel">
+                <span style="font-size:12px;">💰</span>
+                <span class="balance-display" id="balance-index-mobile">...</span>
             </div>
-        </a>
+        </header>
 
-        <a href="/download.html" class="game-card-mobile"
-            style="min-height: 80px; background: linear-gradient(135deg, #2d1f3d, #1a1025); border-color: rgba(255,255,255,0.1);">
-            <div class="game-icon-mobile" style="font-size: 40px; width: 60px; height: 60px;">📱</div>
-            <div class="game-info-mobile">
-                <div class="game-title-mobile" style="font-size: 16px;">TẢI APP ANDROID</div>
-                <div class="game-desc-mobile">Trải nghiệm mượt mà hơn</div>
+        <!-- Scrollable Content -->
+        <main class="content-scroll">
+
+            <!-- Banner -->
+            <div class="promo-banner touch-effect">
+                <div class="promo-text">
+                    <h3>ROYAL CASINO</h3>
+                    <p>Trải nghiệm đẳng cấp thượng lưu.<br>Nạp rút siêu tốc 24/7.</p>
+                </div>
+                <div class="promo-visual">👑</div>
             </div>
-            <span class="game-badge-mobile" style="background: #28a745;">MỚI</span>
-        </a>
 
-        <div style="text-align: center; padding: 20px;">
-            <button class="logout-btn-mobile" onclick="logout()">Đăng Xuất</button>
-        </div>
-    </div>
+            <!-- Game Grid -->
+            <div class="section-title">TRÒ CHƠI NỔI BẬT</div>
+            <div class="game-grid">
 
-    <!-- Footer -->
-    <div class="footer-mobile">
-        © 2026 Royal Casino. All Rights Reserved.
+                <!-- Tai Xiu -->
+                <a href="/taixiu-mobile.html" class="game-card hot">
+                    <div class="game-icon-3d" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🎲</div>
+                    <div>
+                        <div class="game-name">TÀI XỈU</div>
+                        <div class="game-sub">Xóc đĩa truyền thống</div>
+                    </div>
+                </a>
+
+                <!-- Poker -->
+                <a href="/poker-mobile.html?buyin=5000" class="game-card">
+                    <div class="game-icon-3d" style="background: linear-gradient(135deg, #2980b9, #2c3e50);">🃏</div>
+                    <div>
+                        <div class="game-name">POKER</div>
+                        <div class="game-sub">Texas Hold'em</div>
+                    </div>
+                </a>
+
+                <!-- Download -->
+                <a href="/download.html" class="game-card">
+                    <div class="game-icon-3d" style="background: linear-gradient(135deg, #27ae60, #16a085);">📱</div>
+                    <div>
+                        <div class="game-name">TẢI APP</div>
+                        <div class="game-sub">Android APK</div>
+                    </div>
+                </a>
+
+                <!-- Coming Soon -->
+                <div class="game-card" style="opacity: 0.5;">
+                    <div class="game-icon-3d" style="background: #333;">🔒</div>
+                    <div>
+                        <div class="game-name">BẦU CUA</div>
+                        <div class="game-sub">Sắp ra mắt</div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span>Trang Chủ</span>
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">💎</span>
+                <span>Nạp Tiền</span>
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">📜</span>
+                <span>Lịch Sử</span>
+            </div>
+            <div class="nav-item" onclick="logout()">
+                <span class="nav-icon">🚪</span>
+                <span>Đăng Xuất</span>
+            </div>
+        </nav>
     </div>
 
     <script>

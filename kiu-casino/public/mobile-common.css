@@ -1,18 +1,24 @@
 /* ====================================================================
-   MOBILE COMMON STYLES - Shared across all mobile game pages
-   ==================================================================== */
+       MOBILE PREMIUM CORE - Design System
+       ==================================================================== */
 
 :root {
+    /* Colors */
     --gold: #ffd700;
-    --gold-dark: #b8860b;
-    --gold-light: #fff8dc;
-    --royal-purple: #1a0f2e;
-    --royal-dark: #0a0612;
-    --felt-green: #0a4d27;
-    --accent-red: #dc3545;
-    --accent-green: #28a745;
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --gold-glow: #ffae00;
+    --purple-deep: #0f0a1e;
+    --purple-light: #2d1b4e;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shine: rgba(255, 255, 255, 0.08);
+    --nav-bg: rgba(10, 6, 18, 0.95);
+    --active-item: linear-gradient(135deg, var(--gold), var(--gold-glow));
+
+    /* Spacing & Safe Areas */
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
+    --header-height: 60px;
+    --nav-height: 70px;
 }
 
 * {
@@ -20,134 +26,74 @@
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
-}
-
-html,
-body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    touch-action: manipulation;
-}
-
-body {
-    font-family: 'Be Vietnam Pro', 'Outfit', sans-serif;
-    background: var(--royal-dark);
-    color: #fff;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-/* ====================================================================
-   LANDSCAPE ORIENTATION ENFORCEMENT
-   ==================================================================== */
-
-/* Rotation Warning Overlay - Better UX than forcing lock */
-#rotate-warning {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #000;
-    z-index: 999999;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    flex-direction: column;
-    color: white;
-}
-
-/* Show rotation warning in portrait mode */
-@media (orientation: portrait) {
-    #rotate-warning {
-        display: flex !important;
-    }
-}
-
-#rotate-warning img {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-    animation: rotate-device 2s ease-in-out infinite;
-}
-
-@keyframes rotate-device {
-
-    0%,
-    100% {
-        transform: rotate(0deg);
-    }
-
-    50% {
-        transform: rotate(90deg);
-    }
-}
-
-#rotate-warning p {
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.9);
-    max-width: 300px;
-    line-height: 1.6;
+    outline: none;
     font-family: 'Be Vietnam Pro', sans-serif;
 }
 
-/* Legacy portrait warning (keep for compatibility) */
-.portrait-warning {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.98);
+body {
+    background: #000;
+    color: white;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+}
+
+/* --- Utilities --- */
+.glass-panel {
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
-    z-index: 999999;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.flex-center {
+    display: flex;
     align-items: center;
-    padding: 20px;
-    text-align: center;
+    justify-content: center;
 }
 
-/* Show warning in portrait mode */
-@media (orientation: portrait) {
-    .portrait-warning {
-        display: flex !important;
-    }
+.w-full {
+    width: 100%;
 }
 
-.portrait-warning-icon {
-    font-size: 80px;
-    margin-bottom: 20px;
-    animation: rotate-phone 2s ease-in-out infinite;
-}
-
-@keyframes rotate-phone {
-
-    0%,
-    100% {
-        transform: rotate(0deg);
-    }
-
-    25% {
-        transform: rotate(-15deg);
-    }
-
-    75% {
-        transform: rotate(15deg);
-    }
-}
-
-.portrait-warning-title {
-    font-family: 'Cinzel', serif;
-    font-size: 24px;
+.text-gold {
     color: var(--gold);
-    margin-bottom: 15px;
+}
+
+.font-bold {
     font-weight: 700;
 }
 
-.portrait-warning-text {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.8);
-    max-width: 300px;
-    line-height: 1.6;
+/* --- Animations --- */
+@keyframes press {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.95);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.touch-effect:active {
+    animation: press 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --- Shared Rotation Warning (Hidden for Index/Lobby) --- */
+#rotate-warning {
+    display: none;
+}
+
+@media (orientation: portrait) {
+    .require-landscape #rotate-warning {
+        display: flex !important;
+    }
 }
 
 /* ====================================================================

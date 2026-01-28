@@ -154,12 +154,17 @@ if (bowlWrap && typeof Hammer !== 'undefined') {
 
 function openBowl() {
     if (!bowlWrap) return;
-    bowlWrap.style.transition = 'all 0.5s ease-out';
-    bowlWrap.style.transform = 'translateY(-300px)';
-    bowlWrap.style.opacity = 0;
+    // Use the 3D CSS class for opening
+    bowlWrap.classList.add('open');
+    // Remove manual style manipulation if possible, or keep as fallback
+    // bowlWrap.style.transform = 'translateY(-300px)'; 
+    // ^ Disabled in favor of class-based animation defined in CSS (.bowl-3d.open)
 
     const resultToast = safeGetElement('result-toast');
-    if (resultToast) resultToast.style.opacity = 1;
+    if (resultToast) {
+        resultToast.style.opacity = 1;
+        resultToast.style.top = '-50px'; // Float up slightly
+    }
 
     SoundManager.play('open');
 
@@ -176,12 +181,19 @@ function openBowl() {
 function resetBowl() {
     if (!bowlWrap) return;
     cx = 0; cy = 0;
-    bowlWrap.style.transition = 'none';
-    bowlWrap.style.transform = 'translate(0, 0)';
-    bowlWrap.style.opacity = 1;
+    // Reset classes
+    bowlWrap.classList.remove('open');
+    bowlWrap.classList.remove('shaking');
+
+    // Clear manual styles
+    bowlWrap.style.transform = '';
+    bowlWrap.style.opacity = '';
 
     const resultToast = safeGetElement('result-toast');
-    if (resultToast) resultToast.style.opacity = 0;
+    if (resultToast) {
+        resultToast.style.opacity = 0;
+        resultToast.style.top = '-30px';
+    }
 
     currentResultSide = null;
     currentUserWon = false;
@@ -354,16 +366,45 @@ socket.on('tx_force_open', () => { if (bowlWrap && bowlWrap.style.opacity != 0) 
 
 socket.on('tx_history', (hist) => {
     renderHistoryGrid(hist);
+    renderMiniHistory(hist);
 });
 
 // --- HISTORY GRID ---
+function renderMiniHistory(hist) {
+    const container = safeGetElement('mini-history-bar');
+    if (!container) return;
+
+    // Show last 15 items. 
+    // Assuming hist is sorted Newest -> Oldest (index 0 is newest) 
+    // We want to show Oldest -> Newest (Left -> Right) for the bar? 
+    // Or Newest on Right?
+    // Usually "Road" maps go Left->Right. 
+    // Let's grab the first 15 items of a standard history arrays usually meant for grid
+
+    // Let's assume hist[0] is the *latest* result.
+    // So to show flow Left->Right (Old->New), we take slice(0, 15) and reverse it.
+
+    const count = 12;
+    const subset = hist.slice(0, count).reverse(); // Take latest 12 and verify order
+
+    let html = '';
+    subset.forEach(entry => {
+        if (!entry) return;
+        const res = entry.result === 'tai' ? 'tai' : (entry.result === 'xiu' ? 'xiu' : 'bao');
+        html += `<div class="mini-dot ${res}"></div>`;
+    });
+
+    container.innerHTML = html;
+}
+
 function renderHistoryGrid(hist) {
     const grid = safeGetElement('history-grid');
     if (!grid) return;
 
     let cells = '';
-    const maxCells = 120;
+    const maxCells = 120; // 6 rows x 20 cols usually
 
+    // ... existing grid logic ...
     for (let i = 0; i < maxCells; i++) {
         const entry = hist[i];
         if (entry) {
@@ -411,7 +452,8 @@ socket.on('tx_totals', (d) => {
 function spawnFlyingCoins() {
     const coinCount = 15;
     const centerStage = document.querySelector('.center-stage');
-    const target = document.querySelector('.balance-display');
+    // Updated selector to match new HTML structure
+    const target = document.querySelector('.balance-pill') || document.querySelector('.balance-display');
 
     if (!centerStage || !target) return;
 
@@ -420,6 +462,7 @@ function spawnFlyingCoins() {
 
     const startX = centerRect.left + centerRect.width / 2;
     const startY = centerRect.top + centerRect.height / 2;
+    // Target center of balance pill
     const targetX = targetRect.left + targetRect.width / 2;
     const targetY = targetRect.top + targetRect.height / 2;
 
