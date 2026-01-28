@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Royal Casino</string>
+    <string name="title_activity_main">Royal Casino</string>
+    <string name="package_name">com.royalcasino.app</string>
+    <string name="custom_url_scheme">com.royalcasino.app</string>
+</resources>
