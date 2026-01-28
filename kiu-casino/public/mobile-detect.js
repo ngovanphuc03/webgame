@@ -62,14 +62,8 @@
         window.location.href = mobilePath;
     }
 
-    // Execute: Only redirect if mobile AND logged in
+    // Execute: Redirect all mobile users
     if (isMobileDevice()) {
-        isLoggedIn().then(loggedIn => {
-            if (loggedIn) {
-                redirectToMobile();
-            } else {
-                console.log('[Mobile Detect] Not logged in, staying on desktop for login');
-            }
-        });
+        redirectToMobile();
     }
 })();

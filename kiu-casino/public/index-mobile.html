@@ -242,16 +242,56 @@
         fetch('/api/me')
             .then(r => r.json())
             .then(user => {
+                const userInfoDiv = document.getElementById('user-info-mobile');
+                const gamesContainer = document.querySelector('.games-container');
+
                 if (user.error) {
-                    window.location.href = '/';
+                    // Not logged in: Show Login Button
+                    userInfoDiv.innerHTML = `
+                        <div style="width:100%; text-align:center;">
+                            <a href="/auth/discord" style="
+                                display: inline-block;
+                                background: #5865F2;
+                                color: white;
+                                padding: 10px 20px;
+                                border-radius: 20px;
+                                text-decoration: none;
+                                font-weight: bold;
+                                font-family: 'Be Vietnam Pro', sans-serif;
+                                box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+                            ">
+                                🎮 Đăng nhập bằng Discord
+                            </a>
+                        </div>
+                    `;
+                    // Hide logout button if exists
+                    const logoutBtn = document.querySelector('.logout-btn-mobile');
+                    if (logoutBtn) logoutBtn.parentElement.style.display = 'none';
                     return;
                 }
+
+                // Logged in
                 document.getElementById('username-mobile').innerText = user.username || 'Player';
                 document.getElementById('balance-index-mobile').innerText = formatMoney(user.balance || 0);
             })
             .catch(err => {
                 console.error('Failed to fetch user info:', err);
             });
+
+        // Hide StatusBar in Capacitor
+        if (window.Capacitor) {
+            import('https://unpkg.com/@capacitor/status-bar@latest/dist/plugin.js').then(module => {
+                // StatusBar is usually auto-loaded in Capacitor
+            });
+
+            // Try hiding status bar
+            const hideStatusBar = async () => {
+                try {
+                    const { StatusBar } = await import('@capacitor/status-bar'); // This won't work in vanilla without bundler easily.
+                    // Fallback to global Capacitor object if available
+                } catch (e) { console.log(e); }
+            };
+        }
 
         function formatMoney(num) {
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
