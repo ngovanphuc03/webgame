@@ -15,6 +15,12 @@
     <link rel="stylesheet" href="mobile-common.css">
 
     <style>
+        html {
+            overflow: auto !important;
+            height: auto !important;
+            position: static !important;
+        }
+
         body {
             background: linear-gradient(180deg, #0a0612 0%, #1a0f2e 100%);
             min-height: 100vh;
@@ -23,9 +29,7 @@
             color: white;
             padding: 0;
             overflow-y: auto !important;
-            /* Force scroll */
             position: static !important;
-            /* Reset fixed body */
             touch-action: auto !important;
         }
 
@@ -34,7 +38,7 @@
             position: relative;
             padding: 40px 20px;
             text-align: center;
-            overflow: hidden;
+            /* overflow: hidden; Removed to prevent clipping */
         }
 
         .hero-section::before {
@@ -87,8 +91,8 @@
 
         .download-btn {
             background: linear-gradient(180deg, #ffd700, #b8860b);
-            color: #000;
-            border: none;
+            color: #000 !important;
+            border: 2px solid #fff;
             padding: 16px 30px;
             border-radius: 50px;
             font-size: 18px;

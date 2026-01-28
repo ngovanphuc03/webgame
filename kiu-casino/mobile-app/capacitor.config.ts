@@ -7,10 +7,9 @@ const config: CapacitorConfig = {
 
     // Load directly from server - no need to bundle web files
     server: {
-        // IMPORTANT: Change this to your actual server URL
-        // For local testing, you can use ngrok or your local IP
-        url: 'http://localhost:3000',
-        cleartext: true, // Allow http (not just https) - for development
+        // Production URL
+        url: 'https://g18game.onrender.com',
+        cleartext: true,
         androidScheme: 'https'
     },
 
