@@ -97,8 +97,59 @@ function findSeatByPlayerId(pid) {
 }
 
 function spawnFlyingChips(targetSeat) {
-    // Simple visual effect function - can be expanded
-    // For now relies on winner-glow css
+    if (!state.animationsEnabled || !targetSeat) return;
+
+    const chipCount = 15;
+    const potRect = document.getElementById('pot-amount')?.getBoundingClientRect();
+    const targetRect = targetSeat.getBoundingClientRect();
+
+    if (!potRect || !targetRect) return;
+
+    const startX = potRect.left + potRect.width / 2;
+    const startY = potRect.top + potRect.height / 2;
+
+    const targetX = targetRect.left + targetRect.width / 2;
+    const targetY = targetRect.top + targetRect.height / 2;
+
+    for (let i = 0; i < chipCount; i++) {
+        const chip = document.createElement('div');
+        chip.className = 'floating-chip'; // Defined in CSS
+
+        // Randomize start pos slightly
+        const offsetX = (Math.random() - 0.5) * 50;
+        const offsetY = (Math.random() - 0.5) * 50;
+
+        chip.style.left = (startX + offsetX) + 'px';
+        chip.style.top = (startY + offsetY) + 'px';
+
+        // Random rotation
+        chip.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+        document.body.appendChild(chip);
+
+        // Animate using GSAP if available, else Web Animation API
+        if (window.gsap) {
+            gsap.to(chip, {
+                x: targetX - startX - offsetX,
+                y: targetY - startY - offsetY,
+                opacity: 0,
+                scale: 0.5,
+                duration: 0.8 + Math.random() * 0.5,
+                ease: 'power2.in',
+                delay: Math.random() * 0.3,
+                onComplete: () => chip.remove()
+            });
+        } else {
+            // Fallback
+            chip.animate([
+                { transform: `translate(0, 0) scale(1)`, opacity: 1 },
+                { transform: `translate(${targetX - startX - offsetX}px, ${targetY - startY - offsetY}px) scale(0.5)`, opacity: 0 }
+            ], {
+                duration: 1000,
+                easing: 'ease-in'
+            }).onfinish = () => chip.remove();
+        }
+    }
 }
 
 // QUICK UPDATE (no animations)

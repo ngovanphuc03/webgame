@@ -95,14 +95,13 @@ function handleSliderInput(el) {
         else t.classList.remove('active');
     });
 
-    // Sound effect for slider interaction (throttled/debounced ideally, but simple here)
-    // Only play if value changed significantly or on interaction end? 
-    // For now, let's play on change but maybe check if user is dragging? 
-    // "mỗi khi người chơi kéo thanh trượt" -> might be too noisy on input event.
-    // Let's rely on the user release or maybe just 'change' event?
-    // User asked "mỗi khi người chơi kéo thanh trượt", so let's try to add it but maybe debounce.
-    // simpler: play clicking sound
-    SoundManager.play('bet');
+    // Sound effect with throttle to prevent spamming
+    // Play sound only if 50ms passed since last play
+    const now = Date.now();
+    if (!el.lastSoundTime || now - el.lastSoundTime > 50) {
+        SoundManager.play('bet');
+        el.lastSoundTime = now;
+    }
 }
 
 // Wrap handleSliderInput to avoid spamming sound too much?
@@ -255,33 +254,42 @@ socket.on('tx_timer', (t) => {
 });
 
 socket.on('tx_update', (data) => {
-    safeSetText('total-tai', formatMoney(data.total_tai));
-    safeSetText('total-xiu', formatMoney(data.total_xiu));
-    if (data.msg) showNotif(data.msg);
+    try {
+        safeSetText('total-tai', formatMoney(data.total_tai));
+        safeSetText('total-xiu', formatMoney(data.total_xiu));
+        if (data.msg) showNotif(data.msg);
 
-    if (data.phase === 'shaking') {
-        isBettingPhase = false; canNan = false; resetBowl();
-        bowlWrap.classList.add('shaking');
-        SoundManager.play('shaking');
+        if (data.phase === 'shaking') {
+            isBettingPhase = false; canNan = false; resetBowl();
+            bowlWrap.classList.add('shaking');
+            SoundManager.play('shaking');
 
-        document.getElementById('my-tai').innerText = '';
-        document.getElementById('my-xiu').innerText = '';
-        document.getElementById('box-tai').classList.remove('selected');
-        document.getElementById('box-xiu').classList.remove('selected');
+            safeSetText('my-tai', '');
+            safeSetText('my-xiu', ''); // Safe update
+            const boxTai = document.getElementById('box-tai'); if (boxTai) boxTai.classList.remove('selected', 'winner-glow');
+            const boxXiu = document.getElementById('box-xiu'); if (boxXiu) boxXiu.classList.remove('selected', 'winner-glow');
 
-        // Remove effects
-        document.getElementById('box-tai').classList.remove('winner-glow');
-        document.getElementById('box-xiu').classList.remove('winner-glow');
-        for (let i = 1; i <= 3; i++) document.getElementById(`d${i}`).classList.remove('dice-reveal');
-    } else {
-        bowlWrap.classList.remove('shaking');
-        SoundManager.stop('shaking');
+            for (let i = 1; i <= 3; i++) {
+                const d = document.getElementById(`d${i}`);
+                if (d) d.classList.remove('dice-reveal');
+            }
+        } else {
+            bowlWrap.classList.remove('shaking');
+            SoundManager.stop('shaking');
 
-        if (data.phase === 'betting') { isBettingPhase = true; canNan = false; resetBowl(); }
-        else if (data.phase === 'opening' || data.phase === 'result') {
-            isBettingPhase = false; canNan = (data.phase === 'opening');
-            if (data.dice) for (let i = 0; i < 3; i++) document.getElementById(`d${i + 1}`).src = `/images/dice/${data.dice[i]}.png?t=${Date.now()}`;
+            if (data.phase === 'betting') { isBettingPhase = true; canNan = false; resetBowl(); }
+            else if (data.phase === 'opening' || data.phase === 'result') {
+                isBettingPhase = false; canNan = (data.phase === 'opening');
+                if (data.dice) {
+                    for (let i = 0; i < 3; i++) {
+                        const d = document.getElementById(`d${i + 1}`);
+                        if (d) d.src = `/images/dice/${data.dice[i]}.png?t=${Date.now()}`;
+                    }
+                }
+            }
         }
+    } catch (e) {
+        console.error("TX Update Error:", e);
     }
 });
 
