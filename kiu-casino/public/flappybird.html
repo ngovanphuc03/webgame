@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Bird - Royal Casino</title>
+    <link rel="stylesheet" href="css/flappybird.css">
+    <style>
+        /* Asset Preloading (hidden) */
+        #assets {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Asset Container (Preloaded in DOM for ease of use) -->
+    <div id="assets">
+        <!-- Bird Sprite: 64x16 (4 frames of 16x16) -->
+        <img id="img-bird" src="flappy_assets/Flappy Bird Assets/Player/StyleBird1/Bird1-1.png" alt="bird">
+        <!-- Pipes: 128x160 (Green pipe at 0,0, 32x80) -->
+        <img id="img-pipes" src="flappy_assets/Flappy Bird Assets/Tiles/Style 1/PipeStyle1.png" alt="pipes">
+        <!-- Background -->
+        <img id="img-bg" src="flappy_assets/Flappy Bird Assets/Background/Background1.png" alt="bg">
+    </div>
+
+    <div id="game-container">
+        <a href="/" class="back-btn">← Quay lại Casino</a>
+        <canvas id="gameCanvas" width="320" height="480"></canvas>
+
+        <div id="ui-layer">
+            <div id="score">0</div>
+
+            <div id="start-message">
+                <h1>FLAPPY BIRD</h1>
+                <p>Nhấn Space hoặc Click để nhảy</p>
+                <p style="color: gold; font-size: 12px;">1 Điểm = 10 Vàng</p>
+                <button id="btn-start" class="btn">Bắt Đầu</button>
+            </div>
+
+            <div id="game-over" class="hidden">
+                <h1>GAME OVER</h1>
+                <p>Điểm: <span id="final-score">0</span></p>
+                <p style="color: gold;">+<span id="gold-earned">0</span> Vàng</p>
+                <button id="btn-restart" class="btn">Chơi Lại</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/flappybird.js"></script>
+</body>
+
+</html>
