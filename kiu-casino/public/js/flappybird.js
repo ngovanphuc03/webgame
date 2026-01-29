@@ -40,8 +40,8 @@ const LOGICAL_HEIGHT = 480;
 const GROUND_H = 112;
 const PLAYABLE_H = LOGICAL_HEIGHT - GROUND_H;
 
-const GRAVITY = 0.25;
-const JUMP = -4.6;
+const GRAVITY = 0.15; // Was 0.25
+const JUMP = -3.5;   // Was -4.6
 const PIPE_SPEED = 2;
 const PIPE_SPAWN_RATE = 100;
 const PIPE_GAP = 120; // Comfortable gap
