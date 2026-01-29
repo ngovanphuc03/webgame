@@ -149,5 +149,72 @@ p {
 }
 
 .back-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
-}
+
+    /* Leaderboard */
+    #leaderboard {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(180deg, #dcb95b 0%, #e0c455 100%);
+        padding: 15px;
+        border-radius: 8px;
+        border: 3px solid #543847;
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+        color: #543847;
+        z-index: 50;
+        min-width: 180px;
+        font-family: 'PixelFont', sans-serif;
+        transform: rotate(1deg);
+    }
+
+    #leaderboard h3 {
+        margin: 0 0 10px 0;
+        text-align: center;
+        color: #fff;
+        font-size: 14px;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 #543847, -1px -1px 0 #543847;
+        background: #e55b2b;
+        padding: 5px;
+        border-radius: 4px;
+        border: 2px solid #543847;
+    }
+
+    #leaderboard ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #leaderboard li {
+        font-size: 12px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #543847;
+    }
+
+    #leaderboard li span.name {
+        font-weight: bold;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #leaderboard li span.score {
+        color: #e55b2b;
+        font-weight: 900;
+    }
+
+    #leaderboard li:nth-child(1) {
+        background: #fff5ba;
+        border-color: #d4af37;
+    }
+
+    #leaderboard li:nth-child(1) span.score {
+        color: #d4af37;
+    }
