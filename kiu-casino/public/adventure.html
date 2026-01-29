@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Adventure - Royal Casino</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #202020;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #game-container {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 100;
+            text-decoration: none;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-family: monospace;
+            font-size: 20px;
+            text-align: right;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/" class="back-btn">← Quay lại Casino</a>
+
+    <div id="game-container"></div>
+
+    <div id="ui-layer">
+        <div>Level: <span id="level-display">1</span>/30</div>
+        <div>Score: <span id="score-display">0</span></div>
+    </div>
+
+    <script src="js/adventure.js"></script>
+</body>
+
+</html>
