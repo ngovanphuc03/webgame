@@ -210,35 +210,6 @@ app.get('/api/flappy/leaderboard', async (req, res) => {
     }
 });
 
-// Endpoint trả thưởng Pixel Adventure
-app.post('/api/adventure/reward', async (req, res) => {
-    const uid = req.cookies.user_id;
-    if (!uid) return res.status(401).json({ error: 'Chưa đăng nhập' });
-
-    const { score, level } = req.body;
-    if (!score || score <= 0) return res.status(400).json({ error: 'Điểm không hợp lệ' });
-
-    // Validate sane defaults for platformer (e.g. max 50 fruits per level?)
-    // Relaxed check for now
-
-    // Reward: 1 Score (Fruit) = 10 Gold
-    // Level Completion Bonus: Level * 100 Gold?
-    let goldReward = score * 10;
-    if (level === 30) goldReward += 5000; // Big bonus for finishing game
-
-    try {
-        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
-        const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = rows.length ? rows[0].balance : 0;
-
-        console.log(`[PixelAdv] User ${uid} Level ${level} Score ${score} -> +${goldReward} gold.`);
-        res.json({ success: true, addedGold: goldReward, newBalance });
-    } catch (e) {
-        console.error('Adventure Reward Error:', e);
-        res.status(500).json({ error: 'Lỗi Database' });
-    }
-});
-
 
 
 
