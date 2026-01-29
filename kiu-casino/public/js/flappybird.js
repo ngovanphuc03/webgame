@@ -7,11 +7,15 @@ const imgPipes = document.getElementById('img-pipes');
 const imgBg = document.getElementById('img-bg');
 
 // --- CONSTANTS ---
+// We will scale these based on screen size or keep fixed physics and larger view?
+// For simpler gameplay feel, we keep physics constant but just expand the view.
+// However, pipes spawn at right edge, so on wider screens it takes longer.
+// That is acceptable for "Responsive".
 const GRAVITY = 0.25;
 const JUMP = -4.6;
 const PIPE_SPEED = 2;
 const PIPE_SPAWN_RATE = 100; // Frames
-const PIPE_GAP = 100;
+const PIPE_GAP = 120; // Slightly larger for full screen playability
 
 // --- GAME STATE ---
 let frames = 0;
@@ -19,25 +23,50 @@ let score = 0;
 let gameState = 'START'; // START, PLAYING, GAMEOVER
 let pipes = [];
 
+// --- RESIZE HANDLING ---
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // We might need to reposition bird if it goes off screen?
+    // For now, let's just let it be.
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Init
+
 // --- CLASSES ---
 
 class Background {
     constructor() {
         this.x = 0;
-        this.y = 0;
-        this.w = canvas.width;
-        this.h = canvas.height;
     }
 
     draw() {
-        // Simple parallax or just static tile
-        ctx.drawImage(imgBg, this.x, this.y, this.w, this.h);
-        ctx.drawImage(imgBg, this.x + this.w, this.y, this.w, this.h);
+        // Tile the background to cover screen
+        // Assumes imgBg is loaded
+        if (!imgBg.complete) return;
+
+        let bgW = imgBg.width || 300; // Fallback
+        let bgH = imgBg.height || 500;
+
+        // Scale bg to fit height? Or just tile?
+        // Let's scale to cover height, maintain aspect ratio
+        let scale = canvas.height / bgH;
+        let scaledW = bgW * scale;
+        let scaledH = canvas.height;
+
+        let numTiles = Math.ceil(canvas.width / scaledW) + 1;
+
+        // Offset for parallax
+        let offsetX = this.x % scaledW;
+
+        for (let i = 0; i < numTiles; i++) {
+            ctx.drawImage(imgBg, offsetX + (i * scaledW), 0, scaledW, scaledH);
+        }
     }
 
     update() {
         if (gameState === 'PLAYING') {
-            this.x = (this.x - 0.5) % this.w;
+            this.x -= 0.5;
         }
     }
 }
@@ -45,8 +74,8 @@ class Background {
 class Bird {
     constructor() {
         this.x = 50;
-        this.y = 150;
-        this.w = 34; // Scaled up slightly
+        this.y = canvas.height / 2;
+        this.w = 34;
         this.h = 24;
         this.velocity = 0;
         this.frameIndex = 0;
@@ -70,6 +99,9 @@ class Bird {
         let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.1)));
         ctx.rotate(rotation);
 
+        // Draw bigger bird? 34x24 is small on 1080p
+        // Let's scale it up a bit: 1.5x
+        // Actually, let's keep it pixel perfect-ish or just same ratio
         ctx.drawImage(imgBird, sx, sy, sw, sh, -this.w / 2, -this.h / 2, this.w, this.h);
         ctx.restore();
     }
@@ -105,15 +137,8 @@ class Bird {
 class Pipe {
     constructor() {
         this.x = canvas.width;
-        this.w = 50; // Visual width
-        // Pipe Image Slicing: Green Pipe at (0,0), size 32x80 (logic from plan)
-        // We need to stretch the middle part or just draw simple pipes from the sprite
-        // Use full sprite 32x80 for "cap" and "body"? 
-        // Let's simplify: Draw Top and Bottom pipes using the sprite as texture
-
-        // Random Y position for gap
-        // Min pipe height: 50
-        // Max pipe height: canvas.height - ground - gap - min_height
+        this.w = 60; // Slightly wider
+        // Standard pipe logic
         let minHeight = 50;
         let maxPos = canvas.height - minHeight - PIPE_GAP;
         this.topY = Math.floor(Math.random() * (maxPos - minHeight + 1)) + minHeight;
@@ -122,43 +147,17 @@ class Pipe {
     }
 
     draw() {
-        // Source Pipe: 32x80. (0,0 is Green Pipe Top? No, usually these sheets are complex)
-        // Based on user asset: 
-        // PipeStyle1.png (128x160) -> 32x80 per pipe section?
-        // Let's assume standard layout or trial/error. 
-        // Usually: Top-left is one pipe, one color. 
-        // Let's use Source: x=0, y=0, w=32, h=80 as "Whole Pipe"? 
-        // Actually, typical Flappy Bird assets have a "Top Pipe" and "Bottom Pipe".
-        // If the sprite is just one vertical tube, we might need to flip it for top.
-
-        // DRAWING LOGIC:
-        // Top Pipe (flipped vertical or specific sprite)
-        // Bottom Pipe
-
-        // Since we can't easily see the sprite content perfectly, I will assume:
-        // x=0, y=0, w=32, h=80 is "Green Pipe Body/Cap"
-        // I will draw it stretched.
-
-        // Better implementation for generic asset:
-        // Draw Top Pipe
+        // We stretch standard pipe sprite 32x80 to fit
         ctx.save();
-        // Flip for top pipe check? Or just draw rect for now if sprite is weird.
-        // Let's try drawing sprite directly.
-        // Top Pipe: y = this.topY - (some giant number), height = giant number
-        // Bottom Pipe: y = this.topY + PIPE_GAP
 
-        // For visual safety, let's draw standard green pipes using 0,0,32,80
-        // Top Pipe (Rotated 180 deg)
-        ctx.save();
-        ctx.translate(this.x + this.w / 2, this.topY); // Pivot at bottom of top pipe
-        ctx.scale(1, -1); // Flip Y
-        ctx.drawImage(imgPipes, 0, 0, 32, 80, -this.w / 2, 0, this.w, 400); // Stretch height
+        // Top Pipe (Flip Y)
+        ctx.translate(this.x + this.w / 2, this.topY);
+        ctx.scale(1, -1);
+        ctx.drawImage(imgPipes, 0, 0, 32, 80, -this.w / 2, 0, this.w, 800); // Draw tall enough
         ctx.restore();
 
         // Bottom Pipe
-        ctx.drawImage(imgPipes, 0, 0, 32, 80, this.x, this.topY + PIPE_GAP, this.w, 400);
-
-        ctx.restore();
+        ctx.drawImage(imgPipes, 0, 0, 32, 80, this.x, this.topY + PIPE_GAP, this.w, 800); // Draw tall enough
     }
 
     update() {
@@ -200,7 +199,7 @@ function loop() {
 
             // Score
             if (p.x + p.w < bird.x && !p.passed) {
-                if (gameState === 'PLAYING') { // Check again state
+                if (gameState === 'PLAYING') {
                     score++;
                     updateScoreDisplay();
                     p.passed = true;
@@ -225,8 +224,6 @@ function loop() {
         p.draw();
     }
 
-    // Draw ground if needed (omitted for now, pipes go to bottom)
-
     bird.draw();
 
     if (gameState === 'PLAYING' || gameState === 'START') {
@@ -235,8 +232,6 @@ function loop() {
 }
 
 function checkCollision(b, r) {
-    // b: bird, r: rect (pipe)
-    // Reduce hitbox slightly for better feel
     let bx = b.x + 4;
     let by = b.y + 4;
     let bw = b.w - 8;
@@ -269,7 +264,6 @@ function gameOver() {
 
     console.log("Game Over! Score:", score);
 
-    // Send Reward
     if (score > 0) {
         sendReward(score);
     }
@@ -280,7 +274,7 @@ function gameOver() {
 }
 
 function resetGame() {
-    bird.y = 150;
+    bird.y = canvas.height / 2;
     bird.velocity = 0;
     pipes = [];
     score = 0;
@@ -290,7 +284,6 @@ function resetGame() {
     uiGameOver.classList.add('hidden');
     gameState = 'START';
 
-    // Redraw initial state
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     bg.draw();
     bird.draw();
@@ -320,13 +313,17 @@ function action() {
     }
 }
 
-document.getElementById('btn-start').addEventListener('click', () => {
+document.getElementById('btn-start').addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent canvas click triggering jump immediately
     if (gameState === 'START') {
         startGame();
         bird.jump();
     }
 });
-document.getElementById('btn-restart').addEventListener('click', resetGame);
+document.getElementById('btn-restart').addEventListener('click', (e) => {
+    e.stopPropagation();
+    resetGame();
+});
 
 // --- REWARD API ---
 async function sendReward(scoreVal) {
@@ -348,14 +345,16 @@ async function sendReward(scoreVal) {
 }
 
 // --- INIT ---
-// Draw initial frame
+// Ensure resize happens
+resizeCanvas();
+
+// Initial Draw
 imgBird.onload = () => {
     bg.draw();
     bird.draw();
 };
 
-// Fallback if images already loaded
-if (imgBird.complete) {
+if (imgBird.complete || imgBg.complete) {
     bg.draw();
     bird.draw();
 }
