@@ -1,18 +1,13 @@
 :root {
     --sky-blue: #70c5ce;
-    --ground-color: #ded895;
-    --text-color: #fff;
     --font-family: 'Courier New', Courier, monospace;
-    /* Pixel-ish fallback */
 }
 
 body {
     margin: 0;
     padding: 0;
     background-color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100vw;
     height: 100vh;
     overflow: hidden;
     font-family: var(--font-family);
@@ -21,12 +16,9 @@ body {
 
 #game-container {
     position: relative;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    border: 4px solid #fff;
-    border-radius: 4px;
+    width: 100%;
+    height: 100%;
     background-color: var(--sky-blue);
-    width: 320px;
-    height: 480px;
     overflow: hidden;
 }
 
@@ -34,6 +26,8 @@ canvas {
     display: block;
     width: 100%;
     height: 100%;
+    image-rendering: pixelated;
+    /* Keep pixel art crisp */
 }
 
 /* UI Overlay */
@@ -50,11 +44,12 @@ canvas {
 }
 
 #score {
-    font-size: 40px;
+    font-size: 5vh;
+    /* Responsive font size */
     font-weight: bold;
     color: white;
     text-shadow: 2px 2px 0 #000;
-    margin-top: 20px;
+    margin-top: 5vh;
     z-index: 10;
 }
 
@@ -70,7 +65,7 @@ canvas {
     border-radius: 10px;
     border: 2px solid #fff;
     pointer-events: auto;
-    /* Enable clicks on buttons */
+    min-width: 300px;
 }
 
 .hidden {
@@ -109,30 +104,18 @@ p {
     box-shadow: 0 0 0 #9e3e1d;
 }
 
-.btn-secondary {
-    background: #4ec0ca;
-    box-shadow: 0 4px 0 #2f8e96;
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-.btn-secondary:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 #2f8e96;
-}
-
 /* Back Button */
 .back-btn {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 20px;
+    left: 20px;
     background: rgba(0, 0, 0, 0.5);
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
     z-index: 20;
     pointer-events: auto;
     text-decoration: none;
