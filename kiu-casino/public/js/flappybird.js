@@ -93,11 +93,12 @@ class Background {
         let gW = 336; // Tile width usually around 336 or 400. From file analysis: TileStyle1 400w
         if (currentGroundImg.width > 0) gW = currentGroundImg.width;
 
-        let numTilesG = Math.ceil(screenLogicalW / gW) + 1;
+        let numTilesG = Math.ceil(screenLogicalW / gW) + 2; // Extra buffer
         let offsetG = this.groundX % gW;
 
         for (let i = 0; i < numTilesG; i++) {
-            ctx.drawImage(currentGroundImg, offsetG + (i * gW), LOGICAL_HEIGHT - GROUND_H, gW, GROUND_H);
+            // Overlap by 1px to prevent gaps
+            ctx.drawImage(currentGroundImg, Math.floor(offsetG + (i * gW)), LOGICAL_HEIGHT - GROUND_H, gW + 1, GROUND_H);
         }
     }
 
