@@ -4,1046 +4,1120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ROYAL CASINO - VIP Gaming Experience</title>
+    <title>PIXEL PLAYZONE - Thế giới game giải trí</title>
 
-    <!-- Premium Fonts -->
+    <!-- Google Fonts: Nunito for Body text readability -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lora:wght@400;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     <style>
+        /* REGISTER CUSTOM FONTS */
+        @font-face {
+            font-family: 'DearPix';
+            src: url('fonts/dearpix-1-94.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'StarGuard';
+            src: url('fonts/starguard.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'PixelBold';
+            src: url('fonts/pixel.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'PixelRegular';
+            src: url('fonts/pixel_font.otf') format('opentype');
+        }
+
         :root {
-            --gold: #ffd700;
-            --gold-dark: #b8860b;
-            --gold-light: #fff8dc;
-            --royal-purple: #1a0f2e;
-            --royal-dark: #0a0612;
-            --royal-deeper: #050308;
-            --accent-red: #ff3b5c;
-            --accent-green: #00d26a;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --neon-blue: #00f3ff;
+            --neon-pink: #bc13fe;
+            --neon-purple: #8a2be2;
+            --neon-green: #00ff9d;
+            --neon-orange: #ff9e00;
+            --neon-yellow: #ffe600;
+            --bg-dark: #0a0b1e;
+            --card-bg: rgba(20, 20, 40, 0.7);
+
+            --font-hero: 'DearPix', sans-serif;
+            --font-pixel: 'DearPix', sans-serif;
+            --font-body: 'Nunito', sans-serif;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-        }
-
-        html,
-        body {
-            height: 100%;
+            user-select: none;
         }
 
         body {
-            font-family: 'Lora', serif;
-            background: var(--royal-deeper);
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: url('images/ui/bg_lobby.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
-            position: relative;
         }
 
-        /* === ANIMATED BACKGROUND === */
-        .bg-layer {
+        /* Overlay to ensure text readability if BG is too bright */
+        .bg-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        .bg-layer::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background:
-                radial-gradient(ellipse at 30% 20%, rgba(139, 69, 19, 0.15) 0%, transparent 40%),
-                radial-gradient(ellipse at 70% 80%, rgba(75, 0, 130, 0.1) 0%, transparent 40%),
-                radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 60%);
-            animation: bg-rotate 60s linear infinite;
-        }
-
-        @keyframes bg-rotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Floating Particles */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
+            background: rgba(10, 11, 30, 0.4);
+            z-index: -1;
             pointer-events: none;
-            z-index: 1;
-        }
-
-        .particle {
-            position: absolute;
-            background: var(--gold);
-            border-radius: 50%;
-            animation: float-up linear infinite;
-            opacity: 0;
-        }
-
-        @keyframes float-up {
-            0% {
-                transform: translateY(100vh) scale(0);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 0.8;
-            }
-
-            90% {
-                opacity: 0.4;
-            }
-
-            100% {
-                transform: translateY(-100vh) scale(1);
-                opacity: 0;
-            }
-        }
-
-        /* Ambient Orbs */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.12;
-            pointer-events: none;
-            z-index: 0;
-            animation: orb-pulse 8s ease-in-out infinite;
-        }
-
-        .orb-1 {
-            width: 600px;
-            height: 600px;
-            top: -200px;
-            left: -100px;
-            background: var(--gold);
-        }
-
-        .orb-2 {
-            width: 500px;
-            height: 500px;
-            bottom: -150px;
-            right: -100px;
-            background: #9b59b6;
-            animation-delay: 4s;
-        }
-
-        .orb-3 {
-            width: 400px;
-            height: 400px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #e74c3c;
-            animation-delay: 2s;
-            opacity: 0.05;
-        }
-
-        @keyframes orb-pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 0.12;
-            }
-
-            50% {
-                transform: scale(1.15);
-                opacity: 0.18;
-            }
         }
 
         /* === NAVBAR === */
         .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 50px;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+            padding: 15px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .brand {
-            font-family: 'Cinzel', serif;
-            font-size: 32px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--gold) 0%, #fff 25%, var(--gold) 50%, #fff 75%, var(--gold) 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 15px;
             cursor: pointer;
-            letter-spacing: 4px;
-            animation: shine 3s linear infinite;
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
         }
 
-        @keyframes shine {
-            to {
-                background-position: 200% center;
-            }
+        .brand-text {
+            font-family: var(--font-hero);
+            font-size: 38px;
+            /* Slightly larger for StarGuard */
+            line-height: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .brand-text span {
+            display: block;
+            color: #fff;
+        }
+
+        .brand-text span:last-child {
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
         }
 
         .brand-icon {
-            display: inline-block;
-            margin-right: 10px;
-            font-size: 28px;
-            animation: crown-float 2s ease-in-out infinite;
+            font-size: 36px;
+            color: var(--neon-blue);
+            animation: pulse-icon 2s infinite;
         }
 
-        @keyframes crown-float {
+        @keyframes pulse-icon {
 
             0%,
             100% {
-                transform: translateY(0) rotate(-5deg);
+                transform: scale(1);
+                filter: drop-shadow(0 0 5px var(--neon-blue));
             }
 
             50% {
-                transform: translateY(-5px) rotate(5deg);
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 15px var(--neon-blue));
             }
         }
 
+        /* USER PANEL */
         .user-panel {
             display: flex;
             align-items: center;
             gap: 20px;
         }
 
-        .balance-box {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            border-radius: 30px;
-            padding: 12px 28px;
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            color: var(--gold);
-            font-size: 18px;
-            box-shadow:
-                0 0 30px rgba(255, 215, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        /* Balance Pill styles */
+        .balance-display {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--neon-yellow);
+            border-radius: 50px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
         }
 
-        .user-info {
+        .balance-value {
+            font-family: var(--font-pixel);
+            font-size: 18px;
+            color: var(--neon-yellow);
+            letter-spacing: 1px;
+        }
+
+        .user-profile {
             display: flex;
             align-items: center;
             gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 15px 5px 5px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .user-info img {
-            width: 50px;
-            height: 50px;
+        .avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 3px solid var(--gold);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            border: 2px solid var(--neon-blue);
+            object-fit: cover;
         }
 
-        .user-info span {
-            font-family: 'Lora', serif;
-            font-weight: 600;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .btn-premium {
-            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-dark) 100%);
-            background-size: 200% auto;
-            color: #1a0f2e;
-            border: none;
-            padding: 14px 35px;
-            font-family: 'Cinzel', serif;
+        .username {
             font-weight: 700;
-            font-size: 14px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            text-decoration: none;
-            display: inline-block;
-            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
-            animation: btn-shine 3s linear infinite;
-        }
-
-        @keyframes btn-shine {
-            to {
-                background-position: 200% center;
-            }
-        }
-
-        .btn-premium:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 40px rgba(255, 215, 0, 0.6);
+            font-size: 15px;
+            color: #fff;
         }
 
         .btn-logout {
-            background: transparent;
-            border: 1px solid rgba(255, 100, 100, 0.5);
-            color: #ff6b6b;
-            padding: 12px 25px;
-            font-family: 'Lora', serif;
+            background: linear-gradient(90deg, #ff3b5c, #ff0055);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: #fff;
+            font-weight: 700;
             font-size: 14px;
-            border-radius: 25px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);
+            transition: transform 0.2s;
         }
 
         .btn-logout:hover {
-            background: rgba(255, 100, 100, 0.2);
-            border-color: #ff6b6b;
+            transform: translateY(-2px);
         }
 
-        /* === MAIN CONTENT === */
-        .main-content {
-            position: relative;
-            z-index: 10;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 120px 50px 80px;
+        .btn-login {
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            padding: 10px 30px;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+            animation: pulse-btn 2s infinite;
         }
 
-        /* === HERO === */
+        /* === HERO SECTION === */
         .hero {
             text-align: center;
-            margin-bottom: 60px;
+            padding: 60px 20px 40px;
+            position: relative;
         }
 
-        .hero h1 {
-            font-family: 'Cinzel', serif;
+        .welcome-title {
+            font-family: var(--font-hero);
+            /* StarGuard for Impact */
+            font-weight: 400;
+            /* Custom font handles weight */
             font-size: 56px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #fff 0%, var(--gold-light) 30%, var(--gold) 60%, #fff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            letter-spacing: 6px;
-            line-height: 1.2;
-            animation: hero-glow 4s ease-in-out infinite;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            letter-spacing: 3px;
         }
 
-        @keyframes hero-glow {
-
-            0%,
-            100% {
-                filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.4));
-            }
-
-            50% {
-                filter: drop-shadow(0 0 60px rgba(255, 215, 0, 0.7));
-            }
+        .welcome-title span {
+            color: var(--neon-yellow);
         }
 
         .hero-subtitle {
-            font-family: 'Lora', serif;
-            font-size: 22px;
-            color: rgba(255, 255, 255, 0.6);
-            font-style: italic;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-        }
-
-        .hero-tagline {
-            display: inline-flex;
-            align-items: center;
-            gap: 15px;
-            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
-            padding: 15px 40px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 215, 0, 0.2);
-        }
-
-        .hero-tagline span {
-            color: var(--gold);
-            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
             font-weight: 600;
-            letter-spacing: 2px;
         }
 
-        .divider-icon {
-            color: rgba(255, 215, 0, 0.5);
+        .hero-tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
         }
 
-        /* === GAME SECTION === */
-        .game-section {
-            max-width: 1300px;
-            margin: 0 auto;
-            width: 100%;
+        .tag {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .section-header {
-            text-align: center;
-            margin-bottom: 50px;
+        .tag i {
+            font-style: normal;
         }
 
-        .section-title {
-            font-family: 'Cinzel', serif;
-            font-size: 28px;
-            color: var(--gold);
-            letter-spacing: 5px;
-            position: relative;
-            display: inline-block;
-        }
-
-        .section-title::before,
-        .section-title::after {
-            content: '';
+        /* Floating Icons */
+        .floating-icon {
             position: absolute;
-            top: 50%;
-            width: 80px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            font-size: 40px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+            animation: float 4s ease-in-out infinite;
         }
 
-        .section-title::before {
-            right: 120%;
+        .icon-1 {
+            top: 20%;
+            left: 15%;
+            animation-delay: 0s;
+            transform: rotate(-15deg);
         }
 
-        .section-title::after {
-            left: 120%;
+        .icon-2 {
+            top: 30%;
+            right: 15%;
+            animation-delay: 1.5s;
+            transform: rotate(15deg);
         }
 
-        /* === GAME CARDS === */
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 50px;
-            justify-items: center;
+        .icon-3 {
+            top: 15%;
+            right: 25%;
+            font-size: 30px;
+            animation-delay: 2.5s;
         }
 
-        .game-card {
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(var(--rot, 0deg));
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(var(--rot, 0deg));
+            }
+        }
+
+        /* === ULTRA UPGRADES === */
+
+        /* Custom Cursor */
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        #cursor-trail {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            opacity: 0.6;
+        }
+
+        /* Full Screen Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 450px;
-            background: linear-gradient(160deg, rgba(40, 30, 60, 0.6) 0%, rgba(20, 15, 35, 0.8) 100%);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 215, 0, 0.15);
-            border-radius: 30px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            transform-style: preserve-3d;
-            perspective: 1000px;
+            height: 100%;
+            z-index: -2;
+            /* Behind everything */
         }
 
-        .game-card::before {
+        /* Retro Moving Grid */
+        .retro-grid {
+            position: fixed;
+            bottom: -50%;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(188, 19, 254, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(188, 19, 254, 0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: grid-move 20s linear infinite;
+            z-index: -1;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
+        }
+
+        @keyframes grid-move {
+            0% {
+                transform: perspective(500px) rotateX(60deg) translateY(0);
+            }
+
+            100% {
+                transform: perspective(500px) rotateX(60deg) translateY(50px);
+            }
+        }
+
+        /* === VISUAL EFFECTS === */
+
+        /* CRT Scanline */
+        .crt-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.8;
+        }
+
+        .shine-layer {
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Glitch Text Effect */
+        .glitch-text {
+            position: relative;
+            color: #fff;
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+        }
+
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -1px 0 var(--neon-pink);
+            clip-path: inset(44% 0 61% 0);
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -1px 0 var(--neon-blue);
+            clip-path: inset(54% 0 11% 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% {
+                clip-path: inset(20% 0 50% 0);
+            }
+
+            100% {
+                clip-path: inset(80% 0 10% 0);
+            }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% {
+                clip-path: inset(10% 0 60% 0);
+            }
+
+            100% {
+                clip-path: inset(40% 0 20% 0);
+            }
+        }
+
+        /* Button Shine Animation */
+        .btn-play {
+            position: relative;
+            overflow: hidden;
+            /* ... existing ... */
+        }
+
+        .btn-play::after {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(120deg, transparent, rgba(255, 215, 0, 0.15), transparent);
-            transition: left 0.8s ease;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
         }
 
-        .game-card:hover::before {
+        .btn-play:hover::after {
             left: 100%;
         }
 
-        .game-card:hover {
-            transform: translateY(-15px) rotateX(5deg);
-            border-color: var(--gold);
-            box-shadow:
-                0 30px 80px rgba(0, 0, 0, 0.6),
-                0 0 60px rgba(255, 215, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        /* === GAME GRID === */
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
         }
 
+        .section-title {
+            font-family: var(--font-pixel);
+            /* Pixel font for headers */
+            font-size: 36px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
+        }
+
+        .game-card {
+            background: linear-gradient(180deg, rgba(30, 30, 60, 0.9) 0%, rgba(15, 15, 30, 0.95) 100%);
+            border-radius: 24px;
+            padding: 20px;
+            border: 2px solid transparent;
+            position: relative;
+            transition: transform 0.1s;
+            /* Faster response for tilt */
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+            /* Enable 3D children */
+            transform: perspective(1000px);
+        }
+
+        /* ... existing border styles ... */
+        .card-taixiu {
+            border-color: var(--neon-orange);
+            box-shadow: 0 0 20px rgba(255, 158, 0, 0.2);
+        }
+
+        .card-poker {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+
+        .card-flappy {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.2);
+        }
+
+        .game-card:hover {
+            z-index: 10;
+        }
+
+        /* Bring to front on hover */
+
+        /* 3D LAYERS - Pop out elements */
         .card-image {
-            height: 220px;
+            height: 180px;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 20px;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
             overflow: hidden;
+            transition: all 0.4s ease;
+            transform: translateZ(30px);
+            /* Banner pops out 30px */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            /* Deep shadow */
         }
 
-        .card-image::before {
+        .card-title,
+        .card-desc,
+        .card-stats {
+            transform: translateZ(20px);
+            /* Text pops out 20px */
+        }
+
+        .btn-play {
+            /* ... existing styles ... */
+            transform: translateZ(40px);
+            /* Button pops out most (40px) */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            /* Ensure button positioning relative to 3d context */
+            margin-top: auto;
+            /* Re-add button basics if overwrite risks */
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            /* Fallback */
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-family: var(--font-pixel);
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-taixiu {
+            background: linear-gradient(90deg, #ff512f, #dd2476);
+            color: white;
+        }
+
+        .btn-poker {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            color: #000;
+        }
+
+        .btn-flappy {
+            background: linear-gradient(90deg, #fce38a, #f38181);
+            color: #000;
+        }
+
+        .btn-play:hover {
+            transform: translateZ(50px) scale(1.05);
+            /* Hover pop even more */
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        /* Neon Borders & Glow for Banners */
+        .card-taixiu .card-image {
+            border-color: var(--neon-orange);
+            box-shadow: 0 0 10px rgba(255, 158, 0, 0.3);
+        }
+
+        .card-poker .card-image {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+        }
+
+        .card-flappy .card-image {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 10px rgba(255, 230, 0, 0.3);
+        }
+
+        /* Hover: Light up and Strong Glow */
+        .card-taixiu:hover .card-image {
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px var(--neon-orange), inset 0 0 15px var(--neon-orange);
+            border-color: #fff;
+        }
+
+        .card-poker:hover .card-image {
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px var(--neon-green), inset 0 0 15px var(--neon-green);
+            border-color: #fff;
+        }
+
+        .card-flappy:hover .card-image {
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px var(--neon-yellow), inset 0 0 15px var(--neon-yellow);
+            border-color: #fff;
+        }
+
+        .card-image::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
-            z-index: 1;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), transparent);
+            transition: opacity 0.3s;
         }
 
-        .card-image.taixiu {
-            background:
-                radial-gradient(ellipse at 50% 30%, rgba(231, 76, 60, 0.3) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 70%, rgba(52, 152, 219, 0.3) 0%, transparent 50%),
-                linear-gradient(135deg, #1a3a5c 0%, #2c5282 50%, #1a3a5c 100%);
+        .game-card:hover .card-image::after {
+            opacity: 0.3;
+            /* Lighten the overlay on hover */
         }
 
-        .card-image.poker {
-            background:
-                radial-gradient(ellipse at 50% 50%, rgba(46, 204, 113, 0.2) 0%, transparent 50%),
-                linear-gradient(135deg, #0d3320 0%, #1a5c3a 50%, #0d3320 100%);
+        .img-taixiu {
+            background: url('images/ui/banner_taixiu.png');
+            background-size: cover;
+            /* Reset zoom for new HQ images */
+            background-position: center;
+        }
+
+        .img-poker {
+            background: url('images/ui/banner_poker.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .img-flappy {
+            background: url('images/ui/banner_flappy.png');
+            background-size: cover;
+            background-position: center;
         }
 
         .card-icon {
-            font-size: 100px;
+            font-size: 64px;
             z-index: 2;
-            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.5));
-            animation: icon-hover 4s ease-in-out infinite;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5));
+            transition: transform 0.3s;
         }
 
-        @keyframes icon-hover {
-
-            0%,
-            100% {
-                transform: translateY(0) scale(1);
-            }
-
-            50% {
-                transform: translateY(-15px) scale(1.05);
-            }
-        }
-
-        .card-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 8px 20px;
-            font-family: 'Cinzel', serif;
-            font-size: 12px;
-            font-weight: 700;
-            border-radius: 20px;
-            letter-spacing: 2px;
-            z-index: 3;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .badge-hot {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-            color: #fff;
-            animation: badge-glow 2s ease-in-out infinite;
-        }
-
-        .badge-new {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-            color: #1a0f2e;
-        }
-
-        @keyframes badge-glow {
-
-            0%,
-            100% {
-                box-shadow: 0 5px 20px rgba(255, 107, 107, 0.5);
-            }
-
-            50% {
-                box-shadow: 0 5px 30px rgba(255, 107, 107, 0.8);
-            }
-        }
-
-        .card-content {
-            padding: 30px 35px 35px;
-            position: relative;
+        .game-card:hover .card-icon {
+            transform: scale(1.1);
         }
 
         .card-title {
-            font-family: 'Cinzel', serif;
-            font-size: 26px;
-            font-weight: 700;
+            font-family: var(--font-pixel);
+            font-size: 24px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
             color: #fff;
-            margin-bottom: 12px;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
 
         .card-desc {
-            font-family: 'Lora', serif;
-            font-size: 15px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 25px;
-            line-height: 1.7;
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            flex-grow: 1;
         }
 
         .card-stats {
             display: flex;
-            gap: 25px;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .stat-icon {
-            color: var(--gold);
-        }
-
-        .card-btn {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-dark) 100%);
-            background-size: 200% auto;
-            color: #1a0f2e;
-            font-family: 'Cinzel', serif;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 12px;
             font-weight: 700;
-            font-size: 15px;
-            text-align: center;
-            border-radius: 15px;
-            text-decoration: none;
-            letter-spacing: 3px;
-            transition: all 0.4s ease;
-            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+            color: rgba(255, 255, 255, 0.7);
         }
 
-        .card-btn:hover {
-            background-position: right center;
-            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
-            transform: translateY(-2px);
+        .stat-item i {
+            color: var(--neon-yellow);
+            margin-right: 4px;
         }
 
-        /* === LOADING === */
+        .btn-play {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-pixel);
+            font-size: 20px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-taixiu {
+            background: var(--neon-orange);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(255, 158, 0, 0.4);
+        }
+
+        .btn-poker {
+            background: var(--neon-green);
+            color: #0a0b1e;
+            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.4);
+        }
+
+        .btn-flappy {
+            background: var(--neon-yellow);
+            color: #0a0b1e;
+            box-shadow: 0 5px 15px rgba(255, 230, 0, 0.4);
+        }
+
+        /* LOADING */
         #loading {
             position: fixed;
             inset: 0;
-            background: var(--royal-deeper);
+            background: #0a0b1e;
+            z-index: 9999;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
+            flex-direction: column;
+            transition: opacity 0.5s;
         }
 
-        #loading.fade-out {
-            opacity: 0;
-            visibility: hidden;
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--neon-blue);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .loading-logo {
-            font-family: 'Cinzel', serif;
-            font-size: 42px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 40px;
-            animation: hero-glow 2s ease-in-out infinite;
-        }
-
-        .loading-bar {
-            width: 300px;
-            height: 4px;
-            background: rgba(255, 215, 0, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .loading-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark));
-            background-size: 200% 100%;
-            animation: loading-wave 1.5s ease-in-out infinite;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        @keyframes loading-wave {
-            0% {
-                background-position: 200% 0;
-            }
-
-            100% {
-                background-position: -200% 0;
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
 
-        /* === MODAL === */
-        .modal-overlay {
+        /* MODAL */
+        .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 20000;
         }
 
-        .modal-box {
-            background: linear-gradient(160deg, rgba(45, 35, 70, 0.95), rgba(20, 15, 35, 0.98));
-            border: 2px solid var(--gold);
-            border-radius: 30px;
-            padding: 50px;
-            max-width: 450px;
-            text-align: center;
-            box-shadow:
-                0 0 80px rgba(255, 215, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            animation: modal-in 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        @keyframes modal-in {
-            from {
-                transform: scale(0.8) translateY(30px);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-family: 'Cinzel', serif;
-            font-size: 26px;
-            color: var(--gold);
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-
-        .modal-msg {
-            font-family: 'Lora', serif;
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 35px;
-            line-height: 1.7;
-        }
-
-        .modal-btn {
-            padding: 15px 50px;
-            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-            color: #1a0f2e;
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            font-size: 14px;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 2px;
-        }
-
-        .modal-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
-        }
-
-        /* === WARNING BANNER === */
-        .warning-banner {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(90deg, rgba(220, 53, 69, 0.9), rgba(180, 40, 55, 0.95));
-            color: #fff;
-            padding: 12px 30px;
-            border-radius: 30px;
-            text-align: center;
-            font-family: 'Lora', serif;
-            font-size: 14px;
-            display: none;
-            z-index: 999;
-            box-shadow: 0 10px 40px rgba(220, 53, 69, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        /* === FOOTER === */
-        .footer {
-            position: relative;
-            z-index: 10;
-            text-align: center;
+        .modal-content {
+            background: #1a1b3a;
             padding: 40px;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 13px;
+            border-radius: 20px;
+            border: 2px solid var(--neon-pink);
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 50px rgba(188, 19, 254, 0.3);
         }
 
-        /* === RESPONSIVE === */
-        @media (max-width: 900px) {
-            .navbar {
-                padding: 15px 25px;
-            }
-
-            .brand {
-                font-size: 24px;
-            }
-
-            .hero h1 {
-                font-size: 36px;
-                letter-spacing: 3px;
-            }
-
-            .hero-subtitle {
-                font-size: 16px;
-            }
-
-            .game-grid {
-                gap: 30px;
-            }
-
-            .main-content {
-                padding: 100px 20px 60px;
-            }
+        .modal h2 {
+            color: var(--neon-pink);
+            margin-bottom: 15px;
         }
 
-        @media (max-width: 500px) {
-            .game-grid {
-                grid-template-columns: 1fr;
+        .modal p {
+            margin-bottom: 25px;
+            color: #ccc;
+        }
+
+        /* Responsive */
+        @media(max-width: 768px) {
+            .hero-tags {
+                flex-wrap: wrap;
             }
 
-            .game-card {
-                max-width: 100%;
+            .welcome-title {
+                font-size: 32px;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Loading Screen -->
-    <div id="loading">
-        <div class="loading-logo">👑 ROYAL CASINO</div>
-        <div class="loading-bar">
-            <div class="loading-fill" id="load-fill"></div>
-        </div>
-    </div>
+    <div class="bg-overlay"></div>
 
-    <!-- Background Effects -->
-    <div class="bg-layer"></div>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="particles" id="particles"></div>
+    <div id="loading">
+        <div class="loader"></div>
+        <p style="margin-top:20px; color:var(--neon-blue); font-weight:700;">LOADING...</p>
+    </div>
 
     <!-- Login Modal -->
-    <div id="modal-login" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-icon">🔐</div>
-            <div class="modal-title">YÊU CẦU ĐĂNG NHẬP</div>
-            <div class="modal-msg">Vui lòng đăng nhập bằng tài khoản Discord để trải nghiệm sòng bài VIP đẳng cấp.</div>
-            <button class="modal-btn" onclick="closeModal()">ĐÃ HIỂU</button>
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>🔒 YÊU CẦU ĐĂNG NHẬP</h2>
+            <p>Vui lòng đăng nhập để tham gia tranh tài và nhận thưởng!</p>
+            <button class="btn-play btn-taixiu" onclick="location.href='/auth/discord'">ĐĂNG NHẬP NGAY</button>
+            <button
+                style="background:transparent; border:none; color:#ffff; margin-top:15px; cursor:pointer; text-decoration:underline;"
+                onclick="document.getElementById('login-modal').style.display='none'">Đóng</button>
         </div>
     </div>
 
-    <!-- Warning Banner -->
-    <div id="login-warning" class="warning-banner">
-        ⚠️ Chế độ KHÁCH - Đăng nhập để chơi game!
-    </div>
-
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="brand" onclick="location.reload()">
-            <span class="brand-icon">👑</span>ROYAL CASINO
+            <div class="brand-icon">🎮</div>
+            <div class="brand-text">
+                <span>PIXEL</span>
+                <span>PLAYZONE</span>
+            </div>
         </div>
-        <div id="auth-check"></div>
+        <div id="user-area">
+            <!-- Injected via JS -->
+            <button class="btn-login" onclick="location.href='/auth/discord'">ĐĂNG NHẬP</button>
+        </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Hero Section -->
-        <section class="hero">
-            <h1 id="welcome-msg">CHÀO MỪNG ĐẾN<br>VIP LOUNGE</h1>
-            <p class="hero-subtitle">Nơi đẳng cấp gặp gỡ may mắn</p>
-            <div class="hero-tagline">
-                <span>🎰 SÒI THẬT</span>
-                <span class="divider-icon">◆</span>
-                <span>💎 VIP SERVICE</span>
-                <span class="divider-icon">◆</span>
-                <span>🔒 BẢO MẬT</span>
+    <div class="hero">
+        <!-- Decoration Icons -->
+        <div class="floating-icon icon-1" style="--rot: -15deg">🕹️</div>
+        <div class="floating-icon icon-2" style="--rot: 15deg">🎁</div>
+        <div class="floating-icon icon-3">🏆</div>
+
+        <h1 class="welcome-title" id="welcome-text">XIN CHÀO <span id="user-name-display">GUEST</span></h1>
+        <p class="hero-subtitle">Thế giới game giải trí đỉnh cao!</p>
+
+        <div class="hero-tags">
+            <div class="tag" style="background:linear-gradient(90deg, #333, #444); color:var(--neon-green)">
+                <i>🎮</i> GAME MỚI
             </div>
-        </section>
-
-        <!-- Game Section -->
-        <section class="game-section">
-            <div class="section-header">
-                <div class="section-title">CHỌN TRÒ CHƠI</div>
+            <div class="tag" style="background:linear-gradient(90deg, #333, #444); color:var(--neon-yellow)">
+                <i>🏆</i> ĐUA TOP
             </div>
-
-            <div class="game-grid">
-                <!-- Tai Xiu Card -->
-                <div class="game-card" onclick="enterGame('/taixiu')">
-                    <div class="card-image taixiu">
-                        <div class="card-icon">🎲</div>
-                        <div class="card-badge badge-hot">HOT</div>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-title">TÀI XỈU</div>
-                        <div class="card-desc">Trò chơi xúc xắc cổ điển với tỷ lệ cược hấp dẫn. Dự đoán Tài hoặc Xỉu và
-                            thắng lớn!</div>
-                        <div class="card-stats">
-                            <div class="stat"><span class="stat-icon">👥</span> Online: 24/7</div>
-                            <div class="stat"><span class="stat-icon">💰</span> Min: 1,000$</div>
-                            <div class="stat"><span class="stat-icon">⚡</span> 30s/ván</div>
-                        </div>
-                        <div class="card-btn">VÀO PHÒNG</div>
-                    </div>
-                </div>
-
-                <!-- Poker Card -->
-                <div class="game-card" onclick="enterGame('/poker')">
-                    <div class="card-image poker">
-                        <div class="card-icon">♠️</div>
-                        <div class="card-badge badge-new">NEW</div>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-title">TEXAS POKER</div>
-                        <div class="card-desc">Texas Hold'em chuyên nghiệp. Thử thách bản lĩnh, chiến thuật và sự bình
-                            tĩnh của bạn!</div>
-                        <div class="card-stats">
-                            <div class="stat"><span class="stat-icon">👥</span> 2-9 người</div>
-                            <div class="stat"><span class="stat-icon">💰</span> 100/200</div>
-                            <div class="stat"><span class="stat-icon">🏆</span> Ranked</div>
-                        </div>
-                        <div class="card-btn">VÀO BÀN</div>
-                    </div>
-                </div>
-
-                <!-- Flappy Bird Card -->
-                <div class="game-card" onclick="enterGame('/flappybird.html')">
-                    <div class="card-image" style="background: linear-gradient(135deg, #4ec0ca 0%, #70c5ce 100%);">
-                        <div class="card-icon">🐦</div>
-                        <div class="card-badge badge-new">FUN</div>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-title">FLAPPY BIRD</div>
-                        <div class="card-desc">Bay lượn và kiếm vàng! 1 Điểm = 10 Vàng. Thử thách sự khéo léo của bạn.
-                        </div>
-                        <div class="card-stats">
-                            <div class="stat"><span class="stat-icon">👥</span> Solo</div>
-                            <div class="stat"><span class="stat-icon">💰</span> Free</div>
-                            <div class="stat"><span class="stat-icon">⚡</span> Skill</div>
-                        </div>
-                        <div class="card-btn">CHƠI NGAY</div>
-                    </div>
-                </div>
+            <div class="tag" style="background:linear-gradient(90deg, #333, #444); color:var(--neon-pink)">
+                <i>🎁</i> QUÀ TẶNG
             </div>
+        </div>
+    </div>
 
-        </section>
-    </main>
+    <div class="section-header">
+        <div class="section-title">CHỌN TRÒ CHƠI</div>
+    </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        © 2025 Royal Casino. Play Responsibly.
-    </footer>
+    <div class="game-grid">
+        <!-- Tai Xiu -->
+        <div class="game-card card-taixiu" onclick="enterGame('/taixiu')">
+            <div class="card-image img-taixiu">
+                <!-- Icon removed -->
+            </div>
+            <div class="card-title">TÀI XỈU SIÊU TỐC</div>
+            <div class="card-desc">Game chẵn lẻ kinh điển, vui nhộn, thử thách vận may của bạn!</div>
+            <div class="card-stats">
+                <div class="stat-item"><i>📡</i> Online: 24/7</div>
+                <div class="stat-item"><i>💰</i> Min: 1k</div>
+            </div>
+            <button class="btn-play btn-taixiu">CHƠI NGAY</button>
+        </div>
+
+        <!-- Poker -->
+        <div class="game-card card-poker" onclick="enterGame('/poker')">
+            <div class="card-image img-poker">
+                <!-- Icon removed -->
+            </div>
+            <div class="card-title">THẦN BÀI MA CAO</div>
+            <div class="card-desc">Texas Hold'em đỉnh cao. Thử thách bản lĩnh, tâm lý và vận may của bạn!</div>
+            <div class="card-stats">
+                <div class="stat-item"><i>👥</i> 2-9 Người</div>
+                <div class="stat-item"><i>🏆</i> Ranked</div>
+            </div>
+            <button class="btn-play btn-poker">VÀO BÀN</button>
+        </div>
+
+        <!-- Flappy Bird -->
+        <div class="game-card card-flappy" onclick="enterGame('/flappybird.html')">
+            <div class="card-image img-flappy">
+                <!-- Icon removed -->
+            </div>
+            <div class="card-title">FLAPPY BIRD</div>
+            <div class="card-desc">Bay lượn và kiếm tiền vàng. 1 Điểm = 10 Vàng. Thử thách sự khéo léo!</div>
+            <div class="card-stats">
+                <div class="stat-item"><i>🕹️</i> Solo</div>
+                <div class="stat-item"><i>✨</i> Skill</div>
+                <button class="btn-play btn-flappy">BAY NGAY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div id="cursor"></div>
+    <div id="cursor-trail"></div>
+
+    <!-- Background Canvas for Particles -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Retro Wave Grid -->
+    <div class="retro-grid"></div>
+
+    <!-- CRT Scanline Overlay -->
+    <div class="crt-overlay"></div>
 
     <script>
-        // Generate Floating Particles
-        function createParticles() {
-            const container = document.getElementById('particles');
-            for (let i = 0; i < 60; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.width = (2 + Math.random() * 4) + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (15 + Math.random() * 15) + 's';
-                container.appendChild(particle);
+        // --- CUSTOM CURSOR ---
+        const cursor = document.getElementById('cursor');
+        const trail = document.getElementById('cursor-trail');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+
+            trail.animate({
+                left: e.clientX + 'px',
+                top: e.clientY + 'px'
+            }, { duration: 500, fill: 'forwards' });
+        });
+
+        // --- PARTICLE SYSTEM ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray = [];
+        const numberOfParticles = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
-        createParticles();
 
-        // Loading Animation
-        const fill = document.getElementById('load-fill');
-        let width = 0;
-        const loadInterval = setInterval(() => {
-            width += Math.random() * 25;
-            if (width > 100) width = 100;
-            fill.style.width = width + '%';
-            if (width === 100) {
-                clearInterval(loadInterval);
-                setTimeout(() => {
-                    document.getElementById('loading').classList.add('fade-out');
-                }, 400);
+        function initParticles() {
+            particlesArray = [];
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
             }
-        }, 150);
+        }
+        initParticles();
 
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+
+                // Connect particles
+                for (let j = i; j < particlesArray.length; j++) {
+                    const dx = particlesArray[i].x - particlesArray[j].x;
+                    const dy = particlesArray[i].y - particlesArray[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 - distance / 1000})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+                        ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        // --- ULTRA 3D PARALLAX TILT ---
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                // Aggressive rotation
+                const rotateX = ((y - centerY) / centerY) * -20;
+                const rotateY = ((x - centerX) / centerX) * 20;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.1)`;
+
+                // PARALLAX: Move Icon opposite to rotation
+                const icon = card.querySelector('.card-icon');
+                if (icon) {
+                    const moveX = ((x - centerX) / centerX) * 50;
+                    const moveY = ((y - centerY) / centerY) * 50;
+                    icon.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.2)`;
+                }
+
+                // Shine effect
+                const shine = card.querySelector('.shine-layer') || document.createElement('div');
+                if (!shine.className.includes('shine-layer')) {
+                    shine.className = 'shine-layer';
+                    card.appendChild(shine);
+                }
+                shine.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.4), transparent 70%)`;
+                shine.style.mixBlendMode = 'overlay';
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                const icon = card.querySelector('.card-icon');
+                if (icon) icon.style.transform = 'translate(0,0) scale(1)';
+
+                const shine = card.querySelector('.shine-layer');
+                if (shine) shine.style.background = 'transparent';
+            });
+        });
+
+        // --- AUTH LOGIC (UNCHANGED) ---
         let isLoggedIn = false;
 
-        // Auth Check
         async function checkAuth() {
+            const userArea = document.getElementById('user-area');
+            const welcomeName = document.getElementById('user-name-display');
+
             try {
                 const res = await fetch('/api/me');
-                if (res.status === 401) {
-                    isLoggedIn = false;
-                    document.getElementById('auth-check').innerHTML = `
-                        <a href="/auth/discord" class="btn-premium">🔐 ĐĂNG NHẬP VIP</a>
-                    `;
-                    document.getElementById('welcome-msg').innerHTML = "CHẾ ĐỘ<br>KHÁCH";
-                    document.getElementById('login-warning').style.display = 'block';
-                } else {
-                    isLoggedIn = true;
+                if (res.ok) {
                     const u = await res.json();
-                    document.getElementById('auth-check').innerHTML = `
-                        <div class="user-panel">
-                            <div class="balance-box">💰 ${u.balance.toLocaleString()} $</div>
-                            <div class="user-info">
-                                <img src="${u.avatar || 'https://ui-avatars.com/api/?background=1a0f2e&color=ffd700&bold=true&name=' + u.username}" alt="Avatar">
-                                <span>${u.username}</span>
+                    isLoggedIn = true;
+                    welcomeName.innerHTML = `<span class="glitch-text" data-text="${u.username.toUpperCase()}">${u.username.toUpperCase()}</span>`;
+
+                    userArea.innerHTML = `
+                            <div class="user-panel glass-panel">
+                                <div class="balance-display">
+                                    <i>💰</i> <span class="balance-value">${u.balance.toLocaleString()} $</span>
+                                </div>
+                                <div class="user-profile">
+                                    <img src="${u.avatar || 'https://ui-avatars.com/api/?background=random&color=fff&name=' + u.username}" class="avatar">
+                                    <span class="username">${u.username}</span>
+                                </div>
+                                <button onclick="logout()" class="btn-logout">EXIT</button>
                             </div>
-                            <button onclick="logout()" class="btn-logout">Đăng Xuất</button>
-                        </div>
-                    `;
-                    document.getElementById('welcome-msg').innerHTML = `XIN CHÀO<br>${u.username.toUpperCase()}`;
-                    document.getElementById('login-warning').style.display = 'none';
+                        `;
+                } else {
+                    welcomeName.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`;
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                welcomeName.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`;
+            }
+
+            // Hide loading
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+            }, 500);
         }
 
         function enterGame(url) {
             if (!isLoggedIn) {
-                document.getElementById('modal-login').style.display = 'flex';
+                document.getElementById('login-modal').style.display = 'flex';
                 return;
             }
             window.location.href = url;
         }
 
-        function closeModal() {
-            document.getElementById('modal-login').style.display = 'none';
-        }
-
         function logout() {
-            if (confirm("Bạn muốn đăng xuất khỏi Royal Casino?")) {
-                document.cookie = "user_id=; expires=Thu, 01 Dec 1990 00:00:00 UTC; path=/;";
+            if (confirm("Đăng xuất?")) {
+                document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 location.reload();
             }
         }
 
-        checkAuth();
+        window.onload = checkAuth;
     </script>
-
-
 </body>
 
 </html>

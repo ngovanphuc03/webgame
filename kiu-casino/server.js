@@ -155,7 +155,13 @@ app.post('/api/flappy/reward', async (req, res) => {
     const goldReward = score * 10;
 
     try {
-        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
+        const [result] = await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
+
+        if (result.affectedRows === 0) {
+            console.error(`[FlappyBird] ERROR: User ${uid} not found in Guild ${TARGET_GUILD_ID}. Update failed.`);
+            return res.status(400).json({ error: 'Lỗi: Không tìm thấy ví tiền (Sai GuildID?)' });
+        }
+
         const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
         const newBalance = rows.length ? rows[0].balance : 0;
         console.log(`[FlappyBird] User ${uid} score ${score} -> +${goldReward} gold. New Balance: ${newBalance}`);
