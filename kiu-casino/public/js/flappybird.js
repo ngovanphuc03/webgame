@@ -403,10 +403,41 @@ gameContainer.addEventListener('touchstart', (e) => {
 
 document.getElementById('btn-restart').addEventListener('click', (e) => { e.stopPropagation(); resetGame(); });
 
-async function sendReward(v) { try { await fetch('/api/flappy/reward', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ score: v }) }); } catch (e) { } }
+async function sendReward(v) {
+    try {
+        const res = await fetch('/api/flappy/reward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score: v })
+        });
+        const data = await res.json();
+        if (res.ok && data.newBalance !== undefined) {
+            updateBalanceDisplay(data.newBalance);
+            // Show gold earned in UI if needed (already in uiGoldEarned)
+            if (uiGoldEarned) uiGoldEarned.innerText = v * 10;
+        }
+    } catch (e) { }
+}
+
+function updateBalanceDisplay(bal) {
+    const el = document.getElementById('userBalance');
+    if (el) el.innerText = bal.toLocaleString();
+}
+
+async function fetchBalance() {
+    try {
+        const res = await fetch('/api/me');
+        if (res.ok) {
+            const data = await res.json();
+            updateBalanceDisplay(data.balance);
+        }
+    } catch (e) { }
+}
+
 function init() {
     resizeCanvas();
     resetGame();
+    fetchBalance(); // Get initial balance
     if (uiLoading) setTimeout(() => uiLoading.style.display = 'none', 500);
 }
 window.onload = init;

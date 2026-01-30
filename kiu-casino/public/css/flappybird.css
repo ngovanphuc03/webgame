@@ -99,17 +99,56 @@ canvas {
     /* Space from bottom */
 }
 
-/* Hide Helper classes/Text */
+/* Balance Badge */
+.balance-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffd700;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 2px solid #fff;
+    pointer-events: auto;
+    z-index: 30;
+    font-family: 'PixelFont', sans-serif;
+    box-shadow: 0 4px 0 #b8860b;
+}
+
+/* Hide Helper classes/Text, BUT Keep Game Over Details Visible */
 .hidden {
     display: none !important;
 }
 
 #score,
 h1,
-p,
-.score-display,
-.high-score-badge {
+p {
     display: none !important;
+}
+
+/* Allow Game Over Stats to show */
+#game-over .score-display {
+    display: block !important;
+    background: rgba(222, 216, 149, 0.9);
+    border: 3px solid #543847;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 8px;
+    width: 80%;
+}
+
+#game-over p {
+    display: block !important;
+    margin: 5px 0;
+    color: #543847;
+    text-shadow: none;
+}
+
+#game-over .gold-number {
+    color: #e55b2b;
+    font-size: 16px;
 }
 
 /* Buttons - Premium Web Style */
