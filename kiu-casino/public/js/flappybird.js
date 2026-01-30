@@ -310,6 +310,11 @@ function gameOver() {
         bestScore = score;
         localStorage.setItem('flappy_best', bestScore);
     }
+
+    // Update Best Score Display
+    const bestEl = document.getElementById('best-score-display');
+    if (bestEl) bestEl.innerText = bestScore;
+
     if (score > 0) sendReward(score);
     if (uiGameOver) uiGameOver.classList.remove('hidden');
     if (uiStart) uiStart.classList.add('hidden');

@@ -105,21 +105,31 @@
             <div id="game-over" class="hidden">
                 <h1>GAME OVER!</h1>
 
-                <div class="score-display">
-                    <p>Điểm số của bạn</p>
-                    <p class="score-number"><span id="final-score">0</span> điểm</p>
+                <div class="score-board">
+                    <div id="newRecordBadge">🎉 KỶ LỤC MỚI! 🎉</div>
+
+                    <div class="board-row">
+                        <div class="score-display">
+                            <span class="board-label">Điểm số</span>
+                            <span class="board-value" id="final-score">0</span>
+                        </div>
+                        <div class="score-display">
+                            <span class="board-label">Cao nhất</span>
+                            <span class="board-value" id="best-score-display">0</span>
+                        </div>
+                    </div>
+
+                    <div class="gold-section">
+                        <div class="board-label">Phần thưởng</div>
+                        <div class="gold-number">+<span id="gold-earned">0</span> Vàng 💰</div>
+                    </div>
                 </div>
 
-                <div class="score-display">
-                    <p>Phần thưởng</p>
-                    <p class="gold-number">+<span id="gold-earned">0</span> Vàng 💰</p>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-restart" class="btn">Chơi lại</button>
+                    <a href="/" class="btn"
+                        style="background: linear-gradient(180deg, #757575 0%, #424242 100%); box-shadow: 0 6px 0 #212121; text-decoration: none; padding: 16px 20px;">Thoát</a>
                 </div>
-
-                <div class="score-display" id="newRecordBadge" style="display: none;">
-                    <p style="color: #f5576c; font-size: 16px;">🎉 KỶ LỤC MỚI! 🎉</p>
-                </div>
-
-                <button id="btn-restart" class="btn">Chơi lại</button>
             </div>
         </div>
     </div>

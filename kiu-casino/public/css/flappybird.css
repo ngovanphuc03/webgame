@@ -1,8 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* Fonts */
+@font-face {
+    font-family: 'DearPix';
+    src: url('../fonts/dearpix-1-94.ttf') format('truetype');
+}
 
 :root {
     --sky-blue: #70c5ce;
-    --font-family: 'Press Start 2P', cursive;
+    --font-family: 'DearPix', cursive;
     --primary-color: #e55b2b;
     --secondary-color: #fca048;
     --dark-color: #543847;
@@ -10,7 +14,7 @@
 
 @font-face {
     font-family: 'PixelFont';
-    src: local('Press Start 2P'), url('https://fonts.cdnfonts.com/s/13367/PressStart2P-Regular.woff') format('woff');
+    src: local('DearPix'), url('../fonts/dearpix-1-94.ttf') format('truetype');
 }
 
 * {
@@ -129,26 +133,123 @@ p {
 }
 
 /* Allow Game Over Stats to show */
-#game-over .score-display {
-    display: block !important;
-    background: rgba(222, 216, 149, 0.9);
-    border: 3px solid #543847;
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 8px;
-    width: 80%;
+/* Game Over Board Container */
+#game-over {
+    justify-content: center;
+    /* Center vertically */
+    padding-bottom: 0;
+    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.4);
+    /* Dim background */
+    z-index: 100;
 }
 
-#game-over p {
-    display: block !important;
-    margin: 5px 0;
+#game-over h1 {
+    display: none !important;
+    /* Hide duplicate text, Duplicate is drawn by Canvas */
+}
+
+/* The Board Card */
+.score-board {
+    width: 280px;
+    background: #ded895;
+    border: 4px solid #543847;
+    border-radius: 6px;
+    padding: 20px;
+    position: relative;
+    box-shadow:
+        inset 0 0 0 4px #e8e09f,
+        0 10px 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Row for Score & Best */
+.board-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.board-label {
     color: #543847;
-    text-shadow: none;
+    /* Dark Brown for contrast */
+    font-size: 14px;
+    /* Larger */
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    /* Spaced out */
+    font-weight: bold;
 }
 
-#game-over .gold-number {
-    color: #e55b2b;
-    font-size: 16px;
+.board-value {
+    color: #fff;
+    font-size: 28px;
+    /* Much larger numbers */
+    text-shadow: 3px 3px 0 #000;
+    text-align: right;
+    letter-spacing: 2px;
+}
+
+.score-display {
+    display: flex !important;
+    flex-direction: column;
+    background: none !important;
+    border: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.gold-section {
+    margin-top: 10px;
+    border-top: 2px dashed #bcaa6a;
+    padding-top: 10px;
+    text-align: center;
+}
+
+.gold-number {
+    color: #38ef7d !important;
+    /* Green for money */
+    font-size: 22px !important;
+    /* Larger */
+    text-shadow: 2px 2px 0 #000;
+    margin-top: 8px;
+    letter-spacing: 1px;
+}
+
+#newRecordBadge {
+    position: absolute;
+    top: -15px;
+    right: -10px;
+    background: #ff512f;
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 10px !important;
+    border: 2px solid #fff;
+    transform: rotate(10deg);
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+    animation: pulse 1s infinite;
+    display: none;
+    /* Toggled by JS */
+}
+
+@keyframes pulse {
+    0% {
+        transform: rotate(10deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(10deg) scale(1.1);
+    }
+
+    100% {
+        transform: rotate(10deg) scale(1);
+    }
 }
 
 /* Buttons - Premium Web Style */
