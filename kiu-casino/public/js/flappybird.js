@@ -317,7 +317,6 @@ function gameOver() {
 
 function hitPipe() {
     if (gameState !== 'GAMEOVER') {
-        gameState = 'GAMEOVER';
         gameOver();
     }
 }
