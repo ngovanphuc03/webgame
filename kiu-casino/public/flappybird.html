@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#70c5ce">
+    <meta name="description" content="Flappy Bird - Trò chơi giải trí tại Royal Casino">
     <title>Flappy Bird - Royal Casino</title>
     <link rel="stylesheet" href="css/flappybird.css">
     <style>
@@ -15,69 +17,108 @@
 </head>
 
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <p style="color: white; margin-top: 20px; font-size: 14px;">Đang tải...</p>
+    </div>
 
     <!-- Asset Container (Preloaded in DOM for ease of use) -->
     <div id="assets">
-        <!-- Birds (Style 1 & 2) -->
-        <img id="bird-1" src="flappy_assets/Flappy Bird Assets/Player/StyleBird1/Bird1-1.png" alt="bird1">
-        <img id="bird-2" src="flappy_assets/Flappy Bird Assets/Player/StyleBird2/Bird2-1.png" alt="bird2">
+        <!-- Blue Bird -->
+        <img id="bird-blue-0" src="flappy_assets/sprites/bluebird-downflap.png" alt="blue-down">
+        <img id="bird-blue-1" src="flappy_assets/sprites/bluebird-midflap.png" alt="blue-mid">
+        <img id="bird-blue-2" src="flappy_assets/sprites/bluebird-upflap.png" alt="blue-up">
 
-        <!-- Pipes (Style 1 to 5) -->
-        <img id="pipe-1" src="flappy_assets/Flappy Bird Assets/Tiles/Style 1/PipeStyle1.png" alt="pipe1">
-        <img id="pipe-2" src="flappy_assets/Flappy Bird Assets/Tiles/Style 2/PipeStyle2.png" alt="pipe2">
-        <img id="pipe-3" src="flappy_assets/Flappy Bird Assets/Tiles/Style 3/PipeStyle3.png" alt="pipe3">
-        <img id="pipe-4" src="flappy_assets/Flappy Bird Assets/Tiles/Style 4/PipeStyle4.png" alt="pipe4">
-        <img id="pipe-5" src="flappy_assets/Flappy Bird Assets/Tiles/Style 5/PipeStyle5.png" alt="pipe5">
+        <!-- Red Bird -->
+        <img id="bird-red-0" src="flappy_assets/sprites/redbird-downflap.png" alt="red-down">
+        <img id="bird-red-1" src="flappy_assets/sprites/redbird-midflap.png" alt="red-mid">
+        <img id="bird-red-2" src="flappy_assets/sprites/redbird-upflap.png" alt="red-up">
 
-        <!-- Grounds/Tiles (Matching Pipes) -->
-        <img id="ground-1" src="flappy_assets/Flappy Bird Assets/Tiles/Style 1/TileStyle1.png" alt="ground1">
-        <img id="ground-2" src="flappy_assets/Flappy Bird Assets/Tiles/Style 2/TileStyle2.png" alt="ground2">
-        <img id="ground-3" src="flappy_assets/Flappy Bird Assets/Tiles/Style 3/TileStyle3.png" alt="ground3">
-        <img id="ground-4" src="flappy_assets/Flappy Bird Assets/Tiles/Style 4/TileStyle4.png" alt="ground4">
-        <img id="ground-5" src="flappy_assets/Flappy Bird Assets/Tiles/Style 5/TileStyle5.png" alt="ground5">
+        <!-- Yellow Bird -->
+        <img id="bird-yellow-0" src="flappy_assets/sprites/yellowbird-downflap.png" alt="yellow-down">
+        <img id="bird-yellow-1" src="flappy_assets/sprites/yellowbird-midflap.png" alt="yellow-mid">
+        <img id="bird-yellow-2" src="flappy_assets/sprites/yellowbird-upflap.png" alt="yellow-up">
 
-        <!-- Backgrounds (1 to 5 for variety) -->
+        <!-- Backgrounds -->
+        <img id="bg-day" src="flappy_assets/sprites/background-day.png" alt="bg-day">
+        <img id="bg-night" src="flappy_assets/sprites/background-night.png" alt="bg-night">
 
-        <img id="bg-1" src="flappy_assets/Flappy Bird Assets/Background/Background1.png" alt="bg1">
-        <img id="bg-2" src="flappy_assets/Flappy Bird Assets/Background/Background2.png" alt="bg2">
-        <img id="bg-3" src="flappy_assets/Flappy Bird Assets/Background/Background3.png" alt="bg3">
-        <img id="bg-4" src="flappy_assets/Flappy Bird Assets/Background/Background4.png" alt="bg4">
-        <img id="bg-5" src="flappy_assets/Flappy Bird Assets/Background/Background5.png" alt="bg5">
+        <!-- Ground -->
+        <img id="ground" src="flappy_assets/sprites/base.png" alt="ground">
+
+        <!-- Pipes -->
+        <img id="pipe-green" src="flappy_assets/sprites/pipe-green.png" alt="pipe-green">
+        <img id="pipe-red" src="flappy_assets/sprites/pipe-red.png" alt="pipe-red">
+
+        <!-- UI -->
+        <img id="ui-message" src="flappy_assets/sprites/message.png" alt="message">
+        <img id="ui-gameover" src="flappy_assets/sprites/gameover.png" alt="gameover">
     </div>
 
-
     <div id="game-container">
-        <a href="/" class="back-btn">← Quay lại Casino</a>
+        <a href="/" class="back-btn">Quay lại Casino</a>
 
-        <!-- Leaderboard -->
-        <div id="leaderboard">
-            <h3>Top 3</h3>
-            <ul id="leaderboard-list">
-                <li>Loading...</li>
-            </ul>
+        <!-- High Score Badge -->
+        <div class="high-score-badge" id="highScoreBadge" style="display: none;">
+            🏆 Best: <span id="highScoreValue">0</span>
         </div>
 
         <canvas id="gameCanvas" width="320" height="480"></canvas>
 
+        <!-- Particles Container -->
+        <div class="particles" id="particlesContainer"></div>
 
         <div id="ui-layer">
+            <!-- Score Display -->
             <div id="score">0</div>
 
+            <!-- Combo Display -->
+            <div class="combo-display" id="comboDisplay"></div>
+
+            <!-- Start Message -->
             <div id="start-message">
                 <h1>FLAPPY BIRD</h1>
-                <p>Nhấn Space hoặc Click để nhảy</p>
-                <p style="color: gold; font-size: 12px;">1 Điểm = 10 Vàng</p>
-                <button id="btn-start" class="btn">Bắt Đầu</button>
+                <p class="instruction">Nhấn <strong>Space</strong> hoặc <strong>Click/Tap</strong> để nhảy</p>
+                <p class="gold-info">💰 1 Điểm = 10 Vàng</p>
+                <button id="btn-start" class="btn">Bắt đầu chơi</button>
             </div>
 
+            <!-- Game Over Message -->
             <div id="game-over" class="hidden">
-                <h1>GAME OVER</h1>
-                <p>Điểm: <span id="final-score">0</span></p>
-                <p style="color: gold;">+<span id="gold-earned">0</span> Vàng</p>
-                <button id="btn-restart" class="btn">Chơi Lại</button>
+                <h1>GAME OVER!</h1>
+
+                <div class="score-display">
+                    <p>Điểm số của bạn</p>
+                    <p class="score-number"><span id="final-score">0</span> điểm</p>
+                </div>
+
+                <div class="score-display">
+                    <p>Phần thưởng</p>
+                    <p class="gold-number">+<span id="gold-earned">0</span> Vàng 💰</p>
+                </div>
+
+                <div class="score-display" id="newRecordBadge" style="display: none;">
+                    <p style="color: #f5576c; font-size: 16px;">🎉 KỶ LỤC MỚI! 🎉</p>
+                </div>
+
+                <button id="btn-restart" class="btn">Chơi lại</button>
             </div>
         </div>
     </div>
+
+    <!-- Audio Elements (Optional - uncomment to enable sounds) -->
+    <!--
+    <audio id="jumpSound" preload="auto">
+        <source src="sounds/jump.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="scoreSound" preload="auto">
+        <source src="sounds/score.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="gameoverSound" preload="auto">
+        <source src="sounds/gameover.mp3" type="audio/mpeg">
+    </audio>
+    -->
 
     <script src="js/flappybird.js"></script>
 </body>

@@ -142,20 +142,6 @@ app.get('/api/me', async (req, res) => {
 });
 
 // Endpoint trả thưởng Flappy Bird (1 điểm = 10 vàng)
-// Init Leaderboard Table
-(async () => {
-    try {
-        await dbPool.execute(`
-            CREATE TABLE IF NOT EXISTS flappy_leaderboard (
-                user_id VARCHAR(50) PRIMARY KEY,
-                username VARCHAR(100),
-                score INT DEFAULT 0
-            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        `);
-    } catch (e) { console.error("Init Leaderboard Error:", e); }
-})();
-
-// Endpoint trả thưởng Flappy Bird (1 điểm = 10 vàng) & Save High Score
 app.post('/api/flappy/reward', async (req, res) => {
     const uid = req.cookies.user_id;
     if (!uid) return res.status(401).json({ error: 'Chưa đăng nhập' });
@@ -163,54 +149,22 @@ app.post('/api/flappy/reward', async (req, res) => {
     const { score } = req.body;
     if (!score || score <= 0) return res.status(400).json({ error: 'Điểm không hợp lệ' });
 
-    // Giới hạn điểm tối đa
-    if (score > 10000) return res.status(400).json({ error: 'Điểm quá cao bất thường' }); // Relaxed limit
+    // Giới hạn điểm tối đa mỗi lần gửi để tránh hack (ví dụ: max 1000 điểm = 10000 vàng)
+    if (score > 1000) return res.status(400).json({ error: 'Điểm quá cao bất thường' });
 
     const goldReward = score * 10;
 
-    // Get username from cookie
-    let username = 'Unknown';
-    if (req.cookies.user_info) {
-        try {
-            const raw = JSON.parse(req.cookies.user_info.startsWith('j:') ? req.cookies.user_info.slice(2) : req.cookies.user_info);
-            username = decodeURIComponent(raw.username);
-        } catch (e) { }
-    }
-
     try {
-        // 1. Give Money
         await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
-
-        // 2. Save High Score (Update if higher)
-        await dbPool.execute(`
-            INSERT INTO flappy_leaderboard (user_id, username, score) 
-            VALUES (?, ?, ?) 
-            ON DUPLICATE KEY UPDATE 
-                score = GREATEST(score, VALUES(score)),
-                username = VALUES(username)
-        `, [uid, username, score]);
-
         const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
         const newBalance = rows.length ? rows[0].balance : 0;
-
+        console.log(`[FlappyBird] User ${uid} score ${score} -> +${goldReward} gold. New Balance: ${newBalance}`);
         res.json({ success: true, addedGold: goldReward, newBalance });
     } catch (e) {
         console.error('Flappy Reward Error:', e);
         res.status(500).json({ error: 'Lỗi Database' });
     }
 });
-
-
-app.get('/api/flappy/leaderboard', async (req, res) => {
-    try {
-        const [rows] = await dbPool.execute('SELECT username, score FROM flappy_leaderboard ORDER BY score DESC LIMIT 3');
-        res.json(rows);
-    } catch (e) {
-        res.status(500).json({ error: 'DB Error' });
-    }
-});
-
-
 
 
 // ============================================================
