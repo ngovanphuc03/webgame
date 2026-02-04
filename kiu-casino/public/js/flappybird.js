@@ -25,10 +25,10 @@ const sounds = {
 const ASSET_WIDTH = 288;
 const BASE_HEIGHT = 512; // Reference height for max scale cap
 const GROUND_H = 112;
-const GRAVITY = 0.25;
-const JUMP = -4.6;
-const PIPE_SPEED = 2;
-const PIPE_GAP = 140; // Increased gap for easier gameplay
+const GRAVITY = 0.18;      // Reduced from 0.25 - bird falls slower
+const JUMP = -4;           // Adjusted jump strength
+const PIPE_SPEED = 1.5;    // Reduced from 2 - pipes move slower
+const PIPE_GAP = 170;      // Increased from 140 - wider gap between pipes
 
 // -- STATE --
 let gameScale = 1;
