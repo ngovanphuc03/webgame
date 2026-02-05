@@ -109,7 +109,10 @@ app.get('/auth/discord/callback', async (req, res) => {
         const info = JSON.stringify({ username: encodeURIComponent(username), avatar: avatarUrl });
         res.cookie('user_info', info, { maxAge: 86400000 });
         res.redirect('/');
-    } catch (e) { res.redirect('/'); }
+    } catch (e) {
+        console.error('Login Error:', e.response ? e.response.data : e.message);
+        res.send(`Lỗi đăng nhập: ${e.message} <br> <a href="/">Quay lại</a>`);
+    }
 });
 
 // API /api/me (enabled when DB configured)
