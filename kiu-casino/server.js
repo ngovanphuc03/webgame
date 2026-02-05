@@ -126,6 +126,27 @@ app.get('/auth/discord/callback', async (req, res) => {
     }
 });
 
+// --- DEV LOGIN (BYPASS) ---
+app.get('/auth/fake', async (req, res) => {
+    // Fake random user
+    const id = 'dev_' + Math.floor(Math.random() * 1000000);
+    const username = 'Dev_User_' + id.slice(-4);
+    const avatar = ''; // No avatar
+
+    try {
+        // Ensure user exists in DB
+        const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, id]);
+        if (rows.length === 0) await dbPool.execute('INSERT INTO wallet (guild_id, user_id, balance) VALUES (?,?,?)', [TARGET_GUILD_ID, id, 50000]); // Give 50k for testing
+    } catch (e) { console.error("Dev Login DB Error:", e.message); }
+
+    // Set cookies
+    res.cookie('user_id', id, { maxAge: 86400000 });
+    const info = JSON.stringify({ username: encodeURIComponent(username), avatar: avatar });
+    res.cookie('user_info', info, { maxAge: 86400000 });
+
+    res.redirect('/');
+});
+
 // API /api/me (enabled when DB configured)
 app.get('/api/me', async (req, res) => {
     const uid = req.cookies.user_id;
