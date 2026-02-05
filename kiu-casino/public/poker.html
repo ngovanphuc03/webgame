@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <title>ROYAL POKER - Texas Hold'em VIP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Royal Poker - Texas Hold'em VIP. Chơi poker online miễn phí!">
+    <meta name="theme-color" content="#0f0a1a">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🂡</text></svg>">
 
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1025,6 +1029,58 @@
 
             .seat[data-pos="0"] {
                 bottom: 22%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .poker-table-container {
+                width: 100%;
+                height: 55%;
+            }
+
+            #chat-panel {
+                width: 220px;
+                height: 280px;
+                font-size: 12px;
+            }
+
+            #controls-bar {
+                padding: 10px 15px;
+                gap: 5px;
+                border-radius: 15px;
+            }
+
+            .btn-game {
+                min-width: 65px;
+                height: 44px;
+                font-size: 11px;
+                padding: 0 8px;
+            }
+
+            .player-name {
+                font-size: 10px;
+            }
+
+            .player-chips {
+                font-size: 9px;
+            }
+
+            .player-avatar {
+                width: 40px;
+                height: 40px;
+            }
+
+            .seat {
+                width: 90px;
+            }
+
+            .pot-display {
+                font-size: 14px;
+            }
+
+            .community-cards .card-slot {
+                width: 42px;
+                height: 60px;
             }
         }
 

@@ -346,7 +346,8 @@ function toggleMusic() {
 
 // Try to auto-play music on first user interaction if not playing
 document.addEventListener('click', () => {
-    if (!isMusicPlaying && !SoundManager.sounds.bgm.paused) {
+    const bgm = SoundManager.getSound('bgm');
+    if (!isMusicPlaying && bgm && !bgm.paused) {
         // If it thinks it's playing but paused by browser policy, try again
         SoundManager.play('bgm');
     }

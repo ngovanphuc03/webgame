@@ -4,6 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="PIXEL PLAYZONE - Thế giới game giải trí: Tài Xỉu, Poker, Flappy Bird. Chơi miễn phí!">
+    <meta name="theme-color" content="#0a0b1e">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="PIXEL PLAYZONE - Game Giải Trí">
+    <meta property="og:description" content="Thế giới game giải trí đỉnh cao: Tài Xỉu, Poker, Flappy Bird">
+    <meta property="og:type" content="website">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <title>PIXEL PLAYZONE - Thế giới game giải trí</title>
 
     <!-- Google Fonts: Nunito for Body text readability -->
@@ -16,21 +25,25 @@
         @font-face {
             font-family: 'DearPix';
             src: url('fonts/dearpix-1-94.ttf') format('truetype');
+            font-display: swap;
         }
 
         @font-face {
             font-family: 'StarGuard';
             src: url('fonts/starguard.ttf') format('truetype');
+            font-display: swap;
         }
 
         @font-face {
             font-family: 'PixelBold';
             src: url('fonts/pixel.ttf') format('truetype');
+            font-display: swap;
         }
 
         @font-face {
             font-family: 'PixelRegular';
             src: url('fonts/pixel_font.otf') format('opentype');
+            font-display: swap;
         }
 
         :root {
@@ -809,6 +822,82 @@
             .welcome-title {
                 font-size: 32px;
             }
+
+            .navbar {
+                padding: 10px 15px;
+            }
+
+            .brand-text {
+                font-size: 24px;
+            }
+
+            .user-panel {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .balance-display {
+                padding: 6px 12px;
+            }
+
+            .balance-value {
+                font-size: 14px;
+            }
+
+            .hero {
+                padding: 30px 15px 20px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .game-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 15px 60px;
+            }
+
+            .floating-icon {
+                display: none;
+            }
+
+            #cursor,
+            #cursor-trail {
+                display: none !important;
+            }
+
+            .crt-overlay {
+                display: none;
+            }
+        }
+
+        @media(max-width: 400px) {
+            .welcome-title {
+                font-size: 24px;
+            }
+
+            .brand-text {
+                font-size: 20px;
+            }
+
+            .tag {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            .user-profile {
+                padding: 4px 10px 4px 4px;
+            }
+
+            .avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .username {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -826,9 +915,10 @@
         <div class="modal-content">
             <h2>🔒 YÊU CẦU ĐĂNG NHẬP</h2>
             <p>Vui lòng đăng nhập để tham gia tranh tài và nhận thưởng!</p>
-            <button class="btn-play btn-taixiu" onclick="location.href='/auth/discord'">ĐĂNG NHẬP (Discord)</button>
-            <button class="btn-play btn-flappy" style="margin-top: 10px; background: #666;"
-                onclick="location.href='/auth/fake'">DEV LOGIN (Test)</button>
+            <button id="btn-discord-login" class="btn-play btn-taixiu" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP
+                (Discord)</button>
+            <button id="btn-dev-login" class="btn-play btn-flappy" style="margin-top: 10px; background: #666;"
+                onclick="handleDevLogin(this)">DEV LOGIN (Test)</button>
             <button
                 style="background:transparent; border:none; color:#ffff; margin-top:15px; cursor:pointer; text-decoration:underline;"
                 onclick="document.getElementById('login-modal').style.display='none'">Đóng</button>
@@ -845,7 +935,7 @@
         </div>
         <div id="user-area">
             <!-- Injected via JS -->
-            <button class="btn-login" onclick="location.href='/auth/discord'">ĐĂNG NHẬP</button>
+            <button class="btn-login" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP</button>
         </div>
     </nav>
 
@@ -914,8 +1004,8 @@
             <div class="card-stats">
                 <div class="stat-item"><i>🕹️</i> Solo</div>
                 <div class="stat-item"><i>✨</i> Skill</div>
-                <button class="btn-play btn-flappy">BAY NGAY</button>
             </div>
+            <button class="btn-play btn-flappy">BAY NGAY</button>
         </div>
     </div>
 
@@ -954,7 +1044,8 @@
         canvas.height = window.innerHeight;
 
         let particlesArray = [];
-        const numberOfParticles = 100;
+        const isMobile = window.innerWidth < 768;
+        const numberOfParticles = isMobile ? 30 : 60; // Reduced for perf
 
         class Particle {
             constructor() {
@@ -1062,8 +1153,14 @@
             });
         });
 
-        // --- AUTH LOGIC (UNCHANGED) ---
+        // --- AUTH LOGIC ---
         let isLoggedIn = false;
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
         async function checkAuth() {
             const userArea = document.getElementById('user-area');
@@ -1074,18 +1171,22 @@
                 if (res.ok) {
                     const u = await res.json();
                     isLoggedIn = true;
-                    welcomeName.innerHTML = `<span class="glitch-text" data-text="${u.username.toUpperCase()}">${u.username.toUpperCase()}</span>`;
+                    const safeName = escapeHtml(u.username).toUpperCase();
+                    welcomeName.innerHTML = `<span class="glitch-text" data-text="${safeName}">${safeName}</span>`;
+
+                    const avatarFallback = `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(u.username)}`;
+                    const avatarUrl = u.avatar || avatarFallback;
 
                     userArea.innerHTML = `
                             <div class="user-panel glass-panel">
                                 <div class="balance-display">
-                                    <i>💰</i> <span class="balance-value">${u.balance.toLocaleString()} $</span>
+                                    <i>💰</i> <span class="balance-value">${Number(u.balance).toLocaleString()} $</span>
                                 </div>
                                 <div class="user-profile">
-                                    <img src="${u.avatar || 'https://ui-avatars.com/api/?background=random&color=fff&name=' + u.username}" class="avatar">
-                                    <span class="username">${u.username}</span>
+                                    <img src="${avatarUrl}" class="avatar" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=U'">
+                                    <span class="username">${escapeHtml(u.username)}</span>
                                 </div>
-                                <button onclick="logout()" class="btn-logout">EXIT</button>
+                                <button onclick="logout()" class="btn-logout" aria-label="Đăng xuất">EXIT</button>
                             </div>
                         `;
                 } else {
@@ -1113,9 +1214,97 @@
 
         function logout() {
             if (confirm("Đăng xuất?")) {
-                document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                location.reload();
+                window.location.href = '/auth/logout';
             }
+        }
+
+        // --- ANTI-SPAM LOGIN (Debounce + Loading) ---
+        let isLoginProcessing = false;
+        let lastLoginAttempt = 0;
+        const LOGIN_COOLDOWN = 5000; // 5 seconds between login attempts
+
+        function handleDiscordLogin(btn) {
+            const now = Date.now();
+
+            // Check cooldown
+            if (now - lastLoginAttempt < LOGIN_COOLDOWN) {
+                const remaining = Math.ceil((LOGIN_COOLDOWN - (now - lastLoginAttempt)) / 1000);
+                showLoginWarning(`Vui lòng đợi ${remaining}s...`);
+                return;
+            }
+
+            // Prevent double-click
+            if (isLoginProcessing) {
+                showLoginWarning('Đang xử lý, vui lòng đợi...');
+                return;
+            }
+
+            isLoginProcessing = true;
+            lastLoginAttempt = now;
+
+            // Show loading state
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ ĐANG KẾT NỐI...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+
+            // Disable all login buttons
+            document.querySelectorAll('.btn-login, #btn-discord-login, #btn-dev-login').forEach(b => {
+                b.disabled = true;
+                b.style.opacity = '0.7';
+            });
+
+            // Navigate after short delay (visual feedback)
+            setTimeout(() => {
+                window.location.href = '/auth/discord';
+            }, 300);
+
+            // Reset after timeout (in case user comes back)
+            setTimeout(() => {
+                isLoginProcessing = false;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                document.querySelectorAll('.btn-login, #btn-discord-login, #btn-dev-login').forEach(b => {
+                    b.disabled = false;
+                    b.style.opacity = '1';
+                });
+            }, 10000);
+        }
+
+        function handleDevLogin(btn) {
+            if (isLoginProcessing) {
+                showLoginWarning('Đang xử lý, vui lòng đợi...');
+                return;
+            }
+            isLoginProcessing = true;
+            btn.innerHTML = '⏳ ĐANG XỬ LÝ...';
+            btn.disabled = true;
+            setTimeout(() => {
+                window.location.href = '/auth/fake';
+            }, 300);
+        }
+
+        function showLoginWarning(msg) {
+            // Create or update warning toast
+            let toast = document.getElementById('login-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'login-toast';
+                toast.style.cssText = `
+                    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                    background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white;
+                    padding: 15px 30px; border-radius: 10px; font-weight: bold;
+                    z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                    animation: slideDown 0.3s ease;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = '⚠️ ' + msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
         }
 
         window.onload = checkAuth;

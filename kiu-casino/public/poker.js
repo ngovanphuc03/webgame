@@ -399,17 +399,17 @@ function buildSeatHTML(player, data) {
         ${cardsHtml}
         ${dealerBtn}
         <div class="avatar-wrapper">
-            <img class="avatar-img" src="${player.avatar || `https://ui-avatars.com/api/?name=${player.name}`}">
+            <img class="avatar-img" src="${player.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}`}">
             ${timerRing}
             ${player.status === 'SITTING_OUT' ? '<div class="sit-out-badge">Đang Rời</div>' : ''}
         </div>
         <div class="player-label ${player.connected === false ? 'disconnected' : ''}">
-            <div class="p-name">${player.name}</div>
+            <div class="p-name">${escapeHtml(player.name)}</div>
             <div class="p-chips">$${player.chips}</div>
             ${player.handsWon > 0 ? `<div class="p-stats">${player.handsWon} thắng</div>` : ''}
         </div>
         ${player.bet > 0 ? `<div class="bet-chip">🪙 $${player.bet}</div>` : ''}
-        ${player.lastAction ? `<div class="action-bubble">${player.lastAction}</div>` : ''}
+        ${player.lastAction ? `<div class="action-bubble">${escapeHtml(player.lastAction)}</div>` : ''}
         ${autoActionHtml}
     `;
 }
@@ -698,7 +698,7 @@ function handleChatMessage(msg) {
     msgDiv.className = `chat-msg chat-${isSystem ? 'system' : isMe ? 'me' : 'other'}`;
 
     const name = isSystem ? 'Hệ Thống' :
-        (isMe ? 'Bạn' : (state.tableData?.players.find(p => p && p.id === msg.from)?.name || 'Người Chơi'));
+        (isMe ? 'Bạn' : escapeHtml(state.tableData?.players.find(p => p && p.id === msg.from)?.name || 'Người Chơi'));
 
     msgDiv.innerHTML = `
         <span class="chat-name">${name}:</span>

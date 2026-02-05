@@ -46,6 +46,10 @@ let loopId = null;
 const uiStart = document.getElementById('start-message');
 const uiGameOver = document.getElementById('game-over');
 const uiLoading = document.getElementById('loadingScreen');
+const uiGoldEarned = document.getElementById('gold-earned');
+const uiFinalScore = document.getElementById('final-score');
+
+let gameSessionToken = null; // Anti-cheat token
 
 // -- RESIZE HANDLER --
 function resizeCanvas() {
@@ -309,11 +313,18 @@ function gameOver() {
     if (score > bestScore) {
         bestScore = score;
         localStorage.setItem('flappy_best', bestScore);
+        const newRecordEl = document.getElementById('newRecordBadge');
+        if (newRecordEl) newRecordEl.style.display = 'block';
+    } else {
+        const newRecordEl = document.getElementById('newRecordBadge');
+        if (newRecordEl) newRecordEl.style.display = 'none';
     }
 
-    // Update Best Score Display
+    // Update score displays
+    if (uiFinalScore) uiFinalScore.innerText = score;
     const bestEl = document.getElementById('best-score-display');
     if (bestEl) bestEl.innerText = bestScore;
+    if (uiGoldEarned) uiGoldEarned.innerText = (score * 10).toLocaleString();
 
     if (score > 0) sendReward(score);
     if (uiGameOver) uiGameOver.classList.remove('hidden');
@@ -346,6 +357,9 @@ function startGame() {
     gameState = 'PLAYING';
     if (uiStart) uiStart.classList.add('hidden');
     bird.flap();
+    // Request anti-cheat session token
+    fetch('/api/flappy/start', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(r => r.json()).then(d => { gameSessionToken = d.token; }).catch(() => { });
 }
 
 function loop() {
@@ -412,14 +426,14 @@ async function sendReward(v) {
         const res = await fetch('/api/flappy/reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ score: v })
+            body: JSON.stringify({ score: v, token: gameSessionToken })
         });
         const data = await res.json();
         if (res.ok && data.newBalance !== undefined) {
             updateBalanceDisplay(data.newBalance);
-            // Show gold earned in UI if needed (already in uiGoldEarned)
-            if (uiGoldEarned) uiGoldEarned.innerText = v * 10;
+            if (uiGoldEarned) uiGoldEarned.innerText = (v * 10).toLocaleString();
         }
+        gameSessionToken = null; // Invalidate token
     } catch (e) { }
 }
 
