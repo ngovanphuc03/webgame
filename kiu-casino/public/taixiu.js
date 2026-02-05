@@ -295,7 +295,7 @@ socket.on('tx_update', (data) => {
 
 socket.on('tx_phase_open', (data) => {
     canNan = true; isBettingPhase = false; showNotif("MỞ BÁT !");
-    if (data.dice) for (let i = 0; i < 3; i++) document.getElementById(`d${i + 1}`).src = `images/dice/${data.dice[i]}.png?t=${Date.now()}`;
+    if (data.dice) for (let i = 0; i < 3; i++) { const d = document.getElementById(`d${i + 1}`); if (d) d.src = `images/dice/${data.dice[i]}.png?t=${Date.now()}`; }
     let txt = data.result.toUpperCase(); if (data.result === 'bao') txt = "BÃO";
     let color = data.result === 'tai' ? '#e74c3c' : (data.result === 'xiu' ? '#3498db' : '#ffd700');
     document.getElementById('toast-text').innerText = `${data.total} - ${txt}`;

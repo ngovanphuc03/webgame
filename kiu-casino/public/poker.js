@@ -141,13 +141,16 @@ function spawnFlyingChips(targetSeat) {
             });
         } else {
             // Fallback
-            chip.animate([
+            const anim = chip.animate([
                 { transform: `translate(0, 0) scale(1)`, opacity: 1 },
                 { transform: `translate(${targetX - startX - offsetX}px, ${targetY - startY - offsetY}px) scale(0.5)`, opacity: 0 }
             ], {
                 duration: 1000,
                 easing: 'ease-in'
-            }).onfinish = () => chip.remove();
+            });
+            anim.onfinish = () => chip.remove();
+            // Safety cleanup if animation doesn't fire (tab hidden)
+            setTimeout(() => { if (chip.parentNode) chip.remove(); }, 3000);
         }
     }
 }
@@ -392,7 +395,7 @@ function buildSeatHTML(player, data) {
 
     let autoActionHtml = '';
     if (player.autoAction) {
-        autoActionHtml = `<div class="auto-action-indicator">${player.autoAction.replace('_', ' ')}</div>`;
+        autoActionHtml = `<div class="auto-action-indicator">${escapeHtml(player.autoAction.replace('_', ' '))}</div>`;
     }
 
     return `
@@ -650,11 +653,11 @@ function handleWin(data) {
     const overlay = document.getElementById('win-overlay');
     const details = document.getElementById('win-details');
     if (details) {
-        const name = data.winnerName || 'Người Thắng';
+        const name = escapeHtml(data.winnerName || 'Người Thắng');
         const amt = data.amount || 0;
         details.innerHTML = `
             <div class="winner-name">${name}</div>
-            <div class="win-desc">${data.desc || ''}</div>
+            <div class="win-desc">${escapeHtml(data.desc || '')}</div>
             <div class="win-amount">+$${amt}</div>
         `;
     }
@@ -673,8 +676,8 @@ function handleShowdown(data) {
     if (data.results && details) {
         const resultsHtml = data.results.map(r => `
             <div class="showdown-result">
-                <div class="result-name">${r.playerName}</div>
-                <div class="result-hand">${r.handDesc}</div>
+                <div class="result-name">${escapeHtml(r.playerName)}</div>
+                <div class="result-hand">${escapeHtml(r.handDesc)}</div>
                 <div class="result-amount">+$${r.amount}</div>
             </div>
         `).join('');
