@@ -2,6 +2,7 @@
 // POKER CORE - PROFESSIONAL VERSION (SIDE POTS & SECURITY)
 // ====================================================================
 const Hand = require('pokersolver').Hand;
+const crypto = require('crypto');
 
 class PokerManager {
     constructor(io, dbPool) {
@@ -590,7 +591,8 @@ class PokerTable {
         // Fold win - winner takes EVERYTHING
         // Re-calculate pot one last time just in case
         this.calculatePot();
-        const total = this.pots.reduce((s, p) => s + p.amount, 0);
+        const total = this.pots.reduce((s, pot) => s + pot.amount, 0);
+        const p = this.getPlayer(wid);
 
         if (p) {
             p.chips += total;
@@ -632,7 +634,7 @@ class PokerTable {
     // --- UTILS ---
     dealCommunity(n) { for (let i = 0; i < n; i++) this.communityCards.push(this.deck.pop()); }
 
-    // FIX: Dùng logic cơ bản thay vì flatMap để tránh lỗi version
+    // Fisher-Yates shuffle with crypto-secure random (unbiased)
     createDeck() {
         const suits = ['d', 'c', 'h', 's'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
@@ -642,7 +644,12 @@ class PokerTable {
                 deck.push(r + s);
             }
         }
-        return deck.sort(() => Math.random() - 0.5);
+        // Fisher-Yates shuffle (cryptographically secure)
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = crypto.randomInt(0, i + 1);
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        return deck;
     }
 
     nextActiveSeat(idx, skipCurrent) {

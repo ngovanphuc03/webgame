@@ -1,4 +1,5 @@
 /* FILE: taixiu-core.js (Nằm cùng cấp với server.js) */
+const crypto = require('crypto');
 
 class TaiXiuGame {
     constructor(io, dbPool, guildId) {
@@ -25,61 +26,71 @@ class TaiXiuGame {
 
     async startGameLoop() {
         while (true) {
-            // 1. XÓC
-            this.startNewRound();
-            this.currentState = this.STATE.SHAKING;
-            this.dice = [this.rand(), this.rand(), this.rand()];
-            this.broadcastState("NHÀ CÁI ĐANG XÓC...", 0);
-            await this.sleep(this.T_SHAKING * 1000);
+            try {
+                // 1. XÓC
+                this.startNewRound();
+                this.currentState = this.STATE.SHAKING;
+                this.dice = [this.rand(), this.rand(), this.rand()];
+                this.broadcastState("NHÀ CÁI ĐANG XÓC...", 0);
+                await this.sleep(this.T_SHAKING * 1000);
 
-            // 2. ĐẶT CƯỢC
-            this.currentState = this.STATE.BETTING;
-            this.broadcastState("MỜI ĐẶT CƯỢC", this.T_BETTING);
+                // 2. ĐẶT CƯỢC
+                this.currentState = this.STATE.BETTING;
+                this.broadcastState("MỜI ĐẶT CƯỢC", this.T_BETTING);
 
-            const startBetting = Date.now();
-            for (let i = this.T_BETTING; i > 0; i--) {
-                this.timeLeft = i;
-                this.io.emit('tx_timer', i);
+                const startBetting = Date.now();
+                for (let i = this.T_BETTING; i > 0; i--) {
+                    this.timeLeft = i;
+                    this.io.emit('tx_timer', i);
 
-                // Anti-Drift: Calculate expected time vs actual time
-                const elapsed = Date.now() - startBetting;
-                const target = (this.T_BETTING - i + 1) * 1000;
-                const delay = Math.max(0, target - elapsed);
-                await this.sleep(delay);
+                    // Anti-Drift: Calculate expected time vs actual time
+                    const elapsed = Date.now() - startBetting;
+                    const target = (this.T_BETTING - i + 1) * 1000;
+                    const delay = Math.max(0, target - elapsed);
+                    await this.sleep(delay);
+                }
+
+                // 3. MỞ BÁT
+                this.currentState = this.STATE.OPENING;
+                this.calculateOutcome();
+
+                // Gửi kết quả (kèm dice) nhưng chưa force open (để user nặn)
+                this.io.emit('tx_phase_open', {
+                    time: this.T_OPENING,
+                    dice: this.dice,
+                    total: this.tempResult.total,
+                    result: this.tempResult.winnerSide
+                });
+
+                const startOpening = Date.now();
+                for (let i = this.T_OPENING; i > 0; i--) {
+                    this.timeLeft = i;
+                    this.io.emit('tx_timer', i);
+
+                    // Anti-Drift for Opening phase
+                    const elapsed = Date.now() - startOpening;
+                    const target = (this.T_OPENING - i + 1) * 1000;
+                    const delay = Math.max(0, target - elapsed);
+                    await this.sleep(delay);
+                }
+
+                // 4. TRẢ THƯỞNG
+                this.currentState = this.STATE.RESULT;
+                await this.processPayout();
+                this.io.emit('tx_force_open'); // Hết giờ nặn, lật bát
+                this.io.emit('tx_history', this.history); // GỬI CẦU SAU KHI HẾT 15s MỞ BÁT
+                this.broadcastState(null, 0);
+
+                await this.sleep(5000);
+
+            } catch (err) {
+                console.error('[TaiXiu] Game loop error:', err);
+                // Reset state and continue
+                this.currentState = this.STATE.WAITING;
+                this.bets = { tai: {}, xiu: {} };
+                this.tempResult = null;
+                await this.sleep(5000); // Wait before retrying
             }
-
-            // 3. MỞ BÁT
-            this.currentState = this.STATE.OPENING;
-            this.calculateOutcome();
-
-            // Gửi kết quả (kèm dice) nhưng chưa force open (để user nặn)
-            this.io.emit('tx_phase_open', {
-                time: this.T_OPENING,
-                dice: this.dice,
-                total: this.tempResult.total,
-                result: this.tempResult.winnerSide
-            });
-
-            const startOpening = Date.now();
-            for (let i = this.T_OPENING; i > 0; i--) {
-                this.timeLeft = i;
-                this.io.emit('tx_timer', i);
-
-                // Anti-Drift for Opening phase
-                const elapsed = Date.now() - startOpening;
-                const target = (this.T_OPENING - i + 1) * 1000;
-                const delay = Math.max(0, target - elapsed);
-                await this.sleep(delay);
-            }
-
-            // 4. TRẢ THƯỞNG
-            this.currentState = this.STATE.RESULT;
-            await this.processPayout();
-            this.io.emit('tx_force_open'); // Hết giờ nặn, lật bát
-            this.io.emit('tx_history', this.history); // GỬI CẦU SAU KHI HẾT 15s MỞ BÁT
-            this.broadcastState(null, 0);
-
-            await this.sleep(5000);
         }
     }
 
@@ -163,6 +174,7 @@ class TaiXiuGame {
 
     async handleBet(userId, side, amount) {
         if (this.currentState !== this.STATE.BETTING) return { success: false, msg: "Không phải giờ cược!" };
+        if (!['tai', 'xiu'].includes(side)) return { success: false, msg: "Lỗi lựa chọn!" };
         if (amount <= 0 || !Number.isInteger(amount)) return { success: false, msg: "Lỗi tiền!" };
 
         let conn = null;
@@ -239,7 +251,7 @@ class TaiXiuGame {
         this.io.emit('tx_totals', { total_tai: totalTai, total_xiu: totalXiu });
     }
 
-    rand() { return Math.floor(Math.random() * 6) + 1; }
+    rand() { return crypto.randomInt(1, 7); }
     sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 }
 

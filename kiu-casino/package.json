@@ -1,15 +1,23 @@
 {
   "name": "kiu-casino",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "casino",
+    "poker",
+    "taixiu",
+    "game"
+  ],
+  "author": "Pixel Playzone",
   "license": "ISC",
-  "description": "",
+  "description": "Pixel Playzone - Online casino games platform",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "axios": "^1.13.2",
     "cookie-parser": "^1.4.7",
