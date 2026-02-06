@@ -974,9 +974,19 @@
             setTimeout(() => c.innerHTML = '', 4000);
         }
 
+
         document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !spinning) { e.preventDefault(); spin(); } });
 
-        setupCanvases(); initReels(); fetchBalance();
+        // Ensure fonts are loaded before calculating emoji offsets
+        document.fonts.ready.then(() => {
+            // Small delay to ensure layout is stable
+            setTimeout(() => {
+                setupCanvases();
+                initReels();
+                fetchBalance();
+            }, 100);
+        });
+
 
         // Particles
         (function () {
