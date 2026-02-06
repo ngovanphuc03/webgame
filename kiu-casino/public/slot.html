@@ -774,8 +774,11 @@
             ctx.clearRect(0, 0, w, h);
             const fs = Math.floor(Math.min(w, h) * 0.5);
             ctx.font = fs + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(symbol, w / 2, h / 2);
+            ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+            const m = ctx.measureText(symbol);
+            const glyphH = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+            const cy = (h + m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+            ctx.fillText(symbol, w / 2, cy);
             drawFade(ctx, w, h);
         }
 
@@ -800,6 +803,17 @@
                 seq.push(finalSymbol);
                 const total = seq.length;
                 const startTime = performance.now();
+                // Pre-measure all symbols for precise centering
+                ctx.font = fontStr; ctx.textBaseline = 'alphabetic';
+                const measurements = {};
+                SYMBOLS.forEach(s => {
+                    const m = ctx.measureText(s);
+                    measurements[s] = { asc: m.actualBoundingBoxAscent, desc: m.actualBoundingBoxDescent };
+                });
+                function getCy(sym) {
+                    const m = measurements[sym] || { asc: fs * 0.8, desc: fs * 0.2 };
+                    return (h + m.asc - m.desc) / 2;
+                }
                 function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
                 function frame(now) {
                     const elapsed = now - startTime;
@@ -809,10 +823,14 @@
                     const idx = Math.floor(pos);
                     const frac = pos - idx;
                     ctx.clearRect(0, 0, w, h);
-                    ctx.font = fontStr; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.font = fontStr; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
                     const yShift = -frac * h;
-                    ctx.fillText(seq[Math.min(idx, total - 1)], w / 2, h / 2 + yShift);
-                    if (idx + 1 < total) ctx.fillText(seq[idx + 1], w / 2, h / 2 + yShift + h);
+                    const curSym = seq[Math.min(idx, total - 1)];
+                    ctx.fillText(curSym, w / 2, getCy(curSym) + yShift);
+                    if (idx + 1 < total) {
+                        const nextSym = seq[idx + 1];
+                        ctx.fillText(nextSym, w / 2, getCy(nextSym) + yShift + h);
+                    }
                     drawFade(ctx, w, h);
                     if (t < 1) requestAnimationFrame(frame);
                     else { drawSymbol(ri, finalSymbol); resolve(); }

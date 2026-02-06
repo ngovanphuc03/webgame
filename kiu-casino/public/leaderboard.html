@@ -17,12 +17,12 @@
         * {
             box-sizing: border-box;
             margin: 0;
-            padding: 0;
+            padding: 0
         }
 
         body {
             font-family: 'Nunito', sans-serif;
-            background: linear-gradient(160deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
+            background: #050a18;
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
@@ -31,82 +31,97 @@
             align-items: center;
         }
 
-        /* ═══ AMBIENT ═══ */
+        /* ═══ FULL-SCREEN CANVAS BG ═══ */
+        #bgCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none
+        }
+
+        /* ═══ AMBIENT ORBS ═══ */
         .ambient-orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(100px);
+            filter: blur(120px);
             pointer-events: none;
-            z-index: -1;
-            animation: orb-drift 10s ease-in-out infinite alternate;
+            z-index: 0
         }
 
         .orb-1 {
-            width: 320px;
-            height: 320px;
-            background: rgba(255, 215, 0, 0.07);
-            top: -2%;
-            left: -8%;
+            width: 420px;
+            height: 420px;
+            background: rgba(255, 215, 0, 0.08);
+            top: -8%;
+            left: -12%;
+            animation: od1 12s ease-in-out infinite alternate
         }
 
         .orb-2 {
-            width: 260px;
-            height: 260px;
-            background: rgba(0, 243, 255, 0.05);
-            bottom: 5%;
-            right: -5%;
-            animation-delay: 5s;
+            width: 350px;
+            height: 350px;
+            background: rgba(0, 200, 255, 0.06);
+            bottom: 0;
+            right: -10%;
+            animation: od2 14s ease-in-out infinite alternate
         }
 
         .orb-3 {
+            width: 280px;
+            height: 280px;
+            background: rgba(188, 19, 254, 0.06);
+            top: 40%;
+            left: 55%;
+            animation: od3 10s ease-in-out infinite alternate
+        }
+
+        .orb-4 {
             width: 200px;
             height: 200px;
-            background: rgba(188, 19, 254, 0.04);
-            top: 45%;
-            right: 20%;
-            animation-delay: 3s;
+            background: rgba(255, 80, 80, 0.04);
+            top: 70%;
+            left: 10%;
+            animation: od1 16s ease-in-out infinite alternate-reverse
         }
 
-        @keyframes orb-drift {
+        @keyframes od1 {
             0% {
-                transform: translate(0, 0) scale(1);
+                transform: translate(0, 0) scale(1)
             }
 
             100% {
-                transform: translate(18px, -12px) scale(1.1);
+                transform: translate(30px, -20px) scale(1.15)
             }
         }
 
-        .star-container {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-        }
+        @keyframes od2 {
+            0% {
+                transform: translate(0, 0) scale(1)
+            }
 
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #ffe600;
-            border-radius: 50%;
-            animation: star-twinkle 3s ease-in-out infinite;
-            box-shadow: 0 0 4px currentColor;
-        }
-
-        @keyframes star-twinkle {
-
-            0%,
             100% {
-                opacity: 0.15;
-                transform: scale(0.8);
+                transform: translate(-25px, 15px) scale(1.2)
+            }
+        }
+
+        @keyframes od3 {
+            0% {
+                transform: translate(0, 0) scale(0.9)
             }
 
-            50% {
-                opacity: 0.9;
-                transform: scale(1.3);
+            100% {
+                transform: translate(20px, 25px) scale(1.1)
             }
+        }
+
+        /* ═══ CONTENT WRAPPER ═══ */
+        .content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center
         }
 
         /* ═══ TOP BAR ═══ */
@@ -116,14 +131,17 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 25px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         .back-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: #fff;
             padding: 8px 20px;
             border-radius: 22px;
@@ -136,17 +154,18 @@
 
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.08)
         }
 
         .balance-pill {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             border: 2px solid #ffe600;
             border-radius: 50px;
             padding: 8px 20px;
             font-weight: 800;
             color: #ffe600;
             font-size: 15px;
-            box-shadow: 0 0 18px rgba(255, 230, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.15), inset 0 0 15px rgba(255, 230, 0, 0.05);
             position: relative;
             overflow: hidden;
         }
@@ -158,126 +177,225 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.15), transparent);
             animation: bshine 3s ease infinite;
         }
 
         @keyframes bshine {
             0% {
-                left: -100%;
+                left: -100%
             }
 
             100% {
-                left: 200%;
+                left: 200%
             }
         }
 
         /* ═══ HEADER ═══ */
-        .page-title {
-            margin-top: 28px;
-            font-size: 30px;
-            font-weight: 900;
+        .header-section {
+            margin-top: 30px;
             text-align: center;
-            background: linear-gradient(90deg, #ffe600, #ff9e00, #ffe600);
-            background-size: 200% 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
-            animation: tshimmer 3s ease infinite;
+            position: relative
         }
 
-        @keyframes tshimmer {
+        .crown-icon {
+            font-size: 48px;
+            animation: crownFloat 3s ease-in-out infinite;
+            display: inline-block;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5))
+        }
+
+        @keyframes crownFloat {
 
             0%,
             100% {
-                background-position: 0% 50%;
+                transform: translateY(0) rotate(-3deg)
             }
 
             50% {
-                background-position: 100% 50%;
+                transform: translateY(-8px) rotate(3deg)
             }
         }
 
+        .page-title {
+            font-size: 34px;
+            font-weight: 900;
+            background: linear-gradient(90deg, #ffd700, #ffaa00, #ffe600, #fff5a0, #ffd700);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            animation: goldFlow 4s ease infinite;
+            text-shadow: none;
+            position: relative;
+        }
+
+        @keyframes goldFlow {
+
+            0%,
+            100% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffd700, #ffe600, #ffd700, transparent);
+            border-radius: 2px;
+        }
+
         .page-subtitle {
-            color: rgba(255, 255, 255, 0.45);
+            color: rgba(255, 255, 255, 0.4);
             font-size: 13px;
-            margin-top: 5px;
-            text-align: center;
+            margin-top: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase
+        }
+
+        /* ═══ LIVE COUNTER ═══ */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: rgba(0, 255, 100, 0.08);
+            border: 1px solid rgba(0, 255, 100, 0.2);
+            font-size: 11px;
+            color: #00ff64;
+            font-weight: 700;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00ff64;
+            animation: livePulse 1.5s ease-in-out infinite
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.7)
+            }
         }
 
         /* ═══ MY RANK ═══ */
         .my-rank-card {
             margin-top: 22px;
-            background: linear-gradient(135deg, rgba(188, 19, 254, 0.12), rgba(0, 243, 255, 0.06));
-            border: 1px solid rgba(188, 19, 254, 0.25);
-            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(188, 19, 254, 0.1), rgba(0, 200, 255, 0.06), rgba(255, 215, 0, 0.04));
+            border: 1px solid rgba(188, 19, 254, 0.2);
+            border-radius: 20px;
             padding: 18px 25px;
             display: flex;
             align-items: center;
             gap: 14px;
             width: 90vw;
             max-width: 580px;
-            box-shadow: 0 0 25px rgba(188, 19, 254, 0.12);
+            box-shadow: 0 0 30px rgba(188, 19, 254, 0.1), inset 0 0 30px rgba(188, 19, 254, 0.03);
             animation: rglow 3s ease-in-out infinite alternate;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .my-rank-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 22px;
+            background: conic-gradient(from 0deg, #bc13fe, #00f3ff, #ffe600, #bc13fe);
+            z-index: -1;
+            opacity: 0.15;
+            animation: borderSpin 6s linear infinite;
+        }
+
+        @keyframes borderSpin {
+            to {
+                transform: rotate(360deg)
+            }
         }
 
         @keyframes rglow {
             0% {
-                box-shadow: 0 0 15px rgba(188, 19, 254, 0.1);
+                box-shadow: 0 0 15px rgba(188, 19, 254, 0.08)
             }
 
             100% {
-                box-shadow: 0 0 35px rgba(188, 19, 254, 0.25);
+                box-shadow: 0 0 40px rgba(188, 19, 254, 0.2)
             }
         }
 
         .my-rank-pos {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 900;
             color: #ffe600;
-            min-width: 45px;
+            min-width: 50px;
             text-align: center;
+            text-shadow: 0 0 15px rgba(255, 230, 0, 0.4)
         }
 
         .my-rank-avatar {
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 2px solid #bc13fe;
             object-fit: cover;
-            box-shadow: 0 0 10px rgba(188, 19, 254, 0.3);
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.4);
         }
 
         .my-rank-info {
-            flex: 1;
+            flex: 1
         }
 
         .my-rank-name {
             font-weight: 800;
-            font-size: 15px;
+            font-size: 15px
         }
 
         .my-rank-balance {
             color: #ffe600;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 13px
         }
 
         .my-rank-label {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.35);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px
         }
 
         /* ═══ PODIUM ═══ */
+        .podium-section {
+            margin-top: 28px;
+            position: relative
+        }
+
         .podium {
-            margin-top: 22px;
             display: flex;
             align-items: flex-end;
-            gap: 12px;
-            justify-content: center;
+            gap: 14px;
+            justify-content: center
         }
 
         .podium-item {
@@ -285,6 +403,36 @@
             flex-direction: column;
             align-items: center;
             gap: 6px;
+            animation: podiumRise 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        .podium-2 {
+            animation-delay: 0.2s
+        }
+
+        .podium-1 {
+            animation-delay: 0.4s
+        }
+
+        .podium-3 {
+            animation-delay: 0.1s
+        }
+
+        @keyframes podiumRise {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.8)
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        .podium-avatar-wrap {
+            position: relative;
+            display: inline-block
         }
 
         .podium-avatar {
@@ -292,61 +440,118 @@
             height: 55px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            transition: 0.3s;
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            transition: 0.4s;
+            position: relative;
+            z-index: 1;
         }
 
         .podium-item:hover .podium-avatar {
-            transform: scale(1.08);
+            transform: scale(1.12)
         }
 
         .podium-1 .podium-avatar {
-            width: 72px;
-            height: 72px;
+            width: 78px;
+            height: 78px;
             border-color: #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), 0 0 50px rgba(255, 215, 0, 0.15);
+        }
+
+        .podium-1 .podium-avatar-wrap::before {
+            content: '👑';
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            z-index: 2;
+            animation: crownFloat 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        }
+
+        .podium-1 .podium-avatar-wrap::after {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #ffd700, #ff8c00, #ffd700, #fff5a0, #ffd700);
+            z-index: 0;
+            animation: avatarRing 3s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes avatarRing {
+            to {
+                transform: rotate(360deg)
+            }
         }
 
         .podium-2 .podium-avatar {
             border-color: #c0c0c0;
-            box-shadow: 0 0 12px rgba(192, 192, 192, 0.25);
+            box-shadow: 0 0 15px rgba(192, 192, 192, 0.3)
+        }
+
+        .podium-2 .podium-avatar-wrap::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #c0c0c0, #e8e8e8, #c0c0c0, #808080, #c0c0c0);
+            z-index: 0;
+            animation: avatarRing 4s linear infinite;
+            opacity: 0.4;
         }
 
         .podium-3 .podium-avatar {
             border-color: #cd7f32;
-            box-shadow: 0 0 12px rgba(205, 127, 50, 0.25);
+            box-shadow: 0 0 15px rgba(205, 127, 50, 0.3)
+        }
+
+        .podium-3 .podium-avatar-wrap::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #cd7f32, #e8a860, #cd7f32, #8b4513, #cd7f32);
+            z-index: 0;
+            animation: avatarRing 4s linear infinite;
+            opacity: 0.4;
         }
 
         .podium-name {
             font-size: 12px;
             font-weight: 700;
-            max-width: 75px;
+            max-width: 80px;
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: nowrap
         }
 
         .podium-balance {
             font-size: 11px;
             color: #ffe600;
             font-weight: 800;
+            text-shadow: 0 0 8px rgba(255, 230, 0, 0.3)
         }
 
         .podium-medal {
-            font-size: 26px;
+            font-size: 28px;
+            filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4))
         }
 
         .podium-bar {
-            width: 75px;
-            border-radius: 10px 10px 0 0;
+            width: 80px;
+            border-radius: 12px 12px 0 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
-            font-size: 18px;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
         }
 
         .podium-bar::after {
@@ -356,152 +561,242 @@
             left: -100%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-            animation: shimmer 3s linear infinite;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2.5s linear infinite;
         }
 
         @keyframes shimmer {
             0% {
-                transform: translateX(-100%) translateY(-100%);
+                transform: translateX(-100%) translateY(-100%)
             }
 
             100% {
-                transform: translateX(100%) translateY(100%);
+                transform: translateX(100%) translateY(100%)
             }
         }
 
         .podium-1 .podium-bar {
-            height: 95px;
-            background: linear-gradient(180deg, #ffd700, #b8860b);
+            height: 110px;
+            background: linear-gradient(180deg, #ffd700, #e8a000, #b8860b);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.25)
         }
 
         .podium-2 .podium-bar {
-            height: 65px;
-            background: linear-gradient(180deg, #c0c0c0, #808080);
+            height: 75px;
+            background: linear-gradient(180deg, #d0d0d0, #a0a0a0, #707070)
         }
 
         .podium-3 .podium-bar {
-            height: 45px;
-            background: linear-gradient(180deg, #cd7f32, #8b4513);
+            height: 50px;
+            background: linear-gradient(180deg, #cd7f32, #a06020, #804010)
         }
 
-        /* ═══ LEADERBOARD ═══ */
+        .podium-floor {
+            width: 280px;
+            height: 6px;
+            margin-top: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), rgba(192, 192, 192, 0.2), rgba(205, 127, 50, 0.2), transparent);
+            border-radius: 3px;
+        }
+
+        /* ═══ LEADERBOARD TABLE ═══ */
         .leaderboard {
-            margin-top: 22px;
+            margin-top: 25px;
             width: 90vw;
             max-width: 580px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 18px;
-            padding: 18px;
+            background: rgba(10, 10, 30, 0.6);
+            border-radius: 20px;
+            padding: 4px;
             border: 1px solid rgba(255, 255, 255, 0.06);
-            margin-bottom: 30px;
-            backdrop-filter: blur(5px);
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .leaderboard::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 21px;
+            background: conic-gradient(from 180deg, rgba(255, 215, 0, 0.15), rgba(0, 200, 255, 0.1), rgba(188, 19, 254, 0.1), rgba(255, 215, 0, 0.15));
+            z-index: -1;
+        }
+
+        .lb-inner {
+            padding: 14px
         }
 
         .lb-header {
             display: flex;
-            padding: 8px 14px;
-            font-size: 11px;
+            padding: 10px 14px;
+            font-size: 10px;
             font-weight: 800;
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.3);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .lb-header .col-rank {
-            width: 45px;
+            width: 45px
         }
 
         .lb-header .col-user {
-            flex: 1;
+            flex: 1
         }
 
         .lb-header .col-balance {
             width: 110px;
-            text-align: right;
+            text-align: right
         }
 
         .lb-row {
             display: flex;
             align-items: center;
-            padding: 10px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            transition: 0.25s;
-            border-radius: 10px;
-            animation: rowIn 0.3s ease-out both;
+            padding: 11px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 12px;
+            margin: 2px 0;
+            animation: rowIn 0.4s ease-out both;
+            position: relative;
         }
 
         @keyframes rowIn {
             0% {
                 opacity: 0;
-                transform: translateX(-8px);
+                transform: translateY(10px) scale(0.98)
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(0) scale(1)
             }
         }
 
         .lb-row:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2)
         }
 
         .lb-row.top-1 {
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.02), transparent);
+            border: 1px solid rgba(255, 215, 0, 0.12);
+        }
+
+        .lb-row.top-1::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), transparent);
+            animation: goldPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes goldPulse {
+
+            0%,
+            100% {
+                opacity: 0.5
+            }
+
+            50% {
+                opacity: 1
+            }
         }
 
         .lb-row.top-2 {
-            background: linear-gradient(90deg, rgba(192, 192, 192, 0.07), transparent);
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.08), transparent);
+            border: 1px solid rgba(192, 192, 192, 0.08)
         }
 
         .lb-row.top-3 {
-            background: linear-gradient(90deg, rgba(205, 127, 50, 0.07), transparent);
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.08), transparent);
+            border: 1px solid rgba(205, 127, 50, 0.08)
         }
 
         .lb-row.is-me {
-            background: rgba(188, 19, 254, 0.1);
-            border: 1px solid rgba(188, 19, 254, 0.2);
+            background: linear-gradient(90deg, rgba(188, 19, 254, 0.12), rgba(0, 200, 255, 0.05), transparent);
+            border: 1px solid rgba(188, 19, 254, 0.25);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.1);
         }
 
         .lb-rank {
             width: 45px;
             font-weight: 900;
             font-size: 15px;
-            text-align: center;
+            text-align: center
         }
 
         .rank-1 {
             color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5)
         }
 
         .rank-2 {
             color: #c0c0c0;
+            text-shadow: 0 0 8px rgba(192, 192, 192, 0.4)
         }
 
         .rank-3 {
             color: #cd7f32;
+            text-shadow: 0 0 8px rgba(205, 127, 50, 0.4)
         }
 
         .lb-user {
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 10px
+        }
+
+        .lb-avatar-wrap {
+            position: relative;
+            flex-shrink: 0
         }
 
         .lb-avatar {
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             object-fit: cover;
+            position: relative;
+            z-index: 1
+        }
+
+        .lb-row.top-1 .lb-avatar {
+            border-color: rgba(255, 215, 0, 0.5)
+        }
+
+        .lb-row.top-2 .lb-avatar {
+            border-color: rgba(192, 192, 192, 0.4)
+        }
+
+        .lb-row.top-3 .lb-avatar {
+            border-color: rgba(205, 127, 50, 0.4)
+        }
+
+        .lb-row.is-me .lb-avatar {
+            border-color: rgba(188, 19, 254, 0.5)
         }
 
         .lb-name {
             font-weight: 700;
-            font-size: 13px;
+            font-size: 13px
+        }
+
+        .lb-me-tag {
+            font-size: 10px;
+            color: #bc13fe;
+            font-weight: 800;
+            background: rgba(188, 19, 254, 0.15);
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 5px
         }
 
         .lb-balance {
@@ -510,121 +805,332 @@
             font-weight: 800;
             color: #ffe600;
             font-size: 13px;
+            text-shadow: 0 0 8px rgba(255, 230, 0, 0.2);
         }
 
+        /* ═══ REFRESH BUTTON ═══ */
         .refresh-btn {
-            margin-top: 12px;
+            margin-top: 8px;
             margin-bottom: 30px;
-            padding: 10px 25px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.06);
+            padding: 12px 30px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(188, 19, 254, 0.1));
             color: #fff;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s;
             font-size: 13px;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .refresh-btn:hover::after {
+            left: 200%
         }
 
         .refresh-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.15)
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.97)
+        }
+
+        .refresh-btn.spinning .btn-icon {
+            animation: spin360 0.8s ease
+        }
+
+        @keyframes spin360 {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .btn-icon {
+            display: inline-block;
+            transition: 0.3s
         }
 
         .loading-text {
             color: rgba(255, 255, 255, 0.4);
-            font-size: 14px;
-            margin-top: 25px;
+            font-size: 14px
+        }
+
+        /* ═══ FLOATING COINS ═══ */
+        .coin {
+            position: fixed;
+            font-size: 16px;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            animation: coinFloat linear infinite;
+        }
+
+        @keyframes coinFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0
+            }
+
+            10% {
+                opacity: 0.6
+            }
+
+            90% {
+                opacity: 0.3
+            }
+
+            100% {
+                transform: translateY(-20vh) rotate(720deg);
+                opacity: 0
+            }
+        }
+
+        /* ═══ SCROLL REVEAL ═══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0)
         }
 
         /* ═══ RESPONSIVE ═══ */
-        @media (max-width: 500px) {
+        @media(max-width:500px) {
             .podium-1 .podium-avatar {
-                width: 55px;
-                height: 55px;
+                width: 60px;
+                height: 60px
             }
 
             .podium-avatar {
-                width: 42px;
-                height: 42px;
+                width: 44px;
+                height: 44px
             }
 
             .podium-bar {
-                width: 56px;
+                width: 62px
+            }
+
+            .podium-1 .podium-bar {
+                height: 90px
+            }
+
+            .podium-floor {
+                width: 220px
             }
 
             .my-rank-card {
-                padding: 14px;
+                padding: 14px
             }
 
             .page-title {
-                font-size: 22px;
+                font-size: 24px
+            }
+
+            .crown-icon {
+                font-size: 36px
             }
         }
     </style>
 </head>
 
 <body>
+    <canvas id="bgCanvas"></canvas>
     <div class="ambient-orb orb-1"></div>
     <div class="ambient-orb orb-2"></div>
     <div class="ambient-orb orb-3"></div>
-    <div class="star-container" id="starContainer"></div>
+    <div class="ambient-orb orb-4"></div>
 
-    <div class="top-bar">
-        <a href="/" class="back-btn">← LOBBY</a>
-        <div class="balance-pill">💰 <span id="balance">0</span> $</div>
-    </div>
-
-    <h1 class="page-title">🏆 BẢNG XẾP HẠNG</h1>
-    <p class="page-subtitle">Top người chơi giàu nhất server</p>
-
-    <div class="my-rank-card" id="myRankCard" style="display:none;">
-        <div class="my-rank-pos" id="myRankPos">#?</div>
-        <img class="my-rank-avatar" id="myRankAvatar" src="https://ui-avatars.com/api/?name=U" alt="avatar">
-        <div class="my-rank-info">
-            <div class="my-rank-label">Hạng của bạn</div>
-            <div class="my-rank-name" id="myRankName">-</div>
-            <div class="my-rank-balance" id="myRankBalance">0 $</div>
+    <div class="content">
+        <div class="top-bar">
+            <a href="/" class="back-btn">← LOBBY</a>
+            <div class="balance-pill">💰 <span id="balance">0</span> $</div>
         </div>
-    </div>
 
-    <div class="podium" id="podium"></div>
-
-    <div class="leaderboard">
-        <div class="lb-header">
-            <div class="col-rank">#</div>
-            <div class="col-user">Người chơi</div>
-            <div class="col-balance">Tài sản</div>
+        <div class="header-section reveal">
+            <div class="crown-icon">👑</div>
+            <h1 class="page-title">BẢNG XẾP HẠNG</h1>
+            <p class="page-subtitle">Top người chơi giàu nhất server</p>
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                <span>LIVE • <span id="playerCount">0</span> người chơi</span>
+            </div>
         </div>
-        <div id="lbBody">
-            <p class="loading-text" style="text-align:center;padding:20px;">⏳ Đang tải...</p>
-        </div>
-    </div>
 
-    <button class="refresh-btn" onclick="loadLeaderboard()">🔄 Làm mới</button>
+        <div class="my-rank-card reveal" id="myRankCard" style="display:none;">
+            <div class="my-rank-pos" id="myRankPos">#?</div>
+            <img class="my-rank-avatar" id="myRankAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">
+            <div class="my-rank-info">
+                <div class="my-rank-label">Hạng của bạn</div>
+                <div class="my-rank-name" id="myRankName">-</div>
+                <div class="my-rank-balance" id="myRankBalance">0 $</div>
+            </div>
+        </div>
+
+        <div class="podium-section reveal">
+            <div class="podium" id="podium"></div>
+            <div class="podium-floor"></div>
+        </div>
+
+        <div class="leaderboard reveal">
+            <div class="lb-inner">
+                <div class="lb-header">
+                    <div class="col-rank">#</div>
+                    <div class="col-user">Người chơi</div>
+                    <div class="col-balance">Tài sản</div>
+                </div>
+                <div id="lbBody">
+                    <p class="loading-text" style="text-align:center;padding:30px;">⏳ Đang tải...</p>
+                </div>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="refreshClicked()">
+            <span class="btn-icon">🔄</span> Làm mới
+        </button>
+    </div>
 
     <script>
-        let myUserId = null;
+        // ═══ CANVAS PARTICLE BACKGROUND ═══
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [], mouseX = -1, mouseY = -1;
 
-        function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-        async function fetchBalance() {
-            try {
-                const res = await fetch('/api/me');
-                if (res.ok) { const d = await res.json(); document.getElementById('balance').textContent = Number(d.balance).toLocaleString(); return d; }
-                else window.location.href = '/';
-            } catch (e) { console.error(e); }
-            return null;
+        class Particle {
+            constructor() { this.reset() }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.size = Math.random() * 2 + 0.5;
+                const colors = ['255,215,0', '0,200,255', '188,19,254', '255,255,255'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.alpha = Math.random() * 0.4 + 0.1;
+                this.pulseSpeed = Math.random() * 0.02 + 0.005;
+                this.pulseOffset = Math.random() * Math.PI * 2;
+            }
+            update(t) {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                this.currentAlpha = this.alpha * (0.6 + 0.4 * Math.sin(t * this.pulseSpeed + this.pulseOffset));
+                if (mouseX > 0 && mouseY > 0) {
+                    const dx = this.x - mouseX, dy = this.y - mouseY, d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 120) { const f = (120 - d) / 120 * 0.5; this.x += dx / d * f; this.y += dy / d * f }
+                }
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.color},${this.currentAlpha})`; ctx.fill();
+                if (this.size > 1.2) {
+                    ctx.shadowBlur = this.size * 6; ctx.shadowColor = `rgba(${this.color},${this.currentAlpha * 0.5})`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        for (let i = 0; i < 80; i++)particles.push(new Particle());
+
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 100) {
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(255,215,0,${(1 - d / 100) * 0.06})`;
+                        ctx.lineWidth = 0.5; ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        let animFrame = 0;
+        function animateBg() {
+            animFrame++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // subtle gradient overlay
+            const g = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.3, 0, canvas.width / 2, canvas.height * 0.3, canvas.width * 0.7);
+            g.addColorStop(0, 'rgba(25,10,60,0.15)'); g.addColorStop(1, 'rgba(5,10,24,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => { p.update(animFrame); p.draw() });
+            drawLines();
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY });
+        document.addEventListener('mouseleave', () => { mouseX = -1; mouseY = -1 });
+
+        // ═══ FLOATING COINS ═══
+        function spawnCoins() {
+            const emojis = ['💰', '🪙', '💎', '⭐', '🏆'];
+            for (let i = 0; i < 8; i++) {
+                const c = document.createElement('div'); c.className = 'coin';
+                c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                c.style.left = Math.random() * 100 + '%';
+                c.style.fontSize = (12 + Math.random() * 14) + 'px';
+                c.style.animationDuration = (10 + Math.random() * 15) + 's';
+                c.style.animationDelay = Math.random() * 10 + 's';
+                document.body.appendChild(c);
+            }
+        }
+        spawnCoins();
+
+        // ═══ SCROLL REVEAL ═══
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+        // ═══ MAIN LOGIC ═══
+        function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML }
+
+        function animateCounter(el, target) {
+            const start = 0, duration = 1200, startTime = performance.now();
+            function tick(now) {
+                const p = Math.min((now - startTime) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.floor(eased * target).toLocaleString();
+                if (p < 1) requestAnimationFrame(tick);
+                else el.textContent = target.toLocaleString();
+            }
+            requestAnimationFrame(tick);
         }
 
         async function loadLeaderboard() {
             const lbBody = document.getElementById('lbBody');
             try {
                 const [meRes, lbRes] = await Promise.all([fetch('/api/me'), fetch('/api/leaderboard')]);
-                if (!meRes.ok) { window.location.href = '/'; return; }
+                if (!meRes.ok) { window.location.href = '/'; return }
                 const me = await meRes.json();
-                document.getElementById('balance').textContent = Number(me.balance).toLocaleString();
+                animateCounter(document.getElementById('balance'), Number(me.balance));
 
                 if (!lbRes.ok) {
                     const err = await lbRes.json().catch(() => ({}));
@@ -640,13 +1146,14 @@
                 }
 
                 const list = lb.leaderboard;
+                document.getElementById('playerCount').textContent = list.length;
 
                 if (lb.my_rank) {
                     const card = document.getElementById('myRankCard');
                     card.style.display = 'flex';
                     document.getElementById('myRankPos').textContent = '#' + lb.my_rank;
                     document.getElementById('myRankName').textContent = me.username;
-                    document.getElementById('myRankAvatar').src = me.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(me.username || 'U');
+                    document.getElementById('myRankAvatar').src = me.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
                     document.getElementById('myRankBalance').textContent = Number(me.balance).toLocaleString() + ' $';
                 }
 
@@ -662,14 +1169,16 @@
 
         function renderPodium(top3) {
             const podium = document.getElementById('podium');
-            if (top3.length < 3) { podium.innerHTML = ''; return; }
+            if (top3.length < 3) { podium.innerHTML = ''; return }
             const order = [top3[1], top3[0], top3[2]];
             const classes = ['podium-2', 'podium-1', 'podium-3'];
             const medals = ['🥈', '🥇', '🥉'];
             podium.innerHTML = order.map((u, i) => `
                 <div class="podium-item ${classes[i]}">
                     <div class="podium-medal">${medals[i]}</div>
-                    <img class="podium-avatar" src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.username || 'U')}" alt="avatar" onerror="this.src='https://ui-avatars.com/api/?name=U'">
+                    <div class="podium-avatar-wrap">
+                        <img class="podium-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                    </div>
                     <div class="podium-name">${escapeHtml(u.username || 'User')}</div>
                     <div class="podium-balance">${Number(u.balance).toLocaleString()} $</div>
                     <div class="podium-bar">${i === 1 ? '1' : (i === 0 ? '2' : '3')}</div>
@@ -679,7 +1188,7 @@
 
         function renderList(list, myId) {
             const body = document.getElementById('lbBody');
-            if (!list.length) { body.innerHTML = '<p class="loading-text" style="text-align:center;">Chưa có dữ liệu</p>'; return; }
+            if (!list.length) { body.innerHTML = '<p class="loading-text" style="text-align:center;">Chưa có dữ liệu</p>'; return }
             body.innerHTML = list.map((u, i) => {
                 const rank = i + 1;
                 let rankClass = rank === 1 ? 'top-1' : rank === 2 ? 'top-2' : rank === 3 ? 'top-3' : '';
@@ -687,34 +1196,25 @@
                 const rankColor = rank <= 3 ? `rank-${rank}` : '';
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
                 return `
-                    <div class="lb-row ${rankClass} ${isMe ? 'is-me' : ''}" style="animation-delay: ${i * 0.03}s">
+                    <div class="lb-row ${rankClass} ${isMe ? 'is-me' : ''}" style="animation-delay:${i * 0.05}s">
                         <div class="lb-rank ${rankColor}">${medal}</div>
                         <div class="lb-user">
-                            <img class="lb-avatar" src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.username || 'U')}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U'">
-                            <span class="lb-name">${escapeHtml(u.username || 'User')} ${isMe ? '(Bạn)' : ''}</span>
+                            <div class="lb-avatar-wrap">
+                                <img class="lb-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            </div>
+                            <span class="lb-name">${escapeHtml(u.username || 'User')}${isMe ? ' <span class="lb-me-tag">BẠN</span>' : ''}</span>
                         </div>
                         <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>
                     </div>`;
             }).join('');
         }
 
-        // Stars
-        function createStars() {
-            const c = document.getElementById('starContainer');
-            const cols = ['#ffe600', '#00f3ff', '#bc13fe', '#fff'];
-            for (let i = 0; i < 35; i++) {
-                const s = document.createElement('div');
-                s.className = 'star';
-                s.style.left = Math.random() * 100 + '%';
-                s.style.top = Math.random() * 100 + '%';
-                s.style.animationDelay = Math.random() * 3 + 's';
-                const col = cols[Math.floor(Math.random() * cols.length)];
-                s.style.background = col; s.style.color = col;
-                s.style.width = s.style.height = (Math.random() * 2.5 + 1) + 'px';
-                c.appendChild(s);
-            }
+        function refreshClicked() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.classList.add('spinning');
+            loadLeaderboard().finally(() => setTimeout(() => btn.classList.remove('spinning'), 800));
         }
-        createStars();
+
         loadLeaderboard();
     </script>
 </body>

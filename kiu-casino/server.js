@@ -241,13 +241,24 @@ app.get('/auth/logout', (req, res) => {
 app.get('/api/me', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
     try {
-        const [r] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        let r;
+        try {
+            [r] = await dbPool.execute('SELECT balance, username, avatar FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        } catch (colErr) {
+            [r] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        }
         let info = { username: 'User', avatar: '' };
+
+        // Try DB first for username/avatar
+        if (r.length && r[0].username) info.username = r[0].username;
+        if (r.length && r[0].avatar) info.avatar = r[0].avatar;
+
+        // Override with cookie info if available (more up-to-date)
         if (req.cookies.user_info) {
             try {
                 const raw = JSON.parse(req.cookies.user_info.startsWith('j:') ? req.cookies.user_info.slice(2) : req.cookies.user_info);
-                info.username = decodeURIComponent(raw.username);
-                info.avatar = raw.avatar;
+                if (raw.username) info.username = decodeURIComponent(raw.username);
+                if (raw.avatar) info.avatar = raw.avatar;
             } catch (e) { }
         }
 
@@ -586,12 +597,23 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
             );
         }
 
-        const leaderboard = rows.map(r => ({
-            user_id: r.user_id,
-            balance: Number(r.balance),
-            username: r.username || ('User_' + String(r.user_id).slice(-4)),
-            avatar: r.avatar || ''
-        }));
+        const leaderboard = rows.map(r => {
+            let av = r.avatar || '';
+            if (!av) {
+                try {
+                    const index = Number((BigInt(r.user_id) >> 22n) % 6n);
+                    av = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+                } catch (e) {
+                    av = 'https://cdn.discordapp.com/embed/avatars/0.png';
+                }
+            }
+            return {
+                user_id: r.user_id,
+                balance: Number(r.balance),
+                username: r.username || ('User_' + String(r.user_id).slice(-4)),
+                avatar: av
+            };
+        });
 
         // Find my rank - safer query that handles missing user
         let myRank = null;

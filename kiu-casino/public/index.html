@@ -177,14 +177,15 @@
             width: 200%;
             height: 100%;
             background-image:
-                linear-gradient(rgba(188, 19, 254, 0.12) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(188, 19, 254, 0.12) 1px, transparent 1px);
+                linear-gradient(rgba(188, 19, 254, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.12) 1px, transparent 1px);
             background-size: 50px 50px;
             transform: perspective(500px) rotateX(60deg);
             animation: grid-move 20s linear infinite;
             z-index: -1;
-            opacity: 0.5;
+            opacity: 0.55;
             mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
+            filter: drop-shadow(0 0 3px rgba(188, 19, 254, 0.3));
         }
 
         @keyframes grid-move {
@@ -249,7 +250,7 @@
 
         .brand-text span:last-child {
             color: var(--neon-pink);
-            text-shadow: 0 0 15px var(--neon-pink), 0 0 40px rgba(188, 19, 254, 0.25);
+            text-shadow: 0 0 8px var(--neon-pink), 0 0 20px var(--neon-pink), 0 0 45px rgba(188, 19, 254, 0.35), 0 0 80px rgba(188, 19, 254, 0.15);
         }
 
         .brand-icon {
@@ -286,9 +287,22 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 0 18px rgba(255, 230, 0, 0.15);
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.2), 0 0 40px rgba(255, 230, 0, 0.06), inset 0 0 15px rgba(255, 230, 0, 0.04);
             position: relative;
             overflow: hidden;
+            animation: balanceGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes balanceGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(255, 230, 0, 0.2), 0 0 40px rgba(255, 230, 0, 0.06);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 230, 0, 0.3), 0 0 50px rgba(255, 230, 0, 0.1);
+            }
         }
 
         .balance-display::before {
@@ -333,6 +347,7 @@
         .user-profile:hover {
             background: rgba(255, 255, 255, 0.13);
             border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.05);
         }
 
         .avatar {
@@ -341,7 +356,13 @@
             border-radius: 50%;
             border: 2px solid var(--neon-blue);
             object-fit: cover;
-            box-shadow: 0 0 8px rgba(0, 243, 255, 0.25);
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.35), 0 0 20px rgba(0, 243, 255, 0.12);
+            transition: 0.3s;
+        }
+
+        .avatar:hover {
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.2);
+            transform: scale(1.08);
         }
 
         .username {
@@ -376,13 +397,37 @@
             font-weight: 800;
             font-size: 15px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.35);
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.35), 0 0 50px rgba(138, 43, 226, 0.1);
             animation: pulse-btn 2s infinite;
             transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: loginShine 2.5s ease infinite;
+        }
+
+        @keyframes loginShine {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 200%;
+            }
         }
 
         .btn-login:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.5), 0 0 60px rgba(0, 243, 255, 0.2);
         }
 
         @keyframes pulse-btn {
@@ -411,10 +456,25 @@
             top: -180px;
             left: 50%;
             transform: translateX(-50%);
-            width: 700px;
-            height: 500px;
-            background: radial-gradient(ellipse, rgba(188, 19, 254, 0.1) 0%, transparent 70%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(ellipse, rgba(188, 19, 254, 0.12) 0%, rgba(0, 243, 255, 0.04) 40%, transparent 70%);
             pointer-events: none;
+            animation: heroGlow 5s ease-in-out infinite;
+        }
+
+        @keyframes heroGlow {
+
+            0%,
+            100% {
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.05);
+            }
         }
 
         .welcome-title {
@@ -429,7 +489,20 @@
 
         .welcome-title span {
             color: var(--neon-yellow);
-            text-shadow: 0 0 25px rgba(255, 230, 0, 0.4);
+            text-shadow: 0 0 10px rgba(255, 230, 0, 0.6), 0 0 30px rgba(255, 230, 0, 0.3), 0 0 60px rgba(255, 230, 0, 0.15);
+            animation: neonTextPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes neonTextPulse {
+
+            0%,
+            100% {
+                text-shadow: 0 0 10px rgba(255, 230, 0, 0.6), 0 0 30px rgba(255, 230, 0, 0.3), 0 0 60px rgba(255, 230, 0, 0.15);
+            }
+
+            50% {
+                text-shadow: 0 0 15px rgba(255, 230, 0, 0.8), 0 0 40px rgba(255, 230, 0, 0.5), 0 0 80px rgba(255, 230, 0, 0.25), 0 0 120px rgba(255, 230, 0, 0.1);
+            }
         }
 
         @keyframes title-in {
@@ -502,7 +575,23 @@
 
         .tag:hover {
             background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tag:nth-child(1):hover {
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.15);
+            border-color: rgba(0, 255, 157, 0.3);
+        }
+
+        .tag:nth-child(2):hover {
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.15);
+            border-color: rgba(255, 230, 0, 0.3);
+        }
+
+        .tag:nth-child(3):hover {
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.15);
+            border-color: rgba(188, 19, 254, 0.3);
         }
 
         .tag i {
@@ -618,10 +707,26 @@
             bottom: -8px;
             left: 50%;
             transform: translateX(-50%);
-            width: 50px;
+            width: 60px;
             height: 3px;
             background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue));
             border-radius: 3px;
+            box-shadow: 0 0 10px var(--neon-pink), 0 0 25px rgba(188, 19, 254, 0.3);
+            animation: neonLine 3s ease-in-out infinite;
+        }
+
+        @keyframes neonLine {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px var(--neon-pink), 0 0 25px rgba(188, 19, 254, 0.3);
+                width: 60px;
+            }
+
+            50% {
+                box-shadow: 0 0 15px var(--neon-blue), 0 0 35px rgba(0, 243, 255, 0.3);
+                width: 80px;
+            }
         }
 
         /* ═══ GAME GRID ═══ */
@@ -651,16 +756,51 @@
         .game-card::before {
             content: '';
             position: absolute;
-            inset: -1px;
-            border-radius: 18px;
-            background: conic-gradient(from 180deg, transparent 0%, rgba(255, 255, 255, 0.06) 25%, transparent 50%, rgba(255, 255, 255, 0.06) 75%, transparent 100%);
+            inset: -2px;
+            border-radius: 20px;
+            padding: 2px;
+            background: conic-gradient(from var(--card-angle, 0deg), var(--neon-c1, #ff9e00), var(--neon-c2, #ff512f), var(--neon-c1, #ff9e00), transparent 40%, transparent 60%, var(--neon-c1, #ff9e00));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.4s;
+            transition: opacity 0.5s;
+            animation: neonSpin 4s linear infinite;
+        }
+
+        @property --card-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes neonSpin {
+            to {
+                --card-angle: 360deg;
+            }
+        }
+
+        .game-card::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 20px;
+            background: conic-gradient(from var(--card-angle, 0deg), var(--neon-c1, #ff9e00), var(--neon-c2, #ff512f), var(--neon-c1, #ff9e00), transparent 40%, transparent 60%, var(--neon-c1, #ff9e00));
+            pointer-events: none;
+            opacity: 0;
+            filter: blur(12px);
+            transition: opacity 0.5s;
+            animation: neonSpin 4s linear infinite;
+            z-index: -1;
         }
 
         .game-card:hover::before {
             opacity: 1;
+        }
+
+        .game-card:hover::after {
+            opacity: 0.4;
         }
 
         .game-card:hover {
@@ -669,56 +809,68 @@
 
         .card-taixiu {
             border-color: rgba(255, 158, 0, 0.25);
+            --neon-c1: #ff9e00;
+            --neon-c2: #ff512f;
         }
 
         .card-poker {
             border-color: rgba(0, 255, 157, 0.25);
+            --neon-c1: #00ff9d;
+            --neon-c2: #11998e;
         }
 
         .card-flappy {
             border-color: rgba(255, 230, 0, 0.25);
+            --neon-c1: #ffe600;
+            --neon-c2: #f38181;
         }
 
         .card-slot {
             border-color: rgba(138, 43, 226, 0.25);
+            --neon-c1: #bc13fe;
+            --neon-c2: #6c5ce7;
         }
 
         .card-daily {
             border-color: rgba(255, 107, 107, 0.25);
+            --neon-c1: #ff6b6b;
+            --neon-c2: #ee5a24;
         }
 
         .card-leaderboard {
             border-color: rgba(0, 243, 255, 0.25);
+            --neon-c1: #00f3ff;
+            --neon-c2: #0077ff;
         }
 
         .card-taixiu:hover {
-            box-shadow: 0 8px 45px rgba(255, 158, 0, 0.18);
-            border-color: rgba(255, 158, 0, 0.6);
+            box-shadow: 0 8px 45px rgba(255, 158, 0, 0.25), 0 0 80px rgba(255, 158, 0, 0.08), inset 0 0 30px rgba(255, 158, 0, 0.03);
+            border-color: transparent;
         }
 
         .card-poker:hover {
-            box-shadow: 0 8px 45px rgba(0, 255, 157, 0.18);
-            border-color: rgba(0, 255, 157, 0.6);
+            box-shadow: 0 8px 45px rgba(0, 255, 157, 0.25), 0 0 80px rgba(0, 255, 157, 0.08), inset 0 0 30px rgba(0, 255, 157, 0.03);
+            border-color: transparent;
         }
 
         .card-flappy:hover {
-            box-shadow: 0 8px 45px rgba(255, 230, 0, 0.12);
-            border-color: rgba(255, 230, 0, 0.6);
+            box-shadow: 0 8px 45px rgba(255, 230, 0, 0.2), 0 0 80px rgba(255, 230, 0, 0.06), inset 0 0 30px rgba(255, 230, 0, 0.03);
+            border-color: transparent;
         }
 
         .card-slot:hover {
-            box-shadow: 0 8px 45px rgba(138, 43, 226, 0.18);
-            border-color: rgba(138, 43, 226, 0.6);
+            box-shadow: 0 8px 45px rgba(138, 43, 226, 0.25), 0 0 80px rgba(138, 43, 226, 0.1), inset 0 0 30px rgba(138, 43, 226, 0.03);
+            border-color: transparent;
         }
 
         .card-daily:hover {
-            box-shadow: 0 8px 45px rgba(255, 107, 107, 0.18);
-            border-color: rgba(255, 107, 107, 0.6);
+            box-shadow: 0 8px 45px rgba(255, 107, 107, 0.25), 0 0 80px rgba(255, 107, 107, 0.08), inset 0 0 30px rgba(255, 107, 107, 0.03);
+            border-color: transparent;
         }
 
         .card-leaderboard:hover {
-            box-shadow: 0 8px 45px rgba(0, 243, 255, 0.12);
-            border-color: rgba(0, 243, 255, 0.6);
+            box-shadow: 0 8px 45px rgba(0, 243, 255, 0.2), 0 0 80px rgba(0, 243, 255, 0.08), inset 0 0 30px rgba(0, 243, 255, 0.03);
+            border-color: transparent;
         }
 
         .card-image {
@@ -935,6 +1087,8 @@
 
         .btn-play:hover {
             transform: translateY(-2px);
+            filter: brightness(1.15);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15), 0 0 40px rgba(var(--btn-r, 188), var(--btn-g, 19), var(--btn-b, 254), 0.3);
         }
 
         .btn-play:active {
@@ -945,36 +1099,54 @@
             background: linear-gradient(135deg, #ff512f, #f09819);
             color: #fff;
             box-shadow: 0 4px 18px rgba(255, 158, 0, 0.25);
+            --btn-r: 255;
+            --btn-g: 158;
+            --btn-b: 0;
         }
 
         .btn-poker {
             background: linear-gradient(135deg, #11998e, #38ef7d);
             color: #0a0b1e;
             box-shadow: 0 4px 18px rgba(0, 255, 157, 0.25);
+            --btn-r: 0;
+            --btn-g: 255;
+            --btn-b: 157;
         }
 
         .btn-flappy {
             background: linear-gradient(135deg, #fce38a, #f38181);
             color: #0a0b1e;
             box-shadow: 0 4px 18px rgba(255, 230, 0, 0.25);
+            --btn-r: 255;
+            --btn-g: 230;
+            --btn-b: 0;
         }
 
         .btn-slot {
             background: linear-gradient(135deg, #bc13fe, #6c5ce7);
             color: #fff;
             box-shadow: 0 4px 18px rgba(138, 43, 226, 0.25);
+            --btn-r: 138;
+            --btn-g: 43;
+            --btn-b: 226;
         }
 
         .btn-daily {
             background: linear-gradient(135deg, #ff6b6b, #ee5a24);
             color: #fff;
             box-shadow: 0 4px 18px rgba(255, 107, 107, 0.25);
+            --btn-r: 255;
+            --btn-g: 107;
+            --btn-b: 107;
         }
 
         .btn-leaderboard {
             background: linear-gradient(135deg, var(--neon-blue), #0077ff);
             color: #fff;
             box-shadow: 0 4px 18px rgba(0, 243, 255, 0.25);
+            --btn-r: 0;
+            --btn-g: 243;
+            --btn-b: 255;
         }
 
         .shine-layer {
@@ -1043,15 +1215,15 @@
             pointer-events: none;
             z-index: 10000;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px var(--neon-blue);
-            transition: width 0.2s, height 0.2s, border-color 0.2s;
+            box-shadow: 0 0 8px var(--neon-blue), 0 0 20px rgba(0, 243, 255, 0.2), inset 0 0 6px rgba(0, 243, 255, 0.1);
+            transition: width 0.2s, height 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
 
         #cursor.hover {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-color: var(--neon-pink);
-            box-shadow: 0 0 15px var(--neon-pink);
+            box-shadow: 0 0 12px var(--neon-pink), 0 0 30px rgba(188, 19, 254, 0.3), 0 0 50px rgba(188, 19, 254, 0.1), inset 0 0 10px rgba(188, 19, 254, 0.15);
         }
 
         #cursor-trail {
@@ -1064,6 +1236,7 @@
             z-index: 9999;
             transform: translate(-50%, -50%);
             opacity: 0.5;
+            box-shadow: 0 0 8px var(--neon-pink), 0 0 15px rgba(188, 19, 254, 0.3);
         }
 
         /* ═══ FOOTER ═══ */
