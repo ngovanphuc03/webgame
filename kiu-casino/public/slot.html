@@ -757,6 +757,7 @@
         const DPR = window.devicePixelRatio || 1;
         const reels = [];
 
+
         function setupCanvases() {
             for (let i = 0; i < 3; i++) {
                 const canvas = document.getElementById('reel' + i);
@@ -767,60 +768,25 @@
                 ctx.scale(DPR, DPR);
                 reels.push({ canvas, ctx, w, h });
             }
-            // Pre-measure all emoji bounding boxes using pixel scanning
-            const { w, h } = reels[0];
-            const fs = Math.floor(Math.min(w, h) * 0.5);
-            const fontStr = fs + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
-            const offCanvas = document.createElement('canvas');
-            offCanvas.width = w * 2; offCanvas.height = h * 2;
-            const offCtx = offCanvas.getContext('2d');
-            SYMBOLS.forEach(sym => {
-                offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-                offCtx.font = fontStr;
-                offCtx.textAlign = 'center';
-                offCtx.textBaseline = 'middle';
-                offCtx.fillText(sym, offCanvas.width / 2, offCanvas.height / 2);
-                const imgData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
-                const px = imgData.data;
-                let minY = offCanvas.height, maxY = 0, minX = offCanvas.width, maxX = 0;
-                for (let y = 0; y < offCanvas.height; y++) {
-                    for (let x = 0; x < offCanvas.width; x++) {
-                        if (px[(y * offCanvas.width + x) * 4 + 3] > 10) {
-                            if (y < minY) minY = y;
-                            if (y > maxY) maxY = y;
-                            if (x < minX) minX = x;
-                            if (x > maxX) maxX = x;
-                        }
-                    }
-                }
-                const glyphCenterY = (minY + maxY) / 2;
-                const glyphCenterX = (minX + maxX) / 2;
-                // Offset = how much the glyph center differs from canvas center
-                emojiOffsets[sym] = {
-                    dy: glyphCenterY - offCanvas.height / 2,
-                    dx: glyphCenterX - offCanvas.width / 2
-                };
-            });
         }
-
-        const emojiOffsets = {};
 
         function drawSymbol(ri, symbol) {
             const { ctx, w, h } = reels[ri];
             ctx.clearRect(0, 0, w, h);
-            const fs = Math.floor(Math.min(w, h) * 0.5);
+            const fs = Math.floor(Math.min(w, h) * 0.6); // Slightly larger font
             ctx.font = fs + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            const off = emojiOffsets[symbol] || { dy: 0, dx: 0 };
-            ctx.fillText(symbol, w / 2 - off.dx, h / 2 - off.dy);
+            // Slight manual adjustment for emojis often sitting high
+            const vOffset = h * 0.05;
+            ctx.fillText(symbol, w / 2, h / 2 + vOffset);
             drawFade(ctx, w, h);
         }
 
         function drawFade(ctx, w, h) {
             const g = ctx.createLinearGradient(0, 0, 0, h);
             g.addColorStop(0, 'rgba(13,13,32,1)');
-            g.addColorStop(0.18, 'rgba(13,13,32,0)');
-            g.addColorStop(0.82, 'rgba(13,13,32,0)');
+            g.addColorStop(0.15, 'rgba(13,13,32,0)');
+            g.addColorStop(0.85, 'rgba(13,13,32,0)');
             g.addColorStop(1, 'rgba(13,13,32,1)');
             ctx.fillStyle = g;
             ctx.fillRect(0, 0, w, h);
@@ -829,7 +795,7 @@
         function animateReel(ri, finalSymbol, duration) {
             return new Promise(resolve => {
                 const { ctx, w, h } = reels[ri];
-                const fs = Math.floor(Math.min(w, h) * 0.5);
+                const fs = Math.floor(Math.min(w, h) * 0.6);
                 const fontStr = fs + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
                 const seqLen = 18 + ri * 6;
                 const seq = [];
@@ -837,6 +803,10 @@
                 seq.push(finalSymbol);
                 const total = seq.length;
                 const startTime = performance.now();
+
+                // Slight offset for drawing
+                const vOffset = h * 0.05;
+
                 function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
                 function frame(now) {
                     const elapsed = now - startTime;
@@ -845,17 +815,22 @@
                     const pos = eased * (total - 1);
                     const idx = Math.floor(pos);
                     const frac = pos - idx;
+
                     ctx.clearRect(0, 0, w, h);
                     ctx.font = fontStr; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
                     const yShift = -frac * h;
+
+                    // Current symbol
                     const curSym = seq[Math.min(idx, total - 1)];
-                    const curOff = emojiOffsets[curSym] || { dy: 0, dx: 0 };
-                    ctx.fillText(curSym, w / 2 - curOff.dx, h / 2 - curOff.dy + yShift);
+                    ctx.fillText(curSym, w / 2, h / 2 + yShift + vOffset);
+
+                    // Next symbol
                     if (idx + 1 < total) {
                         const nextSym = seq[idx + 1];
-                        const nextOff = emojiOffsets[nextSym] || { dy: 0, dx: 0 };
-                        ctx.fillText(nextSym, w / 2 - nextOff.dx, h / 2 - nextOff.dy + yShift + h);
+                        ctx.fillText(nextSym, w / 2, h / 2 + yShift + h + vOffset);
                     }
+
                     drawFade(ctx, w, h);
                     if (t < 1) requestAnimationFrame(frame);
                     else { drawSymbol(ri, finalSymbol); resolve(); }
@@ -865,8 +840,11 @@
         }
 
         function initReels() {
+            reels.length = 0; // Clear reels array
+            setupCanvases(); // Re-setup to ensure fresh state
             for (let i = 0; i < 3; i++) drawSymbol(i, SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
         }
+
 
         async function fetchBalance() {
             try {
