@@ -32,6 +32,11 @@
             align-items: center;
         }
 
+        :root {
+            --reel-w: 100px;
+            --reel-h: 120px;
+        }
+
         /* AMBIENT GLOW ORBS */
         .ambient-orb {
             position: fixed;
@@ -240,8 +245,8 @@
 
         .reel-wrapper {
             position: relative;
-            width: 100px;
-            height: 120px;
+            width: var(--reel-w);
+            height: var(--reel-h);
             border-radius: 12px;
             overflow: hidden;
             background: #0a0a1a;
@@ -278,8 +283,8 @@
         }
 
         .reel-item {
-            width: 100px;
-            height: 120px;
+            width: var(--reel-w);
+            height: var(--reel-h);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -586,18 +591,16 @@
 
         /* RESPONSIVE */
         @media (max-width: 500px) {
+            :root {
+                --reel-w: 80px;
+                --reel-h: 100px;
+            }
+
             .machine {
                 padding: 20px 15px;
             }
 
-            .reel {
-                width: 80px;
-                height: 100px;
-            }
-
             .reel-item {
-                width: 80px;
-                height: 100px;
                 font-size: 48px;
             }
 
