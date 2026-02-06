@@ -5,15 +5,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Bảng Xếp Hạng - Top người chơi tại Pixel PlayZone">
-    <meta name="theme-color" content="#0a1628">
+    <meta name="theme-color" content="#030014">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
     <title>🏆 Bảng Xếp Hạng - Pixel PlayZone</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
-
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Orbitron:wght@400;500;600;700;800;900&family=Pixelify+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=VT323&display=swap"
+        rel="stylesheet">
     <style>
+        /* Pixel fonts: VT323 (Vietnamese ✓), Pixelify Sans (English headings) */
+
+        @property --ring-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false
+        }
+
+        @property --glow-intensity {
+            syntax: '<number>';
+            initial-value: 0;
+            inherits: false
+        }
+
+        :root {
+            --neon-cyan: #00f0ff;
+            --neon-magenta: #ff00aa;
+            --neon-purple: #8b5cf6;
+            --neon-green: #00ff88;
+            --neon-gold: #ffd700;
+            --neon-red: #ff3366;
+            --bg: #030014;
+            --surface: rgba(15, 15, 35, 0.8);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-pixel: 'VT323', monospace;
+            --font-pixel-en: 'Pixelify Sans', cursive;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -21,8 +53,8 @@
         }
 
         body {
-            font-family: 'Nunito', sans-serif;
-            background: #050a18;
+            font-family: var(--font-body);
+            background: var(--bg);
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
@@ -31,7 +63,7 @@
             align-items: center;
         }
 
-        /* ═══ FULL-SCREEN CANVAS BG ═══ */
+        /* ═══ CANVAS BG ═══ */
         #bgCanvas {
             position: fixed;
             inset: 0;
@@ -39,133 +71,94 @@
             pointer-events: none
         }
 
-        /* ═══ AMBIENT ORBS ═══ */
-        .ambient-orb {
+        /* Mesh gradient */
+        .bg-mesh {
             position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
+            inset: 0;
+            z-index: 0;
             pointer-events: none;
-            z-index: 0
+            background:
+                radial-gradient(ellipse 60% 50% at 20% 10%, rgba(255, 215, 0, 0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 60% at 80% 90%, rgba(0, 240, 255, 0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
         }
 
-        .orb-1 {
-            width: 420px;
-            height: 420px;
-            background: rgba(255, 215, 0, 0.08);
-            top: -8%;
-            left: -12%;
-            animation: od1 12s ease-in-out infinite alternate
+        /* Hex grid overlay */
+        .hex-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: .025;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23ffd700' stroke-width='0.5'/%3E%3C/svg%3E");
         }
 
-        .orb-2 {
-            width: 350px;
-            height: 350px;
-            background: rgba(0, 200, 255, 0.06);
-            bottom: 0;
-            right: -10%;
-            animation: od2 14s ease-in-out infinite alternate
-        }
-
-        .orb-3 {
-            width: 280px;
-            height: 280px;
-            background: rgba(188, 19, 254, 0.06);
-            top: 40%;
-            left: 55%;
-            animation: od3 10s ease-in-out infinite alternate
-        }
-
-        .orb-4 {
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 80, 80, 0.04);
-            top: 70%;
-            left: 10%;
-            animation: od1 16s ease-in-out infinite alternate-reverse
-        }
-
-        @keyframes od1 {
-            0% {
-                transform: translate(0, 0) scale(1)
-            }
-
-            100% {
-                transform: translate(30px, -20px) scale(1.15)
-            }
-        }
-
-        @keyframes od2 {
-            0% {
-                transform: translate(0, 0) scale(1)
-            }
-
-            100% {
-                transform: translate(-25px, 15px) scale(1.2)
-            }
-        }
-
-        @keyframes od3 {
-            0% {
-                transform: translate(0, 0) scale(0.9)
-            }
-
-            100% {
-                transform: translate(20px, 25px) scale(1.1)
-            }
-        }
-
-        /* ═══ CONTENT WRAPPER ═══ */
+        /* ═══ CONTENT ═══ */
         .content {
             position: relative;
             z-index: 1;
             width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center
+            align-items: center;
+            max-width: 680px;
+            padding: 0 16px
         }
 
         /* ═══ TOP BAR ═══ */
         .top-bar {
-            width: 100%;
+            width: 100vw;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 25px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0 24px;
+            height: 58px;
+            background: rgba(3, 0, 20, 0.7);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             position: sticky;
             top: 0;
             z-index: 50;
         }
 
         .back-btn {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #fff;
-            padding: 8px 20px;
-            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 7px 16px;
+            border-radius: 3px;
             cursor: pointer;
-            font-weight: 700;
-            text-decoration: none;
+            font-family: var(--font-pixel-en);
             font-size: 13px;
-            transition: 0.3s;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-decoration: none;
+            transition: .3s;
+            image-rendering: pixelated;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.08)
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.15)
         }
 
         .balance-pill {
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #ffe600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02));
+            border: 1px solid rgba(255, 215, 0, 0.2);
             border-radius: 50px;
-            padding: 8px 20px;
-            font-weight: 800;
-            color: #ffe600;
-            font-size: 15px;
-            box-shadow: 0 0 20px rgba(255, 230, 0, 0.15), inset 0 0 15px rgba(255, 230, 0, 0.05);
+            padding: 6px 16px;
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--neon-gold);
             position: relative;
             overflow: hidden;
         }
@@ -177,11 +170,11 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.15), transparent);
-            animation: bshine 3s ease infinite;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.08), transparent);
+            animation: pillShine 3s ease infinite;
         }
 
-        @keyframes bshine {
+        @keyframes pillShine {
             0% {
                 left: -100%
             }
@@ -192,20 +185,20 @@
         }
 
         /* ═══ HEADER ═══ */
-        .header-section {
+        .header {
             margin-top: 30px;
             text-align: center;
             position: relative
         }
 
-        .crown-icon {
-            font-size: 48px;
-            animation: crownFloat 3s ease-in-out infinite;
+        .trophy-icon {
+            font-size: 44px;
             display: inline-block;
-            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5))
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+            animation: trophyBob 3s ease-in-out infinite;
         }
 
-        @keyframes crownFloat {
+        @keyframes trophyBob {
 
             0%,
             100% {
@@ -213,24 +206,26 @@
             }
 
             50% {
-                transform: translateY(-8px) rotate(3deg)
+                transform: translateY(-10px) rotate(3deg)
             }
         }
 
         .page-title {
-            font-size: 34px;
-            font-weight: 900;
-            background: linear-gradient(90deg, #ffd700, #ffaa00, #ffe600, #fff5a0, #ffd700);
-            background-size: 300% 100%;
+            font-family: var(--font-pixel-en);
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin: 8px 0 4px;
+            background: linear-gradient(135deg, var(--neon-gold), #fff5a0, var(--neon-gold));
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 3px;
-            animation: goldFlow 4s ease infinite;
+            animation: goldShift 3s ease infinite;
+            image-rendering: pixelated;
             text-shadow: none;
-            position: relative;
         }
 
-        @keyframes goldFlow {
+        @keyframes goldShift {
 
             0%,
             100% {
@@ -242,50 +237,69 @@
             }
         }
 
-        .page-title::after {
-            content: '';
-            position: absolute;
-            bottom: -6px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #ffd700, #ffe600, #ffd700, transparent);
-            border-radius: 2px;
+        .page-title-line {
+            width: 120px;
+            height: 3px;
+            margin: 8px auto 0;
+            border-radius: 0;
+            background: linear-gradient(90deg, transparent, var(--neon-gold), rgba(255, 215, 0, 0.3), var(--neon-gold), transparent);
+            animation: lineGlow 3s ease-in-out infinite;
+            image-rendering: pixelated;
         }
 
-        .page-subtitle {
-            color: rgba(255, 255, 255, 0.4);
+        @keyframes lineGlow {
+
+            0%,
+            100% {
+                opacity: .5;
+                width: 80px
+            }
+
+            50% {
+                opacity: 1;
+                width: 140px
+            }
+        }
+
+        .page-sub {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            margin-top: 10px;
+            font-family: var(--font-pixel-en);
+            letter-spacing: 3px;
+            font-weight: 500;
             font-size: 13px;
-            margin-top: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase
+            image-rendering: pixelated;
         }
 
-        /* ═══ LIVE COUNTER ═══ */
+        /* ═══ LIVE BADGE ═══ */
         .live-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             margin-top: 10px;
             padding: 5px 14px;
-            border-radius: 20px;
-            background: rgba(0, 255, 100, 0.08);
-            border: 1px solid rgba(0, 255, 100, 0.2);
-            font-size: 11px;
-            color: #00ff64;
+            border-radius: 3px;
+            background: rgba(0, 255, 136, 0.06);
+            border: 2px solid rgba(0, 255, 136, 0.15);
+            font-family: var(--font-pixel-en);
+            font-size: 12px;
             font-weight: 700;
+            color: var(--neon-green);
+            letter-spacing: 1px;
+            image-rendering: pixelated;
+            box-shadow: 2px 2px 0 rgba(0, 255, 136, 0.08);
         }
 
         .live-dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #00ff64;
-            animation: livePulse 1.5s ease-in-out infinite
+            background: var(--neon-green);
+            animation: ldot 1.5s ease-in-out infinite
         }
 
-        @keyframes livePulse {
+        @keyframes ldot {
 
             0%,
             100% {
@@ -294,107 +308,117 @@
             }
 
             50% {
-                opacity: 0.4;
-                transform: scale(0.7)
+                opacity: .3;
+                transform: scale(.7)
             }
         }
 
-        /* ═══ MY RANK ═══ */
-        .my-rank-card {
-            margin-top: 22px;
-            background: linear-gradient(135deg, rgba(188, 19, 254, 0.1), rgba(0, 200, 255, 0.06), rgba(255, 215, 0, 0.04));
-            border: 1px solid rgba(188, 19, 254, 0.2);
-            border-radius: 20px;
-            padding: 18px 25px;
+        /* ═══ MY RANK CARD ═══ */
+        .my-rank {
+            margin-top: 20px;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(0, 240, 255, 0.04));
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 16px;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             gap: 14px;
-            width: 90vw;
-            max-width: 580px;
-            box-shadow: 0 0 30px rgba(188, 19, 254, 0.1), inset 0 0 30px rgba(188, 19, 254, 0.03);
-            animation: rglow 3s ease-in-out infinite alternate;
             backdrop-filter: blur(15px);
             position: relative;
             overflow: hidden;
+            animation: myRankGlow 4s ease-in-out infinite alternate;
         }
 
-        .my-rank-card::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 22px;
-            background: conic-gradient(from 0deg, #bc13fe, #00f3ff, #ffe600, #bc13fe);
-            z-index: -1;
-            opacity: 0.15;
-            animation: borderSpin 6s linear infinite;
-        }
-
-        @keyframes borderSpin {
-            to {
-                transform: rotate(360deg)
-            }
-        }
-
-        @keyframes rglow {
+        @keyframes myRankGlow {
             0% {
-                box-shadow: 0 0 15px rgba(188, 19, 254, 0.08)
+                box-shadow: 0 0 15px rgba(139, 92, 246, 0.05)
             }
 
             100% {
-                box-shadow: 0 0 40px rgba(188, 19, 254, 0.2)
+                box-shadow: 0 0 40px rgba(139, 92, 246, 0.12)
+            }
+        }
+
+        /* Animated border */
+        .my-rank::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            padding: 1px;
+            background: conic-gradient(from var(--ring-angle), var(--neon-purple), var(--neon-cyan), var(--neon-gold), var(--neon-purple));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: .25;
+            animation: ringRotate 6s linear infinite;
+        }
+
+        @keyframes ringRotate {
+            to {
+                --ring-angle: 360deg
             }
         }
 
         .my-rank-pos {
-            font-size: 28px;
+            font-family: var(--font-display);
+            font-size: 24px;
             font-weight: 900;
-            color: #ffe600;
+            color: var(--neon-gold);
             min-width: 50px;
             text-align: center;
-            text-shadow: 0 0 15px rgba(255, 230, 0, 0.4)
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         .my-rank-avatar {
-            width: 50px;
-            height: 50px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
-            border: 2px solid #bc13fe;
             object-fit: cover;
-            box-shadow: 0 0 15px rgba(188, 19, 254, 0.4);
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
         }
 
         .my-rank-info {
             flex: 1
         }
 
+        .my-rank-label {
+            font-family: var(--font-pixel-en);
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            image-rendering: pixelated;
+        }
+
         .my-rank-name {
             font-weight: 800;
-            font-size: 15px
+            font-size: 14px;
+            margin-top: 2px
         }
 
         .my-rank-balance {
-            color: #ffe600;
+            color: var(--neon-gold);
             font-weight: 700;
-            font-size: 13px
-        }
-
-        .my-rank-label {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.35);
-            text-transform: uppercase;
-            letter-spacing: 2px
+            font-size: 13px;
+            font-family: var(--font-display)
         }
 
         /* ═══ PODIUM ═══ */
         .podium-section {
             margin-top: 28px;
-            position: relative
+            position: relative;
+            width: 100%
         }
 
         .podium {
             display: flex;
             align-items: flex-end;
-            gap: 14px;
+            gap: 10px;
             justify-content: center
         }
 
@@ -403,25 +427,25 @@
             flex-direction: column;
             align-items: center;
             gap: 6px;
-            animation: podiumRise 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            animation: podiumRise .8s cubic-bezier(.175, .885, .32, 1.275) both;
         }
 
-        .podium-2 {
-            animation-delay: 0.2s
+        .p-2 {
+            animation-delay: .2s
         }
 
-        .podium-1 {
-            animation-delay: 0.4s
+        .p-1 {
+            animation-delay: .4s
         }
 
-        .podium-3 {
-            animation-delay: 0.1s
+        .p-3 {
+            animation-delay: .1s
         }
 
         @keyframes podiumRise {
             0% {
                 opacity: 0;
-                transform: translateY(40px) scale(0.8)
+                transform: translateY(50px) scale(.85)
             }
 
             100% {
@@ -436,119 +460,119 @@
         }
 
         .podium-avatar {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.15);
-            transition: 0.4s;
+            border: 3px solid rgba(255, 255, 255, 0.1);
             position: relative;
             z-index: 1;
+            transition: .4s;
         }
 
         .podium-item:hover .podium-avatar {
-            transform: scale(1.12)
+            transform: scale(1.1)
         }
 
-        .podium-1 .podium-avatar {
-            width: 78px;
-            height: 78px;
-            border-color: #ffd700;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), 0 0 50px rgba(255, 215, 0, 0.15);
+        /* #1 avatar */
+        .p-1 .podium-avatar {
+            width: 72px;
+            height: 72px;
+            border-color: var(--neon-gold);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.35), 0 0 60px rgba(255, 215, 0, 0.1);
         }
 
-        .podium-1 .podium-avatar-wrap::before {
+        .p-1 .podium-avatar-wrap::before {
             content: '👑';
             position: absolute;
-            top: -22px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 24px;
+            font-size: 22px;
             z-index: 2;
-            animation: crownFloat 2s ease-in-out infinite;
             filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+            animation: trophyBob 2.5s ease-in-out infinite;
         }
 
-        .podium-1 .podium-avatar-wrap::after {
+        .p-1 .podium-avatar-wrap::after {
             content: '';
             position: absolute;
             inset: -5px;
             border-radius: 50%;
-            background: conic-gradient(from 0deg, #ffd700, #ff8c00, #ffd700, #fff5a0, #ffd700);
             z-index: 0;
-            animation: avatarRing 3s linear infinite;
-            opacity: 0.6;
+            background: conic-gradient(from var(--ring-angle), #ffd700, #ff8c00, #ffd700, #fff5a0, #ffd700);
+            animation: ringRotate 3s linear infinite;
+            opacity: .5;
         }
 
-        @keyframes avatarRing {
-            to {
-                transform: rotate(360deg)
-            }
-        }
-
-        .podium-2 .podium-avatar {
+        /* #2 avatar */
+        .p-2 .podium-avatar {
             border-color: #c0c0c0;
-            box-shadow: 0 0 15px rgba(192, 192, 192, 0.3)
+            box-shadow: 0 0 15px rgba(192, 192, 192, 0.2)
         }
 
-        .podium-2 .podium-avatar-wrap::after {
+        .p-2 .podium-avatar-wrap::after {
             content: '';
             position: absolute;
             inset: -4px;
             border-radius: 50%;
-            background: conic-gradient(from 0deg, #c0c0c0, #e8e8e8, #c0c0c0, #808080, #c0c0c0);
             z-index: 0;
-            animation: avatarRing 4s linear infinite;
-            opacity: 0.4;
+            background: conic-gradient(from var(--ring-angle), #c0c0c0, #e8e8e8, #c0c0c0, #808080, #c0c0c0);
+            animation: ringRotate 4s linear infinite;
+            opacity: .35;
         }
 
-        .podium-3 .podium-avatar {
+        /* #3 avatar */
+        .p-3 .podium-avatar {
             border-color: #cd7f32;
-            box-shadow: 0 0 15px rgba(205, 127, 50, 0.3)
+            box-shadow: 0 0 15px rgba(205, 127, 50, 0.2)
         }
 
-        .podium-3 .podium-avatar-wrap::after {
+        .p-3 .podium-avatar-wrap::after {
             content: '';
             position: absolute;
             inset: -4px;
             border-radius: 50%;
-            background: conic-gradient(from 0deg, #cd7f32, #e8a860, #cd7f32, #8b4513, #cd7f32);
             z-index: 0;
-            animation: avatarRing 4s linear infinite;
-            opacity: 0.4;
+            background: conic-gradient(from var(--ring-angle), #cd7f32, #e8a860, #cd7f32, #8b4513, #cd7f32);
+            animation: ringRotate 4s linear infinite;
+            opacity: .35;
+        }
+
+        .podium-medal {
+            font-size: 26px;
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3))
         }
 
         .podium-name {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             max-width: 80px;
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap
+            white-space: nowrap;
         }
 
         .podium-balance {
-            font-size: 11px;
-            color: #ffe600;
-            font-weight: 800;
-            text-shadow: 0 0 8px rgba(255, 230, 0, 0.3)
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--neon-gold);
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.2);
         }
 
-        .podium-medal {
-            font-size: 28px;
-            filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4))
-        }
-
+        /* Podium bars */
         .podium-bar {
             width: 80px;
             border-radius: 12px 12px 0 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: var(--font-display);
             font-weight: 900;
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.85);
             position: relative;
             overflow: hidden;
             box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
@@ -561,11 +585,11 @@
             left: -100%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            animation: shimmer 2.5s linear infinite;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            animation: barShimmer 2.5s linear infinite;
         }
 
-        @keyframes shimmer {
+        @keyframes barShimmer {
             0% {
                 transform: translateX(-100%) translateY(-100%)
             }
@@ -575,79 +599,81 @@
             }
         }
 
-        .podium-1 .podium-bar {
+        .p-1 .podium-bar {
             height: 110px;
             background: linear-gradient(180deg, #ffd700, #e8a000, #b8860b);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.25)
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2)
         }
 
-        .podium-2 .podium-bar {
+        .p-2 .podium-bar {
             height: 75px;
             background: linear-gradient(180deg, #d0d0d0, #a0a0a0, #707070)
         }
 
-        .podium-3 .podium-bar {
+        .p-3 .podium-bar {
             height: 50px;
             background: linear-gradient(180deg, #cd7f32, #a06020, #804010)
         }
 
         .podium-floor {
             width: 280px;
-            height: 6px;
-            margin-top: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), rgba(192, 192, 192, 0.2), rgba(205, 127, 50, 0.2), transparent);
-            border-radius: 3px;
+            height: 4px;
+            margin: 0 auto;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), rgba(192, 192, 192, 0.15), rgba(205, 127, 50, 0.15), transparent);
+            border-radius: 2px;
         }
 
         /* ═══ LEADERBOARD TABLE ═══ */
-        .leaderboard {
-            margin-top: 25px;
-            width: 90vw;
-            max-width: 580px;
-            background: rgba(10, 10, 30, 0.6);
-            border-radius: 20px;
-            padding: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
+        .lb-container {
+            margin-top: 22px;
+            width: 100%;
+            background: rgba(8, 8, 24, 0.7);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
             overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            margin-bottom: 16px;
         }
 
-        .leaderboard::before {
+        /* Top glow line */
+        .lb-container::before {
             content: '';
             position: absolute;
-            inset: -1px;
-            border-radius: 21px;
-            background: conic-gradient(from 180deg, rgba(255, 215, 0, 0.15), rgba(0, 200, 255, 0.1), rgba(188, 19, 254, 0.1), rgba(255, 215, 0, 0.15));
-            z-index: -1;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), rgba(139, 92, 246, 0.3), rgba(0, 240, 255, 0.3), transparent);
         }
 
         .lb-inner {
-            padding: 14px
+            padding: 6px 14px 14px
         }
 
         .lb-header {
             display: flex;
             padding: 10px 14px;
-            font-size: 10px;
-            font-weight: 800;
-            color: rgba(255, 255, 255, 0.3);
-            text-transform: uppercase;
+            font-family: var(--font-pixel-en);
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.2);
             letter-spacing: 2px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            text-transform: uppercase;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.04);
+            image-rendering: pixelated;
         }
 
         .lb-header .col-rank {
-            width: 45px
+            width: 42px
         }
 
         .lb-header .col-user {
             flex: 1
         }
 
-        .lb-header .col-balance {
+        .lb-header .col-bal {
             width: 110px;
             text-align: right
         }
@@ -655,44 +681,43 @@
         .lb-row {
             display: flex;
             align-items: center;
-            padding: 11px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.025);
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 12px;
-            margin: 2px 0;
-            animation: rowIn 0.4s ease-out both;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin: 3px 0;
+            transition: all .3s cubic-bezier(.25, .46, .45, .94);
             position: relative;
+            animation: rowSlide .4s ease-out both;
         }
 
-        @keyframes rowIn {
+        @keyframes rowSlide {
             0% {
                 opacity: 0;
-                transform: translateY(10px) scale(0.98)
+                transform: translateX(-10px)
             }
 
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1)
+                transform: translateX(0)
             }
         }
 
         .lb-row:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateX(4px);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2)
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateX(4px)
         }
 
+        /* Rank-specific styles */
         .lb-row.top-1 {
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.02), transparent);
-            border: 1px solid rgba(255, 215, 0, 0.12);
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.01), transparent);
+            border: 1px solid rgba(255, 215, 0, 0.1);
         }
 
         .lb-row.top-1::before {
             content: '';
             position: absolute;
             inset: 0;
-            border-radius: 12px;
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), transparent);
+            border-radius: 10px;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.04), transparent);
             animation: goldPulse 3s ease-in-out infinite;
         }
 
@@ -700,7 +725,7 @@
 
             0%,
             100% {
-                opacity: 0.5
+                opacity: .3
             }
 
             50% {
@@ -709,41 +734,42 @@
         }
 
         .lb-row.top-2 {
-            background: linear-gradient(90deg, rgba(192, 192, 192, 0.08), transparent);
-            border: 1px solid rgba(192, 192, 192, 0.08)
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.06), transparent);
+            border: 1px solid rgba(192, 192, 192, 0.06)
         }
 
         .lb-row.top-3 {
-            background: linear-gradient(90deg, rgba(205, 127, 50, 0.08), transparent);
-            border: 1px solid rgba(205, 127, 50, 0.08)
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.06), transparent);
+            border: 1px solid rgba(205, 127, 50, 0.06)
         }
 
         .lb-row.is-me {
-            background: linear-gradient(90deg, rgba(188, 19, 254, 0.12), rgba(0, 200, 255, 0.05), transparent);
-            border: 1px solid rgba(188, 19, 254, 0.25);
-            box-shadow: 0 0 20px rgba(188, 19, 254, 0.1);
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.1), rgba(0, 240, 255, 0.03), transparent);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
         }
 
         .lb-rank {
-            width: 45px;
+            width: 42px;
+            font-family: var(--font-display);
             font-weight: 900;
-            font-size: 15px;
-            text-align: center
+            font-size: 14px;
+            text-align: center;
         }
 
         .rank-1 {
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5)
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4)
         }
 
         .rank-2 {
             color: #c0c0c0;
-            text-shadow: 0 0 8px rgba(192, 192, 192, 0.4)
+            text-shadow: 0 0 8px rgba(192, 192, 192, 0.3)
         }
 
         .rank-3 {
             color: #cd7f32;
-            text-shadow: 0 0 8px rgba(205, 127, 50, 0.4)
+            text-shadow: 0 0 8px rgba(205, 127, 50, 0.3)
         }
 
         .lb-user {
@@ -753,79 +779,81 @@
             gap: 10px
         }
 
-        .lb-avatar-wrap {
-            position: relative;
-            flex-shrink: 0
-        }
-
         .lb-avatar {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.1);
             object-fit: cover;
-            position: relative;
-            z-index: 1
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
         }
 
         .lb-row.top-1 .lb-avatar {
-            border-color: rgba(255, 215, 0, 0.5)
+            border-color: rgba(255, 215, 0, 0.4)
         }
 
         .lb-row.top-2 .lb-avatar {
-            border-color: rgba(192, 192, 192, 0.4)
+            border-color: rgba(192, 192, 192, 0.3)
         }
 
         .lb-row.top-3 .lb-avatar {
-            border-color: rgba(205, 127, 50, 0.4)
+            border-color: rgba(205, 127, 50, 0.3)
         }
 
         .lb-row.is-me .lb-avatar {
-            border-color: rgba(188, 19, 254, 0.5)
+            border-color: rgba(139, 92, 246, 0.4)
         }
 
         .lb-name {
             font-weight: 700;
-            font-size: 13px
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px
         }
 
         .lb-me-tag {
+            font-family: var(--font-pixel-en);
             font-size: 10px;
-            color: #bc13fe;
-            font-weight: 800;
-            background: rgba(188, 19, 254, 0.15);
-            padding: 1px 6px;
-            border-radius: 4px;
-            margin-left: 5px
+            font-weight: 700;
+            color: var(--neon-purple);
+            background: rgba(139, 92, 246, 0.15);
+            padding: 2px 6px;
+            border-radius: 2px;
+            letter-spacing: 1px;
+            image-rendering: pixelated;
+            box-shadow: 1px 1px 0 rgba(139, 92, 246, 0.2);
         }
 
         .lb-balance {
             width: 110px;
             text-align: right;
+            font-family: var(--font-display);
             font-weight: 800;
-            color: #ffe600;
-            font-size: 13px;
-            text-shadow: 0 0 8px rgba(255, 230, 0, 0.2);
+            color: var(--neon-gold);
+            font-size: 12px;
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.15);
         }
 
         /* ═══ REFRESH BUTTON ═══ */
         .refresh-btn {
-            margin-top: 8px;
-            margin-bottom: 30px;
-            padding: 12px 30px;
+            margin: 4px 0 30px;
+            padding: 10px 24px;
             border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(188, 19, 254, 0.1));
-            color: #fff;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s;
+            border-radius: 3px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(0, 240, 255, 0.06));
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: var(--font-pixel-en);
             font-size: 13px;
-            backdrop-filter: blur(10px);
-            letter-spacing: 1px;
-            border: 1px solid rgba(255, 215, 0, 0.15);
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: .3s;
             position: relative;
             overflow: hidden;
+            image-rendering: pixelated;
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
         }
 
         .refresh-btn::after {
@@ -835,8 +863,8 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: 0.5s;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+            transition: .5s;
         }
 
         .refresh-btn:hover::after {
@@ -845,15 +873,16 @@
 
         .refresh-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.15)
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.15);
+            color: #fff
         }
 
         .refresh-btn:active {
-            transform: scale(0.97)
+            transform: scale(.97)
         }
 
         .refresh-btn.spinning .btn-icon {
-            animation: spin360 0.8s ease
+            animation: spin360 .8s ease
         }
 
         @keyframes spin360 {
@@ -864,18 +893,18 @@
 
         .btn-icon {
             display: inline-block;
-            transition: 0.3s
+            transition: .3s
         }
 
         .loading-text {
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.3);
             font-size: 14px
         }
 
-        /* ═══ FLOATING COINS ═══ */
+        /* ═══ FLOATING ELEMENTS ═══ */
         .coin {
             position: fixed;
-            font-size: 16px;
+            font-size: 14px;
             z-index: 0;
             pointer-events: none;
             opacity: 0;
@@ -889,11 +918,11 @@
             }
 
             10% {
-                opacity: 0.6
+                opacity: .5
             }
 
             90% {
-                opacity: 0.3
+                opacity: .2
             }
 
             100% {
@@ -906,7 +935,7 @@
         .reveal {
             opacity: 0;
             transform: translateY(20px);
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+            transition: all .5s cubic-bezier(.25, .46, .45, .94)
         }
 
         .reveal.visible {
@@ -916,21 +945,21 @@
 
         /* ═══ RESPONSIVE ═══ */
         @media(max-width:500px) {
-            .podium-1 .podium-avatar {
-                width: 60px;
-                height: 60px
+            .p-1 .podium-avatar {
+                width: 58px;
+                height: 58px
             }
 
             .podium-avatar {
-                width: 44px;
-                height: 44px
+                width: 42px;
+                height: 42px
             }
 
             .podium-bar {
-                width: 62px
+                width: 64px
             }
 
-            .podium-1 .podium-bar {
+            .p-1 .podium-bar {
                 height: 90px
             }
 
@@ -938,27 +967,98 @@
                 width: 220px
             }
 
-            .my-rank-card {
-                padding: 14px
-            }
-
             .page-title {
-                font-size: 24px
+                font-size: 22px;
+                letter-spacing: 2px
             }
 
-            .crown-icon {
+            .trophy-icon {
                 font-size: 36px
             }
+
+            .my-rank {
+                padding: 12px 14px
+            }
+        }
+
+        /* ═══ PIXEL ART DECORATIONS ═══ */
+        /* Pixel grid overlay on header */
+        .header::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: .04;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 215, 0, .2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, .2) 1px, transparent 1px);
+            background-size: 4px 4px;
+            image-rendering: pixelated;
+        }
+
+        /* Pixel corners on my-rank card */
+        .my-rank .my-rank-info::before {
+            content: '▸';
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+            font-family: monospace;
+            font-size: 16px;
+            color: var(--neon-purple);
+            opacity: .2;
+            animation: pixelBlink 1.2s step-end infinite;
+        }
+
+        @keyframes pixelBlink {
+
+            0%,
+            49% {
+                opacity: .25
+            }
+
+            50%,
+            100% {
+                opacity: 0
+            }
+        }
+
+        /* Pixel scanline on lb-container */
+        .lb-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: .03;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 255, 255, .1) 2px,
+                    rgba(255, 255, 255, .1) 4px);
+            border-radius: 18px;
+        }
+
+        /* Pixel dot decorators on podium bars */
+        .podium-bar::before {
+            content: '▄▄▄';
+            position: absolute;
+            top: 8px;
+            font-family: monospace;
+            font-size: 5px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.2);
+            z-index: 2;
         }
     </style>
 </head>
 
 <body>
+
     <canvas id="bgCanvas"></canvas>
-    <div class="ambient-orb orb-1"></div>
-    <div class="ambient-orb orb-2"></div>
-    <div class="ambient-orb orb-3"></div>
-    <div class="ambient-orb orb-4"></div>
+    <div class="bg-mesh"></div>
+    <div class="hex-grid"></div>
 
     <div class="content">
         <div class="top-bar">
@@ -966,21 +1066,22 @@
             <div class="balance-pill">💰 <span id="balance">0</span> $</div>
         </div>
 
-        <div class="header-section reveal">
-            <div class="crown-icon">👑</div>
-            <h1 class="page-title">BẢNG XẾP HẠNG</h1>
-            <p class="page-subtitle">Top người chơi giàu nhất server</p>
+        <div class="header reveal">
+            <div class="trophy-icon">🏆</div>
+            <h1 class="page-title">LEADERBOARD</h1>
+            <div class="page-title-line"></div>
+            <p class="page-sub">TOP PLAYERS RANKING</p>
             <div class="live-badge">
                 <span class="live-dot"></span>
-                <span>LIVE • <span id="playerCount">0</span> người chơi</span>
+                <span>LIVE • <span id="playerCount">0</span> PLAYERS</span>
             </div>
         </div>
 
-        <div class="my-rank-card reveal" id="myRankCard" style="display:none;">
+        <div class="my-rank reveal" id="myRankCard" style="display:none">
             <div class="my-rank-pos" id="myRankPos">#?</div>
             <img class="my-rank-avatar" id="myRankAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">
             <div class="my-rank-info">
-                <div class="my-rank-label">Hạng của bạn</div>
+                <div class="my-rank-label">YOUR RANK</div>
                 <div class="my-rank-name" id="myRankName">-</div>
                 <div class="my-rank-balance" id="myRankBalance">0 $</div>
             </div>
@@ -991,135 +1092,122 @@
             <div class="podium-floor"></div>
         </div>
 
-        <div class="leaderboard reveal">
+        <div class="lb-container reveal">
             <div class="lb-inner">
                 <div class="lb-header">
                     <div class="col-rank">#</div>
-                    <div class="col-user">Người chơi</div>
-                    <div class="col-balance">Tài sản</div>
+                    <div class="col-user">PLAYER</div>
+                    <div class="col-bal">BALANCE</div>
                 </div>
                 <div id="lbBody">
-                    <p class="loading-text" style="text-align:center;padding:30px;">⏳ Đang tải...</p>
+                    <p class="loading-text" style="text-align:center;padding:30px">⏳ Loading...</p>
                 </div>
             </div>
         </div>
 
         <button class="refresh-btn" onclick="refreshClicked()">
-            <span class="btn-icon">🔄</span> Làm mới
+            <span class="btn-icon">🔄</span> REFRESH
         </button>
     </div>
 
     <script>
-        // ═══ CANVAS PARTICLE BACKGROUND ═══
+        // ═══ CANVAS PARTICLE SYSTEM ═══
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
         let particles = [], mouseX = -1, mouseY = -1;
 
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
-        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+        function resizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight }
+        addEventListener('resize', resizeCanvas); resizeCanvas();
 
         class Particle {
             constructor() { this.reset() }
             reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.3;
-                this.vy = (Math.random() - 0.5) * 0.3;
-                this.size = Math.random() * 2 + 0.5;
-                const colors = ['255,215,0', '0,200,255', '188,19,254', '255,255,255'];
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-                this.alpha = Math.random() * 0.4 + 0.1;
-                this.pulseSpeed = Math.random() * 0.02 + 0.005;
-                this.pulseOffset = Math.random() * Math.PI * 2;
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - .5) * .25; this.vy = (Math.random() - .5) * .25;
+                this.size = Math.random() * 1.8 + .4;
+                this.hue = Math.random() < .4 ? 45 + Math.random() * 15 : 260 + Math.random() * 30;
+                this.alpha = Math.random() * .3 + .08;
+                this.phase = Math.random() * Math.PI * 2;
+                this.pulseSpeed = Math.random() * .015 + .005;
             }
             update(t) {
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                this.currentAlpha = this.alpha * (0.6 + 0.4 * Math.sin(t * this.pulseSpeed + this.pulseOffset));
-                if (mouseX > 0 && mouseY > 0) {
+                this.cAlpha = this.alpha * (.6 + .4 * Math.sin(t * this.pulseSpeed + this.phase));
+                if (mouseX > 0) {
                     const dx = this.x - mouseX, dy = this.y - mouseY, d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < 120) { const f = (120 - d) / 120 * 0.5; this.x += dx / d * f; this.y += dy / d * f }
+                    if (d < 130) { const f = (130 - d) / 130 * .4; this.x += dx / d * f; this.y += dy / d * f }
                 }
             }
             draw() {
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${this.color},${this.currentAlpha})`; ctx.fill();
+                ctx.fillStyle = `hsla(${this.hue},60%,60%,${this.cAlpha})`; ctx.fill();
                 if (this.size > 1.2) {
-                    ctx.shadowBlur = this.size * 6; ctx.shadowColor = `rgba(${this.color},${this.currentAlpha * 0.5})`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = this.size * 6;
+                    ctx.shadowColor = `hsla(${this.hue},60%,60%,${this.cAlpha * .4})`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size * .5, 0, Math.PI * 2); ctx.fill();
                     ctx.shadowBlur = 0;
                 }
             }
         }
+        for (let i = 0; i < 60; i++)particles.push(new Particle());
 
-        for (let i = 0; i < 80; i++)particles.push(new Particle());
+        let frame = 0;
+        function animate() {
+            frame++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Central glow
+            const g = ctx.createRadialGradient(canvas.width / 2, canvas.height * .3, 0, canvas.width / 2, canvas.height * .3, canvas.width * .6);
+            g.addColorStop(0, 'rgba(25,10,60,0.1)'); g.addColorStop(1, 'rgba(3,0,14,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        function drawLines() {
+            particles.forEach(p => { p.update(frame); p.draw() });
+            // Connection lines
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
-                    const d = Math.sqrt(dx * dx + dy * dy);
+                    const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, d = Math.sqrt(dx * dx + dy * dy);
                     if (d < 100) {
-                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(255,215,0,${(1 - d / 100) * 0.06})`;
-                        ctx.lineWidth = 0.5; ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(255,215,0,${(1 - d / 100) * .04})`; ctx.lineWidth = .5; ctx.stroke();
                     }
                 }
             }
+            requestAnimationFrame(animate);
         }
-
-        let animFrame = 0;
-        function animateBg() {
-            animFrame++;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // subtle gradient overlay
-            const g = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.3, 0, canvas.width / 2, canvas.height * 0.3, canvas.width * 0.7);
-            g.addColorStop(0, 'rgba(25,10,60,0.15)'); g.addColorStop(1, 'rgba(5,10,24,0)');
-            ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach(p => { p.update(animFrame); p.draw() });
-            drawLines();
-            requestAnimationFrame(animateBg);
-        }
-        animateBg();
-
+        animate();
         document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY });
         document.addEventListener('mouseleave', () => { mouseX = -1; mouseY = -1 });
 
         // ═══ FLOATING COINS ═══
-        function spawnCoins() {
+        (function () {
             const emojis = ['💰', '🪙', '💎', '⭐', '🏆'];
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 6; i++) {
                 const c = document.createElement('div'); c.className = 'coin';
                 c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
                 c.style.left = Math.random() * 100 + '%';
-                c.style.fontSize = (12 + Math.random() * 14) + 'px';
-                c.style.animationDuration = (10 + Math.random() * 15) + 's';
+                c.style.fontSize = (10 + Math.random() * 12) + 'px';
+                c.style.animationDuration = (12 + Math.random() * 15) + 's';
                 c.style.animationDelay = Math.random() * 10 + 's';
                 document.body.appendChild(c);
             }
-        }
-        spawnCoins();
+        })();
 
         // ═══ SCROLL REVEAL ═══
         const obs = new IntersectionObserver(entries => {
             entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') });
-        }, { threshold: 0.1 });
+        }, { threshold: .1 });
         document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
         // ═══ MAIN LOGIC ═══
-        function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML }
-
+        function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML }
         function animateCounter(el, target) {
-            const start = 0, duration = 1200, startTime = performance.now();
+            const dur = 1000, start = performance.now();
             function tick(now) {
-                const p = Math.min((now - startTime) / duration, 1);
+                const p = Math.min((now - start) / dur, 1);
                 const eased = 1 - Math.pow(1 - p, 3);
                 el.textContent = Math.floor(eased * target).toLocaleString();
-                if (p < 1) requestAnimationFrame(tick);
-                else el.textContent = target.toLocaleString();
+                if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString();
             }
             requestAnimationFrame(tick);
         }
@@ -1128,29 +1216,25 @@
             const lbBody = document.getElementById('lbBody');
             try {
                 const [meRes, lbRes] = await Promise.all([fetch('/api/me'), fetch('/api/leaderboard')]);
-                if (!meRes.ok) { window.location.href = '/'; return }
+                if (!meRes.ok) { location.href = '/'; return }
                 const me = await meRes.json();
                 animateCounter(document.getElementById('balance'), Number(me.balance));
 
                 if (!lbRes.ok) {
                     const err = await lbRes.json().catch(() => ({}));
-                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ ${escapeHtml(err.error || 'Lỗi tải bảng xếp hạng')}</p>`;
-                    return;
+                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff3366;padding:20px">❌ ${escapeHtml(err.error || 'Error')}</p>`; return;
                 }
                 const lb = await lbRes.json();
-
                 if (!lb || !lb.leaderboard || !lb.leaderboard.length) {
                     document.getElementById('podium').innerHTML = '';
-                    lbBody.innerHTML = '<p class="loading-text" style="text-align:center;padding:20px;">📭 Chưa có dữ liệu xếp hạng</p>';
-                    return;
+                    lbBody.innerHTML = '<p class="loading-text" style="text-align:center;padding:20px">📭 No data yet</p>'; return;
                 }
 
                 const list = lb.leaderboard;
                 document.getElementById('playerCount').textContent = list.length;
 
                 if (lb.my_rank) {
-                    const card = document.getElementById('myRankCard');
-                    card.style.display = 'flex';
+                    const card = document.getElementById('myRankCard'); card.style.display = 'flex';
                     document.getElementById('myRankPos').textContent = '#' + lb.my_rank;
                     document.getElementById('myRankName').textContent = me.username;
                     document.getElementById('myRankAvatar').src = me.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
@@ -1159,11 +1243,10 @@
 
                 if (list.length >= 3) renderPodium(list.slice(0, 3));
                 else document.getElementById('podium').innerHTML = '';
-
                 renderList(list, lb.my_user_id);
             } catch (e) {
-                console.error('Leaderboard error:', e);
-                lbBody.innerHTML = '<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ Không thể kết nối server</p>';
+                console.error(e);
+                lbBody.innerHTML = '<p class="loading-text" style="text-align:center;color:#ff3366;padding:20px">❌ Connection error</p>';
             }
         }
 
@@ -1171,41 +1254,38 @@
             const podium = document.getElementById('podium');
             if (top3.length < 3) { podium.innerHTML = ''; return }
             const order = [top3[1], top3[0], top3[2]];
-            const classes = ['podium-2', 'podium-1', 'podium-3'];
+            const classes = ['p-2', 'p-1', 'p-3'];
             const medals = ['🥈', '🥇', '🥉'];
             podium.innerHTML = order.map((u, i) => `
-                <div class="podium-item ${classes[i]}">
-                    <div class="podium-medal">${medals[i]}</div>
-                    <div class="podium-avatar-wrap">
-                        <img class="podium-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                    </div>
-                    <div class="podium-name">${escapeHtml(u.username || 'User')}</div>
-                    <div class="podium-balance">${Number(u.balance).toLocaleString()} $</div>
-                    <div class="podium-bar">${i === 1 ? '1' : (i === 0 ? '2' : '3')}</div>
-                </div>
-            `).join('');
+    <div class="podium-item ${classes[i]}">
+      <div class="podium-medal">${medals[i]}</div>
+      <div class="podium-avatar-wrap">
+        <img class="podium-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+      </div>
+      <div class="podium-name">${escapeHtml(u.username || 'User')}</div>
+      <div class="podium-balance">${Number(u.balance).toLocaleString()} $</div>
+      <div class="podium-bar">${i === 1 ? '1' : (i === 0 ? '2' : '3')}</div>
+    </div>`).join('');
         }
 
         function renderList(list, myId) {
             const body = document.getElementById('lbBody');
-            if (!list.length) { body.innerHTML = '<p class="loading-text" style="text-align:center;">Chưa có dữ liệu</p>'; return }
+            if (!list.length) { body.innerHTML = '<p class="loading-text" style="text-align:center">No data</p>'; return }
             body.innerHTML = list.map((u, i) => {
                 const rank = i + 1;
-                let rankClass = rank === 1 ? 'top-1' : rank === 2 ? 'top-2' : rank === 3 ? 'top-3' : '';
+                let rc = rank === 1 ? 'top-1' : rank === 2 ? 'top-2' : rank === 3 ? 'top-3' : '';
                 const isMe = u.user_id === myId;
                 const rankColor = rank <= 3 ? `rank-${rank}` : '';
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
                 return `
-                    <div class="lb-row ${rankClass} ${isMe ? 'is-me' : ''}" style="animation-delay:${i * 0.05}s">
-                        <div class="lb-rank ${rankColor}">${medal}</div>
-                        <div class="lb-user">
-                            <div class="lb-avatar-wrap">
-                                <img class="lb-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                            </div>
-                            <span class="lb-name">${escapeHtml(u.username || 'User')}${isMe ? ' <span class="lb-me-tag">BẠN</span>' : ''}</span>
-                        </div>
-                        <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>
-                    </div>`;
+      <div class="lb-row ${rc} ${isMe ? 'is-me' : ''}" style="animation-delay:${i * .04}s">
+        <div class="lb-rank ${rankColor}">${medal}</div>
+        <div class="lb-user">
+          <img class="lb-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+          <span class="lb-name">${escapeHtml(u.username || 'User')}${isMe ? ' <span class="lb-me-tag">YOU</span>' : ''}</span>
+        </div>
+        <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>
+      </div>`;
             }).join('');
         }
 

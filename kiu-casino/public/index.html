@@ -7,225 +7,240 @@
     <meta name="description"
         content="PIXEL PLAYZONE - Thế giới game giải trí: Tài Xỉu, Poker, Flappy Bird, Slot Machine. Chơi miễn phí!">
     <meta name="theme-color" content="#0a0b1e">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="PIXEL PLAYZONE - Game Giải Trí">
-    <meta property="og:description" content="Thế giới game giải trí đỉnh cao">
-    <meta property="og:type" content="website">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <title>PIXEL PLAYZONE - Thế giới game giải trí</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
-
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Orbitron:wght@400;500;600;700;800;900&family=Pixelify+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=VT323&display=swap"
+        rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'DearPix';
-            src: url('fonts/dearpix-1-94.ttf') format('truetype');
-            font-display: swap;
+        /* Pixel fonts: VT323 (Vietnamese ✓), Pixelify Sans (English headings) */
+
+        @property --hue {
+            syntax: '<number>';
+            initial-value: 0;
+            inherits: false
         }
 
-        @font-face {
-            font-family: 'StarGuard';
-            src: url('fonts/starguard.ttf') format('truetype');
-            font-display: swap;
+        @property --card-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false
         }
 
-        @font-face {
-            font-family: 'PixelBold';
-            src: url('fonts/pixel.ttf') format('truetype');
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'PixelRegular';
-            src: url('fonts/pixel_font.otf') format('opentype');
-            font-display: swap;
+        @property --beam-x {
+            syntax: '<percentage>';
+            initial-value: 0%;
+            inherits: false
         }
 
         :root {
-            --neon-blue: #00f3ff;
-            --neon-pink: #bc13fe;
-            --neon-purple: #8a2be2;
-            --neon-green: #00ff9d;
-            --neon-orange: #ff9e00;
-            --neon-yellow: #ffe600;
-            --bg-dark: #06071a;
-            --card-bg: rgba(12, 12, 30, 0.85);
-            --font-hero: 'DearPix', sans-serif;
-            --font-pixel: 'DearPix', sans-serif;
-            --font-body: 'Nunito', sans-serif;
+            --neon-cyan: #00f0ff;
+            --neon-magenta: #ff00aa;
+            --neon-purple: #8b5cf6;
+            --neon-green: #00ff88;
+            --neon-orange: #ff8c00;
+            --neon-gold: #ffd700;
+            --neon-red: #ff3366;
+            --neon-blue: #3b82f6;
+            --bg-primary: #030014;
+            --bg-secondary: #0a0a1a;
+            --surface: rgba(15, 15, 35, 0.8);
+            --surface-light: rgba(25, 25, 55, 0.6);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-pixel: 'VT323', monospace;
+            --font-pixel-en: 'Pixelify Sans', cursive;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
-            padding: 0;
-            user-select: none;
+            padding: 0
         }
 
         html {
-            scroll-behavior: smooth;
+            scroll-behavior: smooth
         }
 
         body {
-            font-family: 'Nunito', sans-serif;
-            background-color: var(--bg-dark);
-            background-image: url('images/ui/bg_lobby.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            font-family: var(--font-body);
+            background: var(--bg-primary);
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
-            transition: opacity 0.3s;
+            cursor: none;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .bg-overlay {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(6, 7, 26, 0.5) 0%, rgba(6, 7, 26, 0.65) 50%, rgba(6, 7, 26, 0.85) 100%);
-            z-index: -3;
-            pointer-events: none;
-        }
-
-        /* ═══ LOADING ═══ */
+        /* ═══ LOADING SCREEN ═══ */
         #loading {
             position: fixed;
             inset: 0;
-            background: var(--bg-dark);
+            background: var(--bg-primary);
             z-index: 99999;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.6s ease, visibility 0.6s;
         }
 
-        .loader-wrap {
+        .loader-hex {
             position: relative;
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px
         }
 
-        .loader-ring {
+        .loader-hex::before,
+        .loader-hex::after {
+            content: '';
             position: absolute;
             inset: 0;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             border-radius: 50%;
-            animation: lspin 1.5s linear infinite;
         }
 
-        .loader-ring:nth-child(1) {
-            border-top-color: var(--neon-blue);
+        .loader-hex::before {
+            border-top-color: var(--neon-cyan);
+            border-bottom-color: var(--neon-magenta);
+            animation: hexSpin 1.2s linear infinite
         }
 
-        .loader-ring:nth-child(2) {
-            inset: 8px;
-            border-right-color: var(--neon-pink);
-            animation-duration: 2s;
-            animation-direction: reverse;
-        }
-
-        .loader-ring:nth-child(3) {
-            inset: 16px;
-            border-bottom-color: var(--neon-green);
-            animation-duration: 2.5s;
+        .loader-hex::after {
+            inset: 10px;
+            border-left-color: var(--neon-purple);
+            border-right-color: var(--neon-green);
+            animation: hexSpin 1.8s linear infinite reverse
         }
 
         .loader-text {
-            margin-top: 25px;
-            font-family: var(--font-pixel);
+            margin-top: 20px;
+            font-family: var(--font-pixel-en);
             font-size: 16px;
-            color: var(--neon-blue);
-            letter-spacing: 4px;
-            animation: lpulse 1.5s ease-in-out infinite;
+            letter-spacing: 6px;
+            color: var(--neon-cyan);
+            animation: loadPulse 1.5s ease-in-out infinite;
+            text-shadow: 2px 2px 0 rgba(0, 240, 255, 0.15);
+            image-rendering: pixelated;
         }
 
-        @keyframes lspin {
+        @keyframes hexSpin {
             to {
-                transform: rotate(360deg);
+                transform: rotate(360deg)
             }
         }
 
-        @keyframes lpulse {
+        @keyframes loadPulse {
 
             0%,
             100% {
-                opacity: 0.4;
+                opacity: .3
             }
 
             50% {
-                opacity: 1;
+                opacity: 1
             }
         }
 
-        /* ═══ BG EFFECTS ═══ */
+        /* ═══ ANIMATED BACKGROUND ═══ */
         #bg-canvas {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
+            inset: 0;
+            z-index: 0
         }
 
-        .retro-grid {
-            position: fixed;
-            bottom: -50%;
-            left: -50%;
-            width: 200%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(188, 19, 254, 0.18) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.12) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: perspective(500px) rotateX(60deg);
-            animation: grid-move 20s linear infinite;
-            z-index: -1;
-            opacity: 0.55;
-            mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
-            filter: drop-shadow(0 0 3px rgba(188, 19, 254, 0.3));
-        }
-
-        @keyframes grid-move {
-            0% {
-                transform: perspective(500px) rotateX(60deg) translateY(0);
-            }
-
-            100% {
-                transform: perspective(500px) rotateX(60deg) translateY(50px);
-            }
-        }
-
-        .crt-overlay {
+        .bg-mesh {
             position: fixed;
             inset: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.04) 50%);
-            background-size: 100% 4px;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 60% at 10% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 80% at 90% 80%, rgba(0, 240, 255, 0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 50% at 50% 0%, rgba(255, 0, 170, 0.05) 0%, transparent 60%);
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
+            opacity: .4;
+        }
+
+        /* Hex Grid */
+        .hex-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: .03;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%2300f0ff' stroke-width='0.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%238b5cf6' stroke-width='0.3'/%3E%3C/svg%3E");
+        }
+
+        /* ═══ CUSTOM CURSOR ═══ */
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 30px rgba(0, 240, 255, 0.15), inset 0 0 8px rgba(0, 240, 255, 0.1);
+            transition: width .2s, height .2s, border-color .3s, box-shadow .3s, background .3s;
+            mix-blend-mode: screen;
+        }
+
+        #cursor.hover {
+            width: 45px;
+            height: 45px;
+            border-color: var(--neon-magenta);
+            box-shadow: 0 0 15px var(--neon-magenta), 0 0 40px rgba(255, 0, 170, 0.2), inset 0 0 12px rgba(255, 0, 170, 0.1);
+            background: rgba(255, 0, 170, 0.05);
+        }
+
+        #cursor-trail {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.35;
+            transform: translate(-50%, -50%);
+            background: var(--neon-cyan);
+            opacity: .4;
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px rgba(0, 240, 255, 0.3);
+            transition: opacity .3s;
         }
 
         /* ═══ NAVBAR ═══ */
         .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 35px;
-            background: rgba(6, 7, 26, 0.55);
-            backdrop-filter: blur(20px) saturate(1.4);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             position: sticky;
             top: 0;
             z-index: 100;
-            transition: 0.4s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            height: 64px;
+            background: rgba(3, 0, 20, 0.7);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all .4s;
         }
 
         .navbar.scrolled {
-            background: rgba(6, 7, 26, 0.92);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            background: rgba(3, 0, 20, 0.95);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(139, 92, 246, 0.15);
         }
 
         .brand {
@@ -233,173 +248,153 @@
             align-items: center;
             gap: 12px;
             cursor: pointer;
-        }
-
-        .brand-text {
-            font-family: var(--font-hero);
-            font-size: 32px;
-            line-height: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .brand-text span {
-            display: block;
-            color: #fff;
-        }
-
-        .brand-text span:last-child {
-            color: var(--neon-pink);
-            text-shadow: 0 0 8px var(--neon-pink), 0 0 20px var(--neon-pink), 0 0 45px rgba(188, 19, 254, 0.35), 0 0 80px rgba(188, 19, 254, 0.15);
+            text-decoration: none
         }
 
         .brand-icon {
-            font-size: 34px;
-            animation: pulse-icon 2.5s ease-in-out infinite;
+            font-size: 28px;
+            animation: brandPulse 3s ease-in-out infinite
         }
 
-        @keyframes pulse-icon {
+        @keyframes brandPulse {
 
             0%,
             100% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 5px var(--neon-blue));
+                filter: drop-shadow(0 0 4px var(--neon-cyan));
+                transform: scale(1)
             }
 
             50% {
-                transform: scale(1.12);
-                filter: drop-shadow(0 0 18px var(--neon-blue));
+                filter: drop-shadow(0 0 16px var(--neon-cyan));
+                transform: scale(1.08)
             }
         }
 
-        /* USER PANEL */
+        .brand-text {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            line-height: 1
+        }
+
+        .brand-text .t1 {
+            color: #fff;
+            display: block;
+            font-family: var(--font-pixel-en);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            opacity: .9;
+            image-rendering: pixelated;
+            text-shadow: 2px 2px 0 rgba(0, 240, 255, 0.2);
+        }
+
+        .brand-text .t2 {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.4));
+        }
+
+        /* User Panel */
         .user-panel {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px
         }
 
-        .balance-display {
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--neon-yellow);
-            border-radius: 50px;
-            padding: 8px 18px;
+        .balance-chip {
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 0 15px rgba(255, 230, 0, 0.2), 0 0 40px rgba(255, 230, 0, 0.06), inset 0 0 15px rgba(255, 230, 0, 0.04);
+            padding: 6px 16px;
+            border-radius: 50px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.02));
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-gold);
             position: relative;
             overflow: hidden;
-            animation: balanceGlow 3s ease-in-out infinite;
         }
 
-        @keyframes balanceGlow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 15px rgba(255, 230, 0, 0.2), 0 0 40px rgba(255, 230, 0, 0.06);
-            }
-
-            50% {
-                box-shadow: 0 0 20px rgba(255, 230, 0, 0.3), 0 0 50px rgba(255, 230, 0, 0.1);
-            }
-        }
-
-        .balance-display::before {
+        .balance-chip::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.12), transparent);
-            animation: bshine 3s ease infinite;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            animation: chipShine 3s ease infinite;
         }
 
-        @keyframes bshine {
+        @keyframes chipShine {
             0% {
-                left: -100%;
+                left: -100%
             }
 
             100% {
-                left: 200%;
+                left: 200%
             }
         }
 
-        .balance-value {
-            font-family: var(--font-pixel);
-            font-size: 17px;
-            color: var(--neon-yellow);
-            letter-spacing: 1px;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.07);
-            padding: 5px 14px 5px 5px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            transition: 0.3s;
-        }
-
-        .user-profile:hover {
-            background: rgba(255, 255, 255, 0.13);
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.05);
+        .user-avatar-wrap {
+            position: relative;
+            padding: 2px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
         }
 
         .avatar {
-            width: 38px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            border: 2px solid var(--neon-blue);
             object-fit: cover;
-            box-shadow: 0 0 8px rgba(0, 243, 255, 0.35), 0 0 20px rgba(0, 243, 255, 0.12);
-            transition: 0.3s;
-        }
-
-        .avatar:hover {
-            box-shadow: 0 0 12px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.2);
-            transform: scale(1.08);
+            display: block;
+            border: 2px solid var(--bg-primary)
         }
 
         .username {
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8)
         }
 
-        .btn-logout {
-            background: linear-gradient(135deg, #ff3b5c, #ff0055);
-            border: none;
-            padding: 7px 18px;
-            border-radius: 20px;
-            color: #fff;
+        .btn-exit {
+            padding: 6px 14px;
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 51, 102, 0.08);
+            color: var(--neon-red);
+            font-family: var(--font-display);
+            font-size: 10px;
             font-weight: 700;
-            font-size: 12px;
+            letter-spacing: 2px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.25);
-            transition: 0.3s;
+            transition: .3s;
         }
 
-        .btn-logout:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(255, 0, 85, 0.4);
+        .btn-exit:hover {
+            background: rgba(255, 51, 102, 0.2);
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.15)
         }
 
         .btn-login {
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            padding: 10px 24px;
             border: none;
-            padding: 10px 28px;
-            border-radius: 30px;
-            color: #fff;
-            font-weight: 800;
-            font-size: 15px;
+            border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.35), 0 0 50px rgba(138, 43, 226, 0.1);
-            animation: pulse-btn 2s infinite;
-            transition: 0.3s;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-magenta));
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+            transition: .3s;
             position: relative;
             overflow: hidden;
         }
@@ -411,663 +406,652 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             animation: loginShine 2.5s ease infinite;
         }
 
         @keyframes loginShine {
             0% {
-                left: -100%;
+                left: -100%
             }
 
             100% {
-                left: 200%;
+                left: 200%
             }
         }
 
         .btn-login:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 25px rgba(138, 43, 226, 0.5), 0 0 60px rgba(0, 243, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5)
         }
 
-        @keyframes pulse-btn {
-
-            0%,
-            100% {
-                box-shadow: 0 0 15px rgba(138, 43, 226, 0.25);
-            }
-
-            50% {
-                box-shadow: 0 0 35px rgba(138, 43, 226, 0.55);
-            }
-        }
-
-        /* ═══ HERO ═══ */
+        /* ═══ HERO SECTION ═══ */
         .hero {
-            text-align: center;
-            padding: 70px 20px 45px;
             position: relative;
+            text-align: center;
+            padding: 80px 20px 50px;
             overflow: hidden;
+            z-index: 1;
         }
 
-        .hero::before {
-            content: '';
+        .hero-glow {
             position: absolute;
-            top: -180px;
+            top: -200px;
             left: 50%;
             transform: translateX(-50%);
             width: 800px;
             height: 600px;
-            background: radial-gradient(ellipse, rgba(188, 19, 254, 0.12) 0%, rgba(0, 243, 255, 0.04) 40%, transparent 70%);
             pointer-events: none;
-            animation: heroGlow 5s ease-in-out infinite;
+            background: radial-gradient(ellipse, rgba(139, 92, 246, 0.12) 0%, rgba(0, 240, 255, 0.04) 40%, transparent 70%);
+            animation: heroBreath 6s ease-in-out infinite;
         }
 
-        @keyframes heroGlow {
+        @keyframes heroBreath {
 
             0%,
             100% {
-                opacity: 0.8;
-                transform: translateX(-50%) scale(1);
+                opacity: .6;
+                transform: translateX(-50%) scale(1)
             }
 
             50% {
                 opacity: 1;
-                transform: translateX(-50%) scale(1.05);
+                transform: translateX(-50%) scale(1.08)
             }
         }
 
-        .welcome-title {
-            font-family: var(--font-hero);
-            font-size: 52px;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 3px;
-            line-height: 1.1;
-            animation: title-in 0.8s ease-out;
-        }
-
-        .welcome-title span {
-            color: var(--neon-yellow);
-            text-shadow: 0 0 10px rgba(255, 230, 0, 0.6), 0 0 30px rgba(255, 230, 0, 0.3), 0 0 60px rgba(255, 230, 0, 0.15);
-            animation: neonTextPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes neonTextPulse {
-
-            0%,
-            100% {
-                text-shadow: 0 0 10px rgba(255, 230, 0, 0.6), 0 0 30px rgba(255, 230, 0, 0.3), 0 0 60px rgba(255, 230, 0, 0.15);
-            }
-
-            50% {
-                text-shadow: 0 0 15px rgba(255, 230, 0, 0.8), 0 0 40px rgba(255, 230, 0, 0.5), 0 0 80px rgba(255, 230, 0, 0.25), 0 0 120px rgba(255, 230, 0, 0.1);
-            }
-        }
-
-        @keyframes title-in {
-            0% {
-                transform: translateY(25px);
-                opacity: 0;
-                filter: blur(8px);
-            }
-
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-                filter: blur(0);
-            }
-        }
-
-        .hero-subtitle {
-            font-size: 17px;
-            color: rgba(255, 255, 255, 0.65);
-            margin-bottom: 25px;
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid rgba(139, 92, 246, 0.25);
+            font-family: var(--font-pixel-en);
+            font-size: 13px;
             font-weight: 600;
-            animation: sub-in 0.8s ease-out 0.15s both;
+            letter-spacing: 3px;
+            color: var(--neon-purple);
+            animation: badgePulse 3s ease-in-out infinite;
+            image-rendering: pixelated;
+            box-shadow: 2px 2px 0 rgba(139, 92, 246, 0.15);
         }
 
-        @keyframes sub-in {
+        @keyframes badgePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 rgba(139, 92, 246, 0)
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(139, 92, 246, 0.15)
+            }
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            animation: dotPulse 1.5s ease-in-out infinite
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .4;
+                transform: scale(.7)
+            }
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            line-height: 1.2;
+            margin-bottom: 8px;
+            animation: titleReveal .8s ease-out;
+        }
+
+        @keyframes titleReveal {
             0% {
-                transform: translateY(15px);
                 opacity: 0;
+                transform: translateY(20px);
+                filter: blur(10px)
             }
 
             100% {
-                transform: translateY(0);
                 opacity: 1;
+                transform: translateY(0);
+                filter: blur(0)
             }
         }
 
-        .hero-tags {
+        .hero-title .line1 {
+            color: rgba(255, 255, 255, 0.85);
+            display: block;
+            font-size: 28px;
+            letter-spacing: 8px;
+            font-weight: 500
+        }
+
+        .hero-title .line2 {
+            display: block;
+            font-family: var(--font-pixel);
+            font-size: 46px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.4));
+            animation: titleGlow 4s ease-in-out infinite;
+            image-rendering: pixelated;
+        }
+
+        @keyframes titleGlow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.4))
+            }
+
+            50% {
+                filter: drop-shadow(0 0 40px rgba(0, 240, 255, 0.5))
+            }
+        }
+
+        .hero-sub {
+            font-family: var(--font-pixel);
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 30px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            animation: subIn .8s ease-out .15s both;
+        }
+
+        @keyframes subIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .hero-chips {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 35px;
-            animation: tag-in 0.8s ease-out 0.3s both;
+            gap: 12px;
+            animation: chipsIn .8s ease-out .3s both;
         }
 
-        @keyframes tag-in {
+        @keyframes chipsIn {
             0% {
-                transform: translateY(10px);
                 opacity: 0;
+                transform: translateY(10px)
             }
 
             100% {
-                transform: translateY(0);
                 opacity: 1;
+                transform: translateY(0)
             }
         }
 
-        .tag {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 9px 20px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
+        .chip {
             display: flex;
             align-items: center;
-            gap: 7px;
-            backdrop-filter: blur(8px);
-            transition: 0.3s;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 4px;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            font-family: var(--font-pixel);
+            font-size: 15px;
+            font-weight: 400;
+            transition: all .3s;
+            image-rendering: pixelated;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
         }
 
-        .tag:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .chip:hover {
             transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06)
         }
 
-        .tag:nth-child(1):hover {
-            box-shadow: 0 0 20px rgba(0, 255, 157, 0.15);
-            border-color: rgba(0, 255, 157, 0.3);
+        .chip i {
+            font-style: normal
         }
 
-        .tag:nth-child(2):hover {
-            box-shadow: 0 0 20px rgba(255, 230, 0, 0.15);
-            border-color: rgba(255, 230, 0, 0.3);
+        .chip-green {
+            color: var(--neon-green)
         }
 
-        .tag:nth-child(3):hover {
-            box-shadow: 0 0 20px rgba(188, 19, 254, 0.15);
-            border-color: rgba(188, 19, 254, 0.3);
+        .chip-green:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1)
         }
 
-        .tag i {
-            font-style: normal;
+        .chip-gold {
+            color: var(--neon-gold)
         }
 
-        .floating-icon {
+        .chip-gold:hover {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1)
+        }
+
+        .chip-purple {
+            color: var(--neon-purple)
+        }
+
+        .chip-purple:hover {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.1)
+        }
+
+        .hero-float {
             position: absolute;
-            font-size: 38px;
-            filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.5));
-            animation: float 4s ease-in-out infinite;
+            font-size: 36px;
+            pointer-events: none;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+            animation: heroFloat 5s ease-in-out infinite
         }
 
-        .icon-1 {
+        .hf-1 {
             top: 20%;
-            left: 15%;
+            left: 12%;
+            animation-delay: 0s
         }
 
-        .icon-2 {
-            top: 30%;
-            right: 15%;
-            animation-delay: 1.5s;
+        .hf-2 {
+            top: 25%;
+            right: 12%;
+            animation-delay: 1.5s
         }
 
-        .icon-3 {
-            top: 15%;
-            right: 25%;
-            font-size: 28px;
-            animation-delay: 2.5s;
+        .hf-3 {
+            top: 12%;
+            right: 22%;
+            font-size: 26px;
+            animation-delay: 2.5s
         }
 
-        @keyframes float {
+        @keyframes heroFloat {
 
             0%,
             100% {
-                transform: translateY(0) rotate(var(--rot, 0deg));
+                transform: translateY(0) rotate(var(--r, 0deg))
             }
 
             50% {
-                transform: translateY(-18px) rotate(var(--rot, 0deg));
-            }
-        }
-
-        .glitch-text {
-            position: relative;
-            color: #fff;
-        }
-
-        .glitch-text::before,
-        .glitch-text::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-        }
-
-        .glitch-text::before {
-            left: 2px;
-            text-shadow: -2px 0 var(--neon-pink);
-            clip-path: inset(44% 0 61% 0);
-            animation: g1 2.5s infinite linear alternate-reverse;
-        }
-
-        .glitch-text::after {
-            left: -2px;
-            text-shadow: 2px 0 var(--neon-blue);
-            clip-path: inset(54% 0 11% 0);
-            animation: g2 3.5s infinite linear alternate-reverse;
-        }
-
-        @keyframes g1 {
-            0% {
-                clip-path: inset(20% 0 50% 0);
-            }
-
-            100% {
-                clip-path: inset(80% 0 10% 0);
-            }
-        }
-
-        @keyframes g2 {
-            0% {
-                clip-path: inset(10% 0 60% 0);
-            }
-
-            100% {
-                clip-path: inset(40% 0 20% 0);
+                transform: translateY(-20px) rotate(var(--r, 0deg))
             }
         }
 
         /* ═══ SECTION ═══ */
-        .section-header {
+        .section-label {
             text-align: center;
-            margin-bottom: 35px;
-        }
-
-        .section-title {
-            font-family: var(--font-pixel);
-            font-size: 30px;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 4px;
+            margin: 10px 0 30px;
             position: relative;
-            display: inline-block;
+            z-index: 1;
         }
 
-        .section-title::after {
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-pixel-en);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            padding: 0 20px;
+            image-rendering: pixelated;
+            text-shadow: 2px 2px 0 rgba(139, 92, 246, 0.2);
+        }
+
+        .section-tag::before,
+        .section-tag::after {
             content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
             width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue));
-            border-radius: 3px;
-            box-shadow: 0 0 10px var(--neon-pink), 0 0 25px rgba(188, 19, 254, 0.3);
-            animation: neonLine 3s ease-in-out infinite;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+            image-rendering: pixelated;
         }
 
-        @keyframes neonLine {
+        .section-tag .tag-icon {
+            font-style: normal;
+            font-size: 14px;
+            animation: tagIconPulse 2s ease-in-out infinite
+        }
+
+        @keyframes tagIconPulse {
 
             0%,
             100% {
-                box-shadow: 0 0 10px var(--neon-pink), 0 0 25px rgba(188, 19, 254, 0.3);
-                width: 60px;
+                opacity: .5
             }
 
             50% {
-                box-shadow: 0 0 15px var(--neon-blue), 0 0 35px rgba(0, 243, 255, 0.3);
-                width: 80px;
+                opacity: 1
             }
         }
 
         /* ═══ GAME GRID ═══ */
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-            gap: 25px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 25px 50px;
-        }
-
-        .game-card {
-            background: var(--card-bg);
-            border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0 24px 40px;
             position: relative;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
-            transition: transform 0.15s ease-out, box-shadow 0.3s;
-            overflow: hidden;
+            z-index: 1;
         }
 
+        /* Card */
+        .game-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--surface);
+            border: 1px solid var(--glass-border);
+            transition: transform .3s cubic-bezier(.25, .46, .45, .94), box-shadow .3s;
+            transform-style: preserve-3d;
+            transform: perspective(1200px);
+        }
+
+        /* Neon border animation */
         .game-card::before {
             content: '';
             position: absolute;
-            inset: -2px;
-            border-radius: 20px;
-            padding: 2px;
-            background: conic-gradient(from var(--card-angle, 0deg), var(--neon-c1, #ff9e00), var(--neon-c2, #ff512f), var(--neon-c1, #ff9e00), transparent 40%, transparent 60%, var(--neon-c1, #ff9e00));
+            inset: -1px;
+            border-radius: 17px;
+            padding: 1px;
+            background: conic-gradient(from var(--card-angle), var(--c1), var(--c2), var(--c1), transparent 50%, transparent);
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.5s;
-            animation: neonSpin 4s linear infinite;
+            transition: opacity .4s;
+            animation: cardSpin 4s linear infinite;
+            z-index: 3;
         }
 
-        @property --card-angle {
-            syntax: '<angle>';
-            initial-value: 0deg;
-            inherits: false;
-        }
-
-        @keyframes neonSpin {
+        @keyframes cardSpin {
             to {
-                --card-angle: 360deg;
+                --card-angle: 360deg
             }
         }
 
+        /* Glow behind */
         .game-card::after {
             content: '';
             position: absolute;
-            inset: -2px;
+            inset: -3px;
             border-radius: 20px;
-            background: conic-gradient(from var(--card-angle, 0deg), var(--neon-c1, #ff9e00), var(--neon-c2, #ff512f), var(--neon-c1, #ff9e00), transparent 40%, transparent 60%, var(--neon-c1, #ff9e00));
+            background: conic-gradient(from var(--card-angle), var(--c1), var(--c2), var(--c1), transparent 50%, transparent);
             pointer-events: none;
             opacity: 0;
-            filter: blur(12px);
-            transition: opacity 0.5s;
-            animation: neonSpin 4s linear infinite;
+            filter: blur(18px);
+            transition: opacity .4s;
+            animation: cardSpin 4s linear infinite;
             z-index: -1;
         }
 
         .game-card:hover::before {
-            opacity: 1;
+            opacity: 1
         }
 
         .game-card:hover::after {
-            opacity: 0.4;
+            opacity: .35
         }
 
         .game-card:hover {
             z-index: 10;
+            border-color: transparent
         }
 
-        .card-taixiu {
-            border-color: rgba(255, 158, 0, 0.25);
-            --neon-c1: #ff9e00;
-            --neon-c2: #ff512f;
+        /* Card type colors */
+        .c-taixiu {
+            --c1: #ff8c00;
+            --c2: #ff4500
         }
 
-        .card-poker {
-            border-color: rgba(0, 255, 157, 0.25);
-            --neon-c1: #00ff9d;
-            --neon-c2: #11998e;
+        .c-poker {
+            --c1: #00ff88;
+            --c2: #00c9ff
         }
 
-        .card-flappy {
-            border-color: rgba(255, 230, 0, 0.25);
-            --neon-c1: #ffe600;
-            --neon-c2: #f38181;
+        .c-flappy {
+            --c1: #ffd700;
+            --c2: #ff6b6b
         }
 
-        .card-slot {
-            border-color: rgba(138, 43, 226, 0.25);
-            --neon-c1: #bc13fe;
-            --neon-c2: #6c5ce7;
+        .c-slot {
+            --c1: #8b5cf6;
+            --c2: #ec4899
         }
 
-        .card-daily {
-            border-color: rgba(255, 107, 107, 0.25);
-            --neon-c1: #ff6b6b;
-            --neon-c2: #ee5a24;
+        .c-daily {
+            --c1: #ff3366;
+            --c2: #ff8c00
         }
 
-        .card-leaderboard {
-            border-color: rgba(0, 243, 255, 0.25);
-            --neon-c1: #00f3ff;
-            --neon-c2: #0077ff;
+        .c-lb {
+            --c1: #00f0ff;
+            --c2: #3b82f6
         }
 
-        .card-taixiu:hover {
-            box-shadow: 0 8px 45px rgba(255, 158, 0, 0.25), 0 0 80px rgba(255, 158, 0, 0.08), inset 0 0 30px rgba(255, 158, 0, 0.03);
-            border-color: transparent;
+        /* Hover glow per type */
+        .c-taixiu:hover {
+            box-shadow: 0 10px 60px rgba(255, 140, 0, 0.2), 0 0 100px rgba(255, 140, 0, 0.05)
         }
 
-        .card-poker:hover {
-            box-shadow: 0 8px 45px rgba(0, 255, 157, 0.25), 0 0 80px rgba(0, 255, 157, 0.08), inset 0 0 30px rgba(0, 255, 157, 0.03);
-            border-color: transparent;
+        .c-poker:hover {
+            box-shadow: 0 10px 60px rgba(0, 255, 136, 0.2), 0 0 100px rgba(0, 255, 136, 0.05)
         }
 
-        .card-flappy:hover {
-            box-shadow: 0 8px 45px rgba(255, 230, 0, 0.2), 0 0 80px rgba(255, 230, 0, 0.06), inset 0 0 30px rgba(255, 230, 0, 0.03);
-            border-color: transparent;
+        .c-flappy:hover {
+            box-shadow: 0 10px 60px rgba(255, 215, 0, 0.15), 0 0 100px rgba(255, 215, 0, 0.05)
         }
 
-        .card-slot:hover {
-            box-shadow: 0 8px 45px rgba(138, 43, 226, 0.25), 0 0 80px rgba(138, 43, 226, 0.1), inset 0 0 30px rgba(138, 43, 226, 0.03);
-            border-color: transparent;
+        .c-slot:hover {
+            box-shadow: 0 10px 60px rgba(139, 92, 246, 0.2), 0 0 100px rgba(139, 92, 246, 0.05)
         }
 
-        .card-daily:hover {
-            box-shadow: 0 8px 45px rgba(255, 107, 107, 0.25), 0 0 80px rgba(255, 107, 107, 0.08), inset 0 0 30px rgba(255, 107, 107, 0.03);
-            border-color: transparent;
+        .c-daily:hover {
+            box-shadow: 0 10px 60px rgba(255, 51, 102, 0.2), 0 0 100px rgba(255, 51, 102, 0.05)
         }
 
-        .card-leaderboard:hover {
-            box-shadow: 0 8px 45px rgba(0, 243, 255, 0.2), 0 0 80px rgba(0, 243, 255, 0.08), inset 0 0 30px rgba(0, 243, 255, 0.03);
-            border-color: transparent;
+        .c-lb:hover {
+            box-shadow: 0 10px 60px rgba(0, 240, 255, 0.15), 0 0 100px rgba(0, 240, 255, 0.05)
         }
 
-        .card-image {
-            height: 170px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            background-size: cover;
-            background-position: center;
+        .card-banner {
+            height: 160px;
             position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            transition: 0.5s;
         }
 
-        .card-image::after {
+        .card-banner::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(0deg, rgba(12, 12, 30, 0.9) 0%, rgba(12, 12, 30, 0.25) 40%, transparent 100%);
-            transition: opacity 0.3s;
+            background: linear-gradient(0deg, var(--surface) 0%, rgba(15, 15, 35, 0.4) 40%, transparent 100%);
+            transition: opacity .3s;
         }
 
-        .game-card:hover .card-image::after {
-            opacity: 0.5;
+        .game-card:hover .card-banner::after {
+            opacity: .5
         }
 
-        .img-taixiu {
-            background: url('images/ui/banner_taixiu.png') center/cover;
+        .banner-taixiu {
+            background: url('images/ui/banner_taixiu.png') center/cover
         }
 
-        .img-poker {
-            background: url('images/ui/banner_poker.png') center/cover;
+        .banner-poker {
+            background: url('images/ui/banner_poker.png') center/cover
         }
 
-        .img-flappy {
-            background: url('images/ui/banner_flappy.png') center/cover;
+        .banner-flappy {
+            background: url('images/ui/banner_flappy.png') center/cover
         }
 
-        .img-slot {
-            background: linear-gradient(135deg, #1a0a3e, #3a1a6e 40%, #2a0a4e 70%, #4a1a7e);
-            background-size: 300% 300%;
-            animation: gshift 5s ease infinite;
+        .banner-slot {
+            background: linear-gradient(135deg, #1a0a3e, #3a1a6e 40%, #2a0a4e);
+            overflow: hidden
         }
 
-        .img-slot::before {
-            content: '🍒  7️⃣  💎';
-            position: absolute;
-            font-size: 17px;
-            bottom: 10px;
-            opacity: 0.2;
-            letter-spacing: 8px;
-            animation: fi 3s ease-in-out infinite;
-            z-index: 1;
+        .banner-daily {
+            background: linear-gradient(135deg, #2a0a1e, #4a1a2e 40%, #2a0a3e);
+            overflow: hidden
         }
 
-        .img-daily {
-            background: linear-gradient(135deg, #2a0a1e, #4a1a2e 40%, #2a0a3e 70%, #5a1a3e);
-            background-size: 300% 300%;
-            animation: gshift 6s ease infinite;
-        }
-
-        .img-daily::before {
-            content: '✨';
-            position: absolute;
-            font-size: 90px;
-            opacity: 0.05;
-            animation: sslow 15s linear infinite;
-            z-index: 1;
-        }
-
-        .img-leaderboard {
-            background: linear-gradient(135deg, #0a1628, #1a2a5e 40%, #0a1e3e 70%, #1a3a6e);
-            background-size: 300% 300%;
-            animation: gshift 7s ease infinite;
-        }
-
-        .img-leaderboard::before {
-            content: '🥇 🥈 🥉';
-            position: absolute;
-            font-size: 15px;
-            bottom: 10px;
-            opacity: 0.25;
-            letter-spacing: 5px;
-            z-index: 1;
-        }
-
-        @keyframes gshift {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        @keyframes fi {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-5px);
-            }
-        }
-
-        @keyframes sslow {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+        .banner-lb {
+            background: linear-gradient(135deg, #0a1628, #1a2a5e 40%, #0a1e3e);
+            overflow: hidden
         }
 
         .card-icon {
-            font-size: 68px;
+            font-size: 64px;
             z-index: 2;
-            filter: drop-shadow(0 5px 18px rgba(0, 0, 0, 0.6));
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.4s;
-            animation: ifloat 3s ease-in-out infinite;
+            position: relative;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+            transition: transform .5s cubic-bezier(.175, .885, .32, 1.275);
+            animation: iconBob 3s ease-in-out infinite;
         }
 
-        @keyframes ifloat {
+        @keyframes iconBob {
 
             0%,
             100% {
-                transform: translateY(0) scale(1);
+                transform: translateY(0)
             }
 
             50% {
-                transform: translateY(-8px) scale(1.04);
+                transform: translateY(-8px)
             }
         }
 
         .game-card:hover .card-icon {
-            transform: scale(1.2) rotate(6deg);
-            filter: drop-shadow(0 8px 25px rgba(255, 255, 255, 0.25));
+            transform: scale(1.15) rotate(5deg)
         }
 
-        .card-body {
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
+        /* Status badge on card */
+        .card-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 4;
+            padding: 4px 10px;
+            border-radius: 2px;
+            font-family: var(--font-pixel-en);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+            image-rendering: pixelated;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .status-live {
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--neon-green)
+        }
+
+        .status-hot {
+            background: rgba(255, 51, 102, 0.15);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            color: var(--neon-red)
+        }
+
+        .status-new {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--neon-purple)
+        }
+
+        .card-content {
+            padding: 18px 20px 20px;
+            position: relative;
+            z-index: 2
         }
 
         .card-title {
             font-family: var(--font-pixel);
-            font-size: 19px;
-            text-transform: uppercase;
+            font-size: 20px;
+            font-weight: 400;
+            letter-spacing: 2px;
             margin-bottom: 6px;
-            letter-spacing: 1px;
+            image-rendering: pixelated;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
         }
 
         .card-desc {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.55);
-            margin-bottom: 12px;
-            line-height: 1.5;
-            flex-grow: 1;
-        }
-
-        .card-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 11px;
-            font-weight: 700;
+            font-family: var(--font-pixel);
+            font-size: 16px;
             color: rgba(255, 255, 255, 0.45);
+            line-height: 1.5;
+            margin-bottom: 14px
         }
 
-        .stat-item i {
-            color: var(--neon-yellow);
-            margin-right: 3px;
+        .card-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .meta-item i {
             font-style: normal;
+            color: var(--neon-gold)
         }
 
         .btn-play {
             width: 100%;
-            padding: 13px;
-            border-radius: 12px;
+            padding: 12px;
             border: none;
-            font-family: var(--font-pixel);
-            font-size: 17px;
-            text-transform: uppercase;
+            border-radius: 4px;
             cursor: pointer;
-            letter-spacing: 2px;
+            font-family: var(--font-pixel);
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            color: #fff;
             position: relative;
             overflow: hidden;
-            transition: 0.3s;
+            transition: all .3s;
+            image-rendering: pixelated;
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
         }
 
         .btn-play::after {
@@ -1077,84 +1061,63 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-            transition: 0.6s;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: .6s;
         }
 
         .btn-play:hover::after {
-            left: 100%;
+            left: 100%
         }
 
         .btn-play:hover {
             transform: translateY(-2px);
-            filter: brightness(1.15);
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15), 0 0 40px rgba(var(--btn-r, 188), var(--btn-g, 19), var(--btn-b, 254), 0.3);
+            filter: brightness(1.2)
         }
 
         .btn-play:active {
-            transform: translateY(0);
+            transform: translateY(0)
         }
 
-        .btn-taixiu {
-            background: linear-gradient(135deg, #ff512f, #f09819);
-            color: #fff;
-            box-shadow: 0 4px 18px rgba(255, 158, 0, 0.25);
-            --btn-r: 255;
-            --btn-g: 158;
-            --btn-b: 0;
+        .btn-orange {
+            background: linear-gradient(135deg, #ff8c00, #ff4500);
+            box-shadow: 0 4px 20px rgba(255, 140, 0, 0.25)
         }
 
-        .btn-poker {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
+        .btn-green {
+            background: linear-gradient(135deg, #00c9a7, #00ff88);
             color: #0a0b1e;
-            box-shadow: 0 4px 18px rgba(0, 255, 157, 0.25);
-            --btn-r: 0;
-            --btn-g: 255;
-            --btn-b: 157;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2)
         }
 
-        .btn-flappy {
-            background: linear-gradient(135deg, #fce38a, #f38181);
+        .btn-yellow {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
             color: #0a0b1e;
-            box-shadow: 0 4px 18px rgba(255, 230, 0, 0.25);
-            --btn-r: 255;
-            --btn-g: 230;
-            --btn-b: 0;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2)
         }
 
-        .btn-slot {
-            background: linear-gradient(135deg, #bc13fe, #6c5ce7);
-            color: #fff;
-            box-shadow: 0 4px 18px rgba(138, 43, 226, 0.25);
-            --btn-r: 138;
-            --btn-g: 43;
-            --btn-b: 226;
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25)
         }
 
-        .btn-daily {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: #fff;
-            box-shadow: 0 4px 18px rgba(255, 107, 107, 0.25);
-            --btn-r: 255;
-            --btn-g: 107;
-            --btn-b: 107;
+        .btn-red {
+            background: linear-gradient(135deg, #ff3366, #ff8c00);
+            box-shadow: 0 4px 20px rgba(255, 51, 102, 0.2)
         }
 
-        .btn-leaderboard {
-            background: linear-gradient(135deg, var(--neon-blue), #0077ff);
-            color: #fff;
-            box-shadow: 0 4px 18px rgba(0, 243, 255, 0.25);
-            --btn-r: 0;
-            --btn-g: 243;
-            --btn-b: 255;
+        .btn-cyan {
+            background: linear-gradient(135deg, #00f0ff, #3b82f6);
+            color: #0a0b1e;
+            box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2)
         }
 
+        /* Shine layer for 3D */
         .shine-layer {
             position: absolute;
             inset: 0;
-            border-radius: 18px;
+            border-radius: 16px;
             pointer-events: none;
-            z-index: 5;
+            z-index: 5
         }
 
         /* ═══ MODAL ═══ */
@@ -1169,304 +1132,381 @@
             align-items: center;
         }
 
-        .modal-content {
+        .modal-box {
             background: linear-gradient(135deg, #0e0e28, #1a1a3e);
             padding: 40px;
-            border-radius: 22px;
-            border: 1px solid rgba(188, 19, 254, 0.25);
+            border-radius: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.25);
             text-align: center;
             max-width: 400px;
-            box-shadow: 0 0 50px rgba(188, 19, 254, 0.15);
-            animation: mpop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 60px rgba(139, 92, 246, 0.15);
+            animation: modalPop .4s cubic-bezier(.175, .885, .32, 1.275);
         }
 
-        @keyframes mpop {
+        @keyframes modalPop {
             0% {
-                transform: scale(0.85);
-                opacity: 0;
+                transform: scale(.85);
+                opacity: 0
             }
 
             100% {
                 transform: scale(1);
-                opacity: 1;
+                opacity: 1
             }
         }
 
-        .modal h2 {
-            color: var(--neon-pink);
+        .modal-box h2 {
+            color: var(--neon-magenta);
             margin-bottom: 12px;
-            font-size: 20px;
+            font-size: 18px;
+            font-family: var(--font-display)
         }
 
-        .modal p {
+        .modal-box p {
             margin-bottom: 22px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             line-height: 1.5;
-            font-size: 14px;
-        }
-
-        /* ═══ CURSOR ═══ */
-        #cursor {
-            position: fixed;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--neon-blue);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10000;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px var(--neon-blue), 0 0 20px rgba(0, 243, 255, 0.2), inset 0 0 6px rgba(0, 243, 255, 0.1);
-            transition: width 0.2s, height 0.2s, border-color 0.2s, box-shadow 0.2s;
-        }
-
-        #cursor.hover {
-            width: 40px;
-            height: 40px;
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 12px var(--neon-pink), 0 0 30px rgba(188, 19, 254, 0.3), 0 0 50px rgba(188, 19, 254, 0.1), inset 0 0 10px rgba(188, 19, 254, 0.15);
-        }
-
-        #cursor-trail {
-            position: fixed;
-            width: 7px;
-            height: 7px;
-            background: var(--neon-pink);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            transform: translate(-50%, -50%);
-            opacity: 0.5;
-            box-shadow: 0 0 8px var(--neon-pink), 0 0 15px rgba(188, 19, 254, 0.3);
+            font-size: 14px
         }
 
         /* ═══ FOOTER ═══ */
         .footer {
             text-align: center;
-            padding: 25px 20px;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: var(--font-pixel);
+            font-size: 14px;
         }
 
         .footer span {
-            color: var(--neon-pink);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 400;
+            font-family: var(--font-pixel-en);
+            font-size: 14px;
+        }
+
+        /* ═══ PIXEL ART DECORATIONS ═══ */
+        .game-card .card-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid var(--c1);
+            border-left: 2px solid var(--c1);
+            opacity: .5;
+            image-rendering: pixelated;
+        }
+
+        .game-card .card-content::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-bottom: 2px solid var(--c2);
+            border-right: 2px solid var(--c2);
+            opacity: .5;
+            image-rendering: pixelated;
+        }
+
+        /* Pixel grid overlay on card banners */
+        .card-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: .06;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .15) 1px, transparent 1px);
+            background-size: 4px 4px;
+            image-rendering: pixelated;
+        }
+
+        /* Pixel cursor blink animation for hero */
+        .hero-title .line2::after {
+            content: '█';
+            font-family: monospace;
+            font-size: 32px;
+            display: inline;
+            animation: pixelBlink 1s step-end infinite;
+            -webkit-text-fill-color: var(--neon-cyan);
+            vertical-align: middle;
+            margin-left: 6px;
+            opacity: .6;
+        }
+
+        @keyframes pixelBlink {
+
+            0%,
+            49% {
+                opacity: .6
+            }
+
+            50%,
+            100% {
+                opacity: 0
+            }
+        }
+
+        /* Pixel-style divider */
+        .section-label::before {
+            content: '░░▒▓████████████▓▒░░';
+            display: block;
+            font-family: monospace;
+            font-size: 6px;
+            letter-spacing: 1px;
+            color: rgba(139, 92, 246, 0.12);
+            text-align: center;
+            margin-bottom: 8px;
         }
 
         /* ═══ RESPONSIVE ═══ */
-        @media (max-width: 768px) {
-            .hero-tags {
-                flex-wrap: wrap;
+        @media(max-width:768px) {
+            .hero-title {
+                font-size: 28px
             }
 
-            .welcome-title {
-                font-size: 30px;
-            }
-
-            .navbar {
-                padding: 10px 15px;
-            }
-
-            .brand-text {
-                font-size: 22px;
-            }
-
-            .user-panel {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .balance-display {
-                padding: 5px 12px;
-            }
-
-            .balance-value {
-                font-size: 14px;
+            .hero-title .line1 {
+                font-size: 18px
             }
 
             .hero {
-                padding: 35px 15px 20px;
+                padding: 40px 15px 25px
             }
 
-            .section-title {
-                font-size: 20px;
+            .navbar {
+                padding: 0 15px;
+                height: 56px
+            }
+
+            .brand-text {
+                font-size: 16px
+            }
+
+            .brand-text .t1 {
+                font-size: 11px
             }
 
             .game-grid {
                 grid-template-columns: 1fr;
-                gap: 18px;
-                padding: 0 15px 35px;
+                gap: 16px;
+                padding: 0 16px 30px
             }
 
-            .card-image {
-                height: 140px;
+            .card-banner {
+                height: 130px
             }
 
-            .floating-icon,
+            .hero-float,
             #cursor,
             #cursor-trail,
-            .crt-overlay,
-            .retro-grid {
-                display: none !important;
+            .scanlines,
+            .hex-grid {
+                display: none !important
+            }
+
+            .hero-chips {
+                flex-wrap: wrap;
+                gap: 8px
+            }
+
+            .user-panel {
+                gap: 6px
+            }
+
+            .balance-chip {
+                padding: 4px 10px;
+                font-size: 11px
+            }
+
+            .section-tag {
+                font-size: 12px;
+                letter-spacing: 3px
             }
         }
 
-        @media (max-width: 400px) {
-            .welcome-title {
-                font-size: 22px;
+        @media(max-width:400px) {
+            .hero-title {
+                font-size: 22px
             }
 
-            .brand-text {
-                font-size: 18px;
+            .hero-title .line1 {
+                font-size: 14px
             }
 
-            .tag {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-
-            .user-profile {
-                padding: 3px 8px 3px 3px;
+            .chip {
+                padding: 6px 12px;
+                font-size: 11px
             }
 
             .avatar {
                 width: 28px;
-                height: 28px;
+                height: 28px
             }
 
             .username {
-                font-size: 12px;
+                font-size: 11px
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="bg-overlay"></div>
+    <div class="bg-mesh"></div>
+    <canvas id="bg-canvas"></canvas>
+    <div class="hex-grid"></div>
+    <div class="scanlines"></div>
 
     <div id="loading">
-        <div class="loader-wrap">
-            <div class="loader-ring"></div>
-            <div class="loader-ring"></div>
-            <div class="loader-ring"></div>
-        </div>
-        <p class="loader-text">LOADING...</p>
+        <div class="loader-hex"></div>
+        <p class="loader-text">LOADING</p>
     </div>
 
     <div id="login-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-box">
             <h2>🔒 YÊU CẦU ĐĂNG NHẬP</h2>
             <p>Vui lòng đăng nhập để tham gia tranh tài và nhận thưởng!</p>
-            <button id="btn-discord-login" class="btn-play btn-taixiu" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP
-                (Discord)</button>
+            <button class="btn-play btn-purple" id="btn-discord-login" onclick="handleDiscordLogin(this)">ĐĂNG
+                NHẬP</button>
             <button
-                style="background:transparent; border:none; color:#666; margin-top:12px; cursor:pointer; text-decoration:underline; font-size:12px;"
+                style="background:transparent;border:none;color:#555;margin-top:12px;cursor:pointer;font-size:11px;text-decoration:underline"
                 onclick="document.getElementById('login-modal').style.display='none'">Đóng</button>
         </div>
     </div>
 
     <nav class="navbar" id="navbar">
-        <div class="brand" onclick="location.reload()">
+        <a class="brand" href="/">
             <div class="brand-icon">🎮</div>
-            <div class="brand-text"><span>PIXEL</span><span>PLAYZONE</span></div>
-        </div>
+            <div class="brand-text"><span class="t1">PIXEL</span><span class="t2">PLAYZONE</span></div>
+        </a>
         <div id="user-area"><button class="btn-login" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP</button></div>
     </nav>
 
-    <div class="hero">
-        <div class="floating-icon icon-1" style="--rot: -15deg">🕹️</div>
-        <div class="floating-icon icon-2" style="--rot: 15deg">🎁</div>
-        <div class="floating-icon icon-3">🏆</div>
-        <h1 class="welcome-title" id="welcome-text">XIN CHÀO <span id="user-name-display">GUEST</span></h1>
-        <p class="hero-subtitle">Thế giới game giải trí đỉnh cao!</p>
-        <div class="hero-tags">
-            <div class="tag" style="color:var(--neon-green)"><i>🎮</i> GAME MỚI</div>
-            <div class="tag" style="color:var(--neon-yellow)"><i>🏆</i> ĐUA TOP</div>
-            <div class="tag" style="color:var(--neon-pink)"><i>🎁</i> QUÀ TẶNG</div>
+    <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-float hf-1" style="--r:-12deg">🕹️</div>
+        <div class="hero-float hf-2" style="--r:12deg">🎁</div>
+        <div class="hero-float hf-3">🏆</div>
+        <div class="hero-badge"><span class="badge-dot"></span> ONLINE GAMING PLATFORM</div>
+        <h1 class="hero-title">
+            <span class="line1">WELCOME TO</span>
+            <span class="line2" id="hero-name">PIXEL PLAYZONE</span>
+        </h1>
+        <p class="hero-sub">Nền tảng game giải trí đỉnh cao — Chơi, cạnh tranh & kiếm thưởng</p>
+        <div class="hero-chips">
+            <div class="chip chip-green"><i>🎮</i> MULTIPLAYER</div>
+            <div class="chip chip-gold"><i>🏆</i> ĐUA TOP</div>
+            <div class="chip chip-purple"><i>🎁</i> DAILY REWARDS</div>
+        </div>
+    </section>
+
+    <div class="section-label">
+        <div class="section-tag">
+            <span class="tag-icon">◆</span> GAME LOBBY <span class="tag-icon">◆</span>
         </div>
     </div>
 
-    <div class="section-header">
-        <div class="section-title">CHỌN TRÒ CHƠI</div>
-    </div>
-
     <div class="game-grid">
-        <div class="game-card card-taixiu" onclick="enterGame('/taixiu')">
-            <div class="card-image img-taixiu"></div>
-            <div class="card-body">
+        <div class="game-card c-taixiu" onclick="enterGame('/taixiu')">
+            <div class="card-status status-live">● LIVE</div>
+            <div class="card-banner banner-taixiu"></div>
+            <div class="card-content">
                 <div class="card-title">TÀI XỈU SIÊU TỐC</div>
                 <div class="card-desc">Game chẵn lẻ kinh điển, vui nhộn, thử thách vận may của bạn!</div>
-                <div class="card-stats">
-                    <div class="stat-item"><i>📡</i> Online: 24/7</div>
-                    <div class="stat-item"><i>💰</i> Min: 1k</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>📡</i> Online 24/7</div>
+                    <div class="meta-item"><i>💰</i> Min: 1,000$</div>
                 </div>
-                <button class="btn-play btn-taixiu">CHƠI NGAY</button>
+                <button class="btn-play btn-orange">CHƠI NGAY ▸</button>
             </div>
         </div>
-        <div class="game-card card-poker" onclick="enterGame('/poker')">
-            <div class="card-image img-poker"></div>
-            <div class="card-body">
+
+        <div class="game-card c-poker" onclick="enterGame('/poker')">
+            <div class="card-status status-hot">🔥 HOT</div>
+            <div class="card-banner banner-poker"></div>
+            <div class="card-content">
                 <div class="card-title">THẦN BÀI MA CAO</div>
                 <div class="card-desc">Texas Hold'em đỉnh cao. Thử thách bản lĩnh, tâm lý và vận may!</div>
-                <div class="card-stats">
-                    <div class="stat-item"><i>👥</i> 2-9 Người</div>
-                    <div class="stat-item"><i>🏆</i> Ranked</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>👥</i> 2-9 Players</div>
+                    <div class="meta-item"><i>🏆</i> Ranked</div>
                 </div>
-                <button class="btn-play btn-poker">VÀO BÀN</button>
+                <button class="btn-play btn-green">VÀO BÀN ▸</button>
             </div>
         </div>
-        <div class="game-card card-flappy" onclick="enterGame('/flappybird.html')">
-            <div class="card-image img-flappy"></div>
-            <div class="card-body">
+
+        <div class="game-card c-flappy" onclick="enterGame('/flappybird.html')">
+            <div class="card-status status-new">✦ ARCADE</div>
+            <div class="card-banner banner-flappy"></div>
+            <div class="card-content">
                 <div class="card-title">FLAPPY BIRD</div>
-                <div class="card-desc">Bay lượn và kiếm tiền vàng. 1 Điểm = 10 Vàng. Thử thách sự khéo léo!</div>
-                <div class="card-stats">
-                    <div class="stat-item"><i>🕹️</i> Solo</div>
-                    <div class="stat-item"><i>✨</i> Skill</div>
+                <div class="card-desc">Bay lượn và kiếm vàng! 1 Điểm = 10 Vàng. Thử thách sự khéo léo!</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>🕹️</i> Solo</div>
+                    <div class="meta-item"><i>✨</i> Skill-Based</div>
                 </div>
-                <button class="btn-play btn-flappy">BAY NGAY</button>
+                <button class="btn-play btn-yellow">BAY NGAY ▸</button>
             </div>
         </div>
-        <div class="game-card card-slot" onclick="enterGame('/slot')">
-            <div class="card-image img-slot"><span class="card-icon">🎰</span></div>
-            <div class="card-body">
+
+        <div class="game-card c-slot" onclick="enterGame('/slot')">
+            <div class="card-status status-hot">🔥 JACKPOT</div>
+            <div class="card-banner banner-slot"><span class="card-icon">🎰</span></div>
+            <div class="card-content">
                 <div class="card-title">MEGA SLOT</div>
-                <div class="card-desc">Quay số may mắn! Trúng 3 💎 nhận x50 tiền cược. Vận may trong tay bạn!</div>
-                <div class="card-stats">
-                    <div class="stat-item"><i>🎯</i> Solo</div>
-                    <div class="stat-item"><i>💎</i> Jackpot x50</div>
+                <div class="card-desc">Quay số may mắn! 3 💎 = x50 cược. Vận may trong tay bạn!</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>🎯</i> Solo</div>
+                    <div class="meta-item"><i>💎</i> Jackpot x50</div>
                 </div>
-                <button class="btn-play btn-slot">QUAY NGAY</button>
+                <button class="btn-play btn-purple">QUAY NGAY ▸</button>
             </div>
         </div>
     </div>
 
-    <div class="section-header" style="margin-top: 5px;">
-        <div class="section-title">TIỆN ÍCH</div>
+    <div class="section-label">
+        <div class="section-tag">
+            <span class="tag-icon">◆</span> FEATURES <span class="tag-icon">◆</span>
+        </div>
     </div>
 
     <div class="game-grid">
-        <div class="game-card card-daily" onclick="enterGame('/daily')">
-            <div class="card-image img-daily"><span class="card-icon">🎁</span></div>
-            <div class="card-body">
+        <div class="game-card c-daily" onclick="enterGame('/daily')">
+            <div class="card-status status-new">✦ DAILY</div>
+            <div class="card-banner banner-daily"><span class="card-icon">🎁</span></div>
+            <div class="card-content">
                 <div class="card-title">THƯỞNG HÀNG NGÀY</div>
                 <div class="card-desc">Đăng nhập mỗi ngày, quay vòng quay may mắn và nhận thưởng liên tục!</div>
-                <div class="card-stats">
-                    <div class="stat-item"><i>📅</i> Mỗi ngày</div>
-                    <div class="stat-item"><i>🔥</i> Streak x7</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>📅</i> Daily</div>
+                    <div class="meta-item"><i>🔥</i> Streak x7</div>
                 </div>
-                <button class="btn-play btn-daily">NHẬN THƯỞNG</button>
+                <button class="btn-play btn-red">NHẬN THƯỞNG ▸</button>
             </div>
         </div>
-        <div class="game-card card-leaderboard" onclick="enterGame('/leaderboard')">
-            <div class="card-image img-leaderboard"><span class="card-icon">🏆</span></div>
-            <div class="card-body">
+
+        <div class="game-card c-lb" onclick="enterGame('/leaderboard')">
+            <div class="card-status status-live">● LIVE</div>
+            <div class="card-banner banner-lb"><span class="card-icon">🏆</span></div>
+            <div class="card-content">
                 <div class="card-title">BẢNG XẾP HẠNG</div>
-                <div class="card-desc">Xem ai là người giàu nhất server! Cạnh tranh để leo top đầu bảng.</div>
-                <div class="card-stats">
-                    <div class="stat-item"><i>👑</i> Top 50</div>
-                    <div class="stat-item"><i>📊</i> Realtime</div>
+                <div class="card-desc">Xem ai là người giàu nhất server! Leo top đầu bảng ngay.</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>👑</i> Top 50</div>
+                    <div class="meta-item"><i>📊</i> Realtime</div>
                 </div>
-                <button class="btn-play btn-leaderboard">XEM NGAY</button>
+                <button class="btn-play btn-cyan">XEM NGAY ▸</button>
             </div>
         </div>
     </div>
@@ -1477,170 +1517,170 @@
 
     <div id="cursor"></div>
     <div id="cursor-trail"></div>
-    <canvas id="bg-canvas"></canvas>
-    <div class="retro-grid"></div>
-    <div class="crt-overlay"></div>
 
     <script>
-        // NAVBAR SCROLL
-        const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 50));
-
-        // CURSOR
-        const cursor = document.getElementById('cursor');
-        const trail = document.getElementById('cursor-trail');
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-            trail.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 400, fill: 'forwards' });
-        });
-        document.querySelectorAll('button, a, .game-card').forEach(el => {
-            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
-        });
-
-        // PARTICLES
+        // ═══ PARTICLE SYSTEM ═══
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        resizeCanvas();
-        const isMobile = window.innerWidth < 768;
-        const NP = isMobile ? 20 : 45;
+        function resize() { canvas.width = innerWidth; canvas.height = innerHeight }
+        resize();
+        const isMobile = innerWidth < 768;
+        const NP = isMobile ? 15 : 50;
         let pts = [];
-        class Pt {
-            constructor() { this.reset(); }
+
+        class Particle {
+            constructor() { this.reset() }
             reset() {
                 this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
-                this.sz = Math.random() * 1.8 + 0.5;
-                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
-                this.hue = Math.random() * 60 + 220;
-                this.alpha = Math.random() * 0.4 + 0.15;
+                this.sz = Math.random() * 1.5 + .5;
+                this.vx = (Math.random() - .5) * .4; this.vy = (Math.random() - .5) * .4;
+                this.hue = Math.random() < .5 ? 260 + Math.random() * 40 : 180 + Math.random() * 30;
+                this.alpha = Math.random() * .35 + .1;
                 this.ph = Math.random() * Math.PI * 2;
             }
             update() {
-                this.x += this.vx; this.y += this.vy; this.ph += 0.015;
+                this.x += this.vx; this.y += this.vy; this.ph += .012;
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
             }
             draw() {
-                const a = this.alpha * (0.6 + Math.sin(this.ph) * 0.4);
+                const a = this.alpha * (.6 + Math.sin(this.ph) * .4);
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.sz, 0, Math.PI * 2);
-                ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${a})`; ctx.fill();
+                ctx.fillStyle = `hsla(${this.hue},70%,60%,${a})`; ctx.fill();
+                if (this.sz > 1) {
+                    ctx.shadowBlur = this.sz * 8; ctx.shadowColor = `hsla(${this.hue},70%,60%,${a * .4})`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.sz * .5, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
             }
         }
-        function initPts() { pts = []; for (let i = 0; i < NP; i++) pts.push(new Pt()); }
-        initPts();
-        function animPts() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < NP; i++)pts.push(new Particle());
+
+        function drawConnections() {
             for (let i = 0; i < pts.length; i++) {
-                pts[i].update(); pts[i].draw();
                 for (let j = i + 1; j < pts.length; j++) {
-                    const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-                    const d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < 110) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(100,140,255,${0.06 * (1 - d / 110)})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
-                        ctx.stroke();
+                    const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y, d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 120) {
+                        ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
+                        ctx.strokeStyle = `rgba(139,92,246,${(1 - d / 120) * .06})`; ctx.lineWidth = .5; ctx.stroke();
                     }
                 }
             }
-            requestAnimationFrame(animPts);
         }
-        animPts();
-        window.addEventListener('resize', () => { resizeCanvas(); initPts(); });
+        function animParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pts.forEach(p => { p.update(); p.draw() });
+            drawConnections();
+            requestAnimationFrame(animParticles);
+        }
+        animParticles();
+        addEventListener('resize', () => { resize(); pts = []; for (let i = 0; i < NP; i++)pts.push(new Particle()) });
 
-        // 3D TILT
+        // ═══ CURSOR ═══
+        const cur = document.getElementById('cursor'), trail = document.getElementById('cursor-trail');
+        document.addEventListener('mousemove', e => {
+            cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+            trail.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 400, fill: 'forwards' });
+        });
+        document.querySelectorAll('button,a,.game-card').forEach(el => {
+            el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+        });
+
+        // ═══ 3D TILT ═══
         document.querySelectorAll('.game-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
+            card.addEventListener('mousemove', e => {
                 const r = card.getBoundingClientRect();
                 const x = e.clientX - r.left, y = e.clientY - r.top;
                 const cx = r.width / 2, cy = r.height / 2;
-                const rx = ((y - cy) / cy) * -10, ry = ((x - cx) / cx) * 10;
-                card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.03)`;
+                const rx = ((y - cy) / cy) * -8, ry = ((x - cx) / cx) * 8;
+                card.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
                 const ic = card.querySelector('.card-icon');
-                if (ic) { ic.style.transform = `translate(${((x - cx) / cx) * 25}px, ${((y - cy) / cy) * 25}px) scale(1.12)`; }
+                if (ic) ic.style.transform = `translate(${((x - cx) / cx) * 20}px,${((y - cy) / cy) * 20}px) scale(1.1)`;
                 let sh = card.querySelector('.shine-layer');
-                if (!sh) { sh = document.createElement('div'); sh.className = 'shine-layer'; card.appendChild(sh); }
-                sh.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.12), transparent 60%)`;
+                if (!sh) { sh = document.createElement('div'); sh.className = 'shine-layer'; card.appendChild(sh) }
+                sh.style.background = `radial-gradient(circle at ${x}px ${y}px,rgba(255,255,255,0.08),transparent 55%)`;
             });
             card.addEventListener('mouseleave', () => {
-                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                card.style.transform = 'perspective(1200px) rotateX(0) rotateY(0) scale(1)';
                 const ic = card.querySelector('.card-icon'); if (ic) ic.style.transform = '';
                 const sh = card.querySelector('.shine-layer'); if (sh) sh.style.background = 'transparent';
             });
         });
 
-        // SCROLL REVEAL
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } });
-        }, { threshold: 0.1 });
-        document.querySelectorAll('.game-card').forEach((c, i) => {
-            c.style.opacity = '0'; c.style.transform = 'translateY(35px)';
-            c.style.transition = `opacity 0.5s ease ${i * 0.08}s, transform 0.5s ease ${i * 0.08}s`;
+        // ═══ SCROLL REVEAL ═══
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)' } });
+        }, { threshold: .1 });
+        document.querySelectorAll('.game-card,.section-label').forEach((c, i) => {
+            c.style.opacity = '0'; c.style.transform = 'translateY(30px)';
+            c.style.transition = `opacity .5s ease ${i * .06}s, transform .5s ease ${i * .06}s`;
             obs.observe(c);
         });
 
-        // AUTH
+        // ═══ NAVBAR SCROLL ═══
+        const navbar = document.getElementById('navbar');
+        addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 50));
+
+        // ═══ AUTH ═══
         let isLoggedIn = false;
-        function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML }
 
         async function checkAuth() {
             const userArea = document.getElementById('user-area');
-            const wn = document.getElementById('user-name-display');
+            const heroName = document.getElementById('hero-name');
             try {
                 const res = await fetch('/api/me');
                 if (res.ok) {
                     const u = await res.json(); isLoggedIn = true;
                     const sn = escapeHtml(u.username).toUpperCase();
-                    wn.innerHTML = `<span class="glitch-text" data-text="${sn}">${sn}</span>`;
-                    const af = `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(u.username)}`;
+                    heroName.textContent = sn;
                     userArea.innerHTML = `
-                        <div class="user-panel">
-                            <div class="balance-display"><i>💰</i> <span class="balance-value">${Number(u.balance).toLocaleString()} $</span></div>
-                            <div class="user-profile">
-                                <img src="${u.avatar || af}" class="avatar" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=U'">
-                                <span class="username">${escapeHtml(u.username)}</span>
-                            </div>
-                            <button onclick="logout()" class="btn-logout">EXIT</button>
-                        </div>`;
-                } else { wn.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`; }
-            } catch (e) { console.error(e); wn.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`; }
-            setTimeout(() => { const l = document.getElementById('loading'); l.style.opacity = '0'; setTimeout(() => l.style.display = 'none', 800); }, 500);
+        <div class="user-panel">
+          <div class="balance-chip">💰 <span>${Number(u.balance).toLocaleString()} $</span></div>
+          <div class="user-avatar-wrap">
+            <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="avatar" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+          </div>
+          <span class="username">${escapeHtml(u.username)}</span>
+          <button onclick="logout()" class="btn-exit">EXIT</button>
+        </div>`;
+                }
+            } catch (e) { console.error(e) }
+            setTimeout(() => { const l = document.getElementById('loading'); l.style.opacity = '0'; l.style.visibility = 'hidden'; setTimeout(() => l.style.display = 'none', 600) }, 400);
         }
 
         function enterGame(url) {
-            if (!isLoggedIn) { document.getElementById('login-modal').style.display = 'flex'; return; }
-            document.body.style.opacity = '0'; setTimeout(() => window.location.href = url, 300);
+            if (!isLoggedIn) { document.getElementById('login-modal').style.display = 'flex'; return }
+            document.body.style.opacity = '0'; document.body.style.transition = 'opacity .3s';
+            setTimeout(() => location.href = url, 300);
         }
-        function logout() { if (confirm("Đăng xuất?")) window.location.href = '/auth/logout'; }
+        function logout() { if (confirm("Đăng xuất?")) location.href = '/auth/logout' }
 
         let isLP = false, lastLA = 0; const LC = 5000;
         function handleDiscordLogin(btn) {
             const now = Date.now();
-            if (now - lastLA < LC) { showLW(`Vui lòng đợi ${Math.ceil((LC - (now - lastLA)) / 1000)}s...`); return; }
-            if (isLP) { showLW('Đang xử lý...'); return; }
+            if (now - lastLA < LC) { showToast(`Đợi ${Math.ceil((LC - (now - lastLA)) / 1000)}s...`); return }
+            if (isLP) { showToast('Đang xử lý...'); return }
             isLP = true; lastLA = now;
-            const ot = btn.innerHTML; btn.innerHTML = '⏳ ĐANG KẾT NỐI...'; btn.disabled = true; btn.style.opacity = '0.6';
-            document.querySelectorAll('.btn-login, #btn-discord-login').forEach(b => { b.disabled = true; b.style.opacity = '0.6'; });
-            setTimeout(() => window.location.href = '/auth/discord', 300);
+            const ot = btn.innerHTML; btn.innerHTML = '⏳ CONNECTING...'; btn.disabled = true; btn.style.opacity = '.6';
+            document.querySelectorAll('.btn-login,#btn-discord-login').forEach(b => { b.disabled = true; b.style.opacity = '.6' });
+            setTimeout(() => location.href = '/auth/discord', 300);
             setTimeout(() => {
                 isLP = false; btn.innerHTML = ot; btn.disabled = false; btn.style.opacity = '1';
-                document.querySelectorAll('.btn-login, #btn-discord-login').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+                document.querySelectorAll('.btn-login,#btn-discord-login').forEach(b => { b.disabled = false; b.style.opacity = '1' })
             }, 10000);
         }
-        function showLW(msg) {
-            let t = document.getElementById('login-toast');
+        function showToast(msg) {
+            let t = document.getElementById('toast');
             if (!t) {
-                t = document.createElement('div'); t.id = 'login-toast';
-                t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:white;padding:12px 25px;border-radius:12px;font-weight:bold;z-index:10000;box-shadow:0 5px 25px rgba(0,0,0,0.4);';
-                document.body.appendChild(t);
+                t = document.createElement('div'); t.id = 'toast';
+                t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff3366,#ff8c00);color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;z-index:10000;font-size:13px;box-shadow:0 5px 30px rgba(0,0,0,0.4)';
+                document.body.appendChild(t)
             }
             t.textContent = '⚠️ ' + msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3000);
         }
-        window.onload = checkAuth;
+        checkAuth();
     </script>
 </body>
 

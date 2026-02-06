@@ -139,6 +139,82 @@ const dbPool = mysql.createPool({
     } catch (e) { /* columns already exist */ }
 })();
 
+// --- DISCORD BOT: Auto-sync user info ---
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
+let lastSyncTime = 0;
+const SYNC_COOLDOWN = 5 * 60 * 1000; // 5 phút cooldown giữa các lần sync
+
+async function fetchDiscordUser(userId) {
+    if (!BOT_TOKEN) return null;
+    try {
+        const res = await axios.get(`https://discord.com/api/v10/users/${userId}`, {
+            headers: {
+                Authorization: `Bot ${BOT_TOKEN}`,
+                'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)'
+            }
+        });
+        const { username, avatar, id } = res.data;
+        let avatarUrl = '';
+        if (avatar) {
+            avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png?size=128`;
+        } else {
+            const index = Number((BigInt(id) >> 22n) % 6n);
+            avatarUrl = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+        }
+        return { username, avatar: avatarUrl };
+    } catch (e) {
+        if (e.response && e.response.status === 429) {
+            console.warn(`[Discord Bot] Rate limited, retry after ${e.response.data.retry_after}s`);
+        }
+        return null;
+    }
+}
+
+async function syncMissingUsers() {
+    if (!BOT_TOKEN) return 0;
+    const now = Date.now();
+    if (now - lastSyncTime < SYNC_COOLDOWN) return -1; // cooldown
+    lastSyncTime = now;
+
+    try {
+        const [rows] = await dbPool.execute(
+            "SELECT user_id FROM wallet WHERE guild_id=? AND (username IS NULL OR username='' OR username LIKE 'User_%')",
+            [TARGET_GUILD_ID]
+        );
+        if (rows.length === 0) return 0;
+
+        let synced = 0;
+        for (const row of rows) {
+            const info = await fetchDiscordUser(row.user_id);
+            if (info) {
+                await dbPool.execute(
+                    'UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?',
+                    [info.username, info.avatar, TARGET_GUILD_ID, row.user_id]
+                );
+                synced++;
+                console.log(`[Sync] ✅ ${row.user_id} → ${info.username}`);
+            }
+            // Delay 500ms between requests to avoid rate limit
+            await new Promise(r => setTimeout(r, 500));
+        }
+        console.log(`[Sync] Hoàn tất: ${synced}/${rows.length} users đã cập nhật`);
+        return synced;
+    } catch (e) {
+        console.error('[Sync] Error:', e.message);
+        return 0;
+    }
+}
+
+// Auto-sync on startup (after 5s delay)
+setTimeout(() => {
+    if (BOT_TOKEN) {
+        console.log('🔄 Bắt đầu sync thông tin Discord users...');
+        syncMissingUsers();
+    } else {
+        console.log('⚠️ Không có DISCORD_BOT_TOKEN — bảng xếp hạng sẽ dùng tên mặc định. Thêm token vào .env để tự động cập nhật.');
+    }
+}, 5000);
+
 // --- AUTH ---
 // Discord OAuth routes (enabled when env is configured)
 app.get('/auth/discord', discordAuthLimiter, (req, res) => {
@@ -582,6 +658,9 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
 app.get('/api/leaderboard', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
     try {
+        // Background sync: nếu có bot token, tự động cập nhật user thiếu info
+        syncMissingUsers().catch(() => { });
+
         // Try with username/avatar columns first, fallback to basic query
         let rows;
         try {
@@ -639,6 +718,18 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
         console.error('Leaderboard Error:', e.message);
         res.status(500).json({ error: 'Lỗi Database: ' + e.message });
     }
+});
+
+// Manual sync endpoint (admin)
+app.get('/api/sync-users', requireAuth, async (req, res) => {
+    if (!BOT_TOKEN) {
+        return res.status(400).json({ error: 'DISCORD_BOT_TOKEN chưa được cấu hình trong .env' });
+    }
+    const result = await syncMissingUsers();
+    if (result === -1) {
+        return res.json({ message: 'Đang cooldown, thử lại sau 5 phút', synced: 0 });
+    }
+    res.json({ message: `Đã đồng bộ ${result} users`, synced: result });
 });
 
 // ============================================================
