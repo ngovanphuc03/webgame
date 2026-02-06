@@ -9,6 +9,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
     <title>🎁 Daily Reward - Pixel PlayZone</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -22,7 +23,7 @@
 
         body {
             font-family: 'Nunito', sans-serif;
-            background: linear-gradient(160deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
+            background: linear-gradient(135deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
@@ -31,40 +32,31 @@
             align-items: center;
         }
 
-        /* ═══ AMBIENT ═══ */
+        /* AMBIENT GLOW */
         .ambient-orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(90px);
+            filter: blur(80px);
             pointer-events: none;
             z-index: -1;
-            animation: orb-drift 9s ease-in-out infinite alternate;
+            animation: orb-drift 8s ease-in-out infinite alternate;
         }
 
         .orb-1 {
             width: 300px;
             height: 300px;
-            background: rgba(255, 107, 107, 0.1);
-            top: 3%;
-            right: -6%;
+            background: rgba(255, 107, 107, 0.12);
+            top: 5%;
+            right: -5%;
         }
 
         .orb-2 {
             width: 250px;
             height: 250px;
-            background: rgba(255, 230, 0, 0.08);
-            bottom: 12%;
-            left: -6%;
+            background: rgba(255, 230, 0, 0.1);
+            bottom: 15%;
+            left: -5%;
             animation-delay: 4s;
-        }
-
-        .orb-3 {
-            width: 180px;
-            height: 180px;
-            background: rgba(138, 43, 226, 0.06);
-            top: 40%;
-            left: 30%;
-            animation-delay: 2s;
         }
 
         @keyframes orb-drift {
@@ -73,10 +65,11 @@
             }
 
             100% {
-                transform: translate(20px, -12px) scale(1.12);
+                transform: translate(25px, -15px) scale(1.15);
             }
         }
 
+        /* SPARKLES */
         .sparkle-container {
             position: fixed;
             inset: 0;
@@ -87,27 +80,27 @@
 
         .sparkle {
             position: absolute;
-            width: 3px;
-            height: 3px;
+            width: 4px;
+            height: 4px;
             background: #ffe600;
             border-radius: 50%;
-            animation: sfloat linear infinite;
-            box-shadow: 0 0 6px currentColor;
+            animation: sparkle-float linear infinite;
+            box-shadow: 0 0 6px #ffe600;
         }
 
-        @keyframes sfloat {
+        @keyframes sparkle-float {
             0% {
                 transform: translateY(100vh) rotate(0deg) scale(0);
                 opacity: 0;
             }
 
-            12% {
-                opacity: 0.9;
+            15% {
+                opacity: 1;
                 transform: scale(1);
             }
 
             85% {
-                opacity: 0.6;
+                opacity: 0.8;
             }
 
             100% {
@@ -116,33 +109,31 @@
             }
         }
 
-        /* ═══ TOP BAR ═══ */
         .top-bar {
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 25px;
+            padding: 15px 30px;
             background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .back-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .top-bar .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
             padding: 8px 20px;
-            border-radius: 22px;
+            border-radius: 20px;
             cursor: pointer;
             font-weight: 700;
-            text-decoration: none;
-            font-size: 13px;
             transition: 0.3s;
+            text-decoration: none;
         }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .top-bar .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .balance-pill {
@@ -152,81 +143,43 @@
             padding: 8px 20px;
             font-weight: 800;
             color: #ffe600;
-            font-size: 15px;
-            box-shadow: 0 0 18px rgba(255, 230, 0, 0.2);
-            position: relative;
-            overflow: hidden;
+            font-size: 16px;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
         }
 
-        .balance-pill::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.1), transparent);
-            animation: bshine 3s ease infinite;
-        }
-
-        @keyframes bshine {
-            0% {
-                left: -100%;
-            }
-
-            100% {
-                left: 200%;
-            }
-        }
-
-        /* ═══ PAGE HEADER ═══ */
         .page-title {
-            margin-top: 28px;
-            font-size: 26px;
+            margin-top: 30px;
+            font-size: 28px;
             font-weight: 900;
             text-align: center;
-            background: linear-gradient(90deg, #ffe600, #ff9e00, #ffe600);
-            background-size: 200% 100%;
+            background: linear-gradient(90deg, #ffe600, #ff9e00);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 2px;
-            animation: tshimmer 3s ease infinite;
-        }
-
-        @keyframes tshimmer {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
         }
 
         .page-subtitle {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 13px;
+            color: #aaa;
+            font-size: 14px;
             margin-top: 5px;
             text-align: center;
         }
 
-        /* ═══ STREAK ═══ */
+        /* STREAK */
         .streak-bar {
-            margin-top: 22px;
+            margin-top: 25px;
             display: flex;
-            gap: 6px;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
             max-width: 500px;
         }
 
         .streak-day {
-            width: 58px;
-            height: 68px;
-            background: rgba(0, 0, 0, 0.35);
-            border: 2px solid rgba(255, 255, 255, 0.08);
+            width: 60px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -247,8 +200,8 @@
 
         .streak-day.claimed {
             border-color: #00ff9d;
-            background: rgba(0, 255, 157, 0.1);
-            box-shadow: 0 0 12px rgba(0, 255, 157, 0.15);
+            background: rgba(0, 255, 157, 0.15);
+            box-shadow: 0 0 12px rgba(0, 255, 157, 0.2);
         }
 
         .streak-day.claimed::after {
@@ -258,10 +211,10 @@
             right: -5px;
             background: #00ff9d;
             color: #000;
-            width: 17px;
-            height: 17px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            font-size: 10px;
+            font-size: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -270,19 +223,19 @@
 
         .streak-day.today {
             border-color: #ffe600;
-            box-shadow: 0 0 15px rgba(255, 230, 0, 0.25);
-            animation: ptoday 2s infinite;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
+            animation: pulse-today 2s infinite;
         }
 
-        @keyframes ptoday {
+        @keyframes pulse-today {
 
             0%,
             100% {
-                box-shadow: 0 0 12px rgba(255, 230, 0, 0.2);
+                box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
             }
 
             50% {
-                box-shadow: 0 0 25px rgba(255, 230, 0, 0.4);
+                box-shadow: 0 0 30px rgba(255, 230, 0, 0.5);
             }
         }
 
@@ -291,7 +244,7 @@
         }
 
         .streak-label {
-            color: rgba(255, 255, 255, 0.4);
+            color: #aaa;
             font-size: 10px;
         }
 
@@ -301,9 +254,9 @@
             font-weight: 800;
         }
 
-        /* ═══ WHEEL ═══ */
+        /* WHEEL */
         .wheel-section {
-            margin-top: 25px;
+            margin-top: 30px;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -312,40 +265,30 @@
 
         .wheel-container {
             position: relative;
-            width: 310px;
-            height: 310px;
+            width: 320px;
+            height: 320px;
         }
 
         .wheel-canvas {
-            width: 310px;
-            height: 310px;
+            width: 320px;
+            height: 320px;
             border-radius: 50%;
-            border: 4px solid #ffe600;
-            box-shadow: 0 0 35px rgba(255, 230, 0, 0.2), 0 0 70px rgba(255, 230, 0, 0.08), inset 0 0 18px rgba(0, 0, 0, 0.5);
+            border: 5px solid #ffe600;
+            box-shadow: 0 0 40px rgba(255, 230, 0, 0.3), 0 0 80px rgba(255, 230, 0, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.5);
             transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
-        }
-
-        .wheel-container::before {
-            content: '';
-            position: absolute;
-            inset: -10px;
-            border-radius: 50%;
-            border: 2px dashed rgba(255, 230, 0, 0.15);
-            animation: wring 25s linear infinite;
-            pointer-events: none;
         }
 
         .wheel-container::after {
             content: '';
             position: absolute;
-            inset: -18px;
+            inset: -8px;
             border-radius: 50%;
-            border: 1px dashed rgba(138, 43, 226, 0.1);
-            animation: wring 35s linear infinite reverse;
+            border: 2px dashed rgba(255, 230, 0, 0.2);
+            animation: wheel-ring-spin 20s linear infinite;
             pointer-events: none;
         }
 
-        @keyframes wring {
+        @keyframes wheel-ring-spin {
             from {
                 transform: rotate(0deg);
             }
@@ -357,10 +300,10 @@
 
         .wheel-pointer {
             position: absolute;
-            top: -14px;
+            top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 28px;
+            font-size: 30px;
             z-index: 10;
             filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
         }
@@ -370,78 +313,53 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #ffe600, #ff9e00);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
             color: #000;
-            box-shadow: 0 0 18px rgba(255, 230, 0, 0.4);
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.5);
             z-index: 5;
         }
 
         .spin-wheel-btn {
-            margin-top: 22px;
-            padding: 15px 45px;
+            margin-top: 25px;
+            padding: 16px 50px;
             border: none;
-            border-radius: 14px;
-            font-size: 18px;
+            border-radius: 15px;
+            font-size: 20px;
             font-weight: 900;
             cursor: pointer;
             letter-spacing: 2px;
-            text-transform: uppercase;
             background: linear-gradient(135deg, #ffe600, #ff9e00);
             color: #000;
-            box-shadow: 0 5px 25px rgba(255, 230, 0, 0.3);
+            box-shadow: 0 5px 25px rgba(255, 230, 0, 0.4);
             transition: 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .spin-wheel-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: btnshine 2.5s ease infinite;
-        }
-
-        @keyframes btnshine {
-            0% {
-                left: -100%;
-            }
-
-            100% {
-                left: 200%;
-            }
+            text-transform: uppercase;
         }
 
         .spin-wheel-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 35px rgba(255, 230, 0, 0.45);
         }
 
         .spin-wheel-btn:disabled {
-            opacity: 0.35;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
         .cooldown-msg {
-            margin-top: 12px;
-            font-size: 13px;
+            margin-top: 15px;
+            font-size: 14px;
             color: #ff6b6b;
             text-align: center;
             font-weight: 700;
         }
 
-        /* ═══ RESULT POPUP ═══ */
         .result-popup {
             display: none;
             position: fixed;
@@ -450,7 +368,7 @@
             z-index: 100;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(5px);
         }
 
         .result-popup.active {
@@ -459,15 +377,15 @@
 
         .result-box {
             background: linear-gradient(135deg, #1a0a2e, #2a1a4e);
-            border: 2px solid #ffe600;
-            border-radius: 22px;
-            padding: 35px;
+            border: 3px solid #ffe600;
+            border-radius: 25px;
+            padding: 40px;
             text-align: center;
-            box-shadow: 0 0 70px rgba(255, 230, 0, 0.25);
-            animation: rpop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 80px rgba(255, 230, 0, 0.3);
+            animation: pop-in 0.5s;
         }
 
-        @keyframes rpop {
+        @keyframes pop-in {
             0% {
                 transform: scale(0);
                 opacity: 0;
@@ -480,40 +398,35 @@
         }
 
         .result-box h2 {
-            font-size: 26px;
+            font-size: 28px;
             color: #ffe600;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .result-box .reward-amount {
-            font-size: 38px;
+            font-size: 42px;
             color: #00ff9d;
             font-weight: 900;
-            margin: 12px 0;
+            margin: 15px 0;
         }
 
         .result-box .reward-emoji {
-            font-size: 55px;
+            font-size: 60px;
         }
 
         .result-box button {
-            margin-top: 18px;
-            padding: 12px 35px;
+            margin-top: 20px;
+            padding: 12px 40px;
             border: none;
             border-radius: 12px;
-            background: linear-gradient(135deg, #ffe600, #ff9e00);
+            background: #ffe600;
             color: #000;
             font-weight: 900;
-            font-size: 15px;
+            font-size: 16px;
             cursor: pointer;
-            transition: 0.3s;
         }
 
-        .result-box button:hover {
-            transform: translateY(-2px);
-        }
-
-        /* ═══ CONFETTI ═══ */
+        /* CONFETTI */
         .confetti-container {
             position: fixed;
             inset: 0;
@@ -526,10 +439,10 @@
             width: 10px;
             height: 10px;
             top: -10px;
-            animation: cfall 3s linear forwards;
+            animation: confetti-fall 3s linear forwards;
         }
 
-        @keyframes cfall {
+        @keyframes confetti-fall {
             0% {
                 transform: translateY(0) rotate(0deg);
                 opacity: 1;
@@ -541,36 +454,30 @@
             }
         }
 
-        /* ═══ RESPONSIVE ═══ */
         @media (max-width: 400px) {
 
             .wheel-container,
             .wheel-canvas {
-                width: 270px;
-                height: 270px;
+                width: 280px;
+                height: 280px;
             }
 
             .streak-day {
-                width: 48px;
-                height: 58px;
+                width: 50px;
+                height: 60px;
             }
 
             .page-title {
-                font-size: 20px;
-            }
-
-            .spin-wheel-btn {
-                padding: 12px 35px;
-                font-size: 16px;
+                font-size: 22px;
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Ambient Effects -->
     <div class="ambient-orb orb-1"></div>
     <div class="ambient-orb orb-2"></div>
-    <div class="ambient-orb orb-3"></div>
     <div class="sparkle-container" id="sparkleContainer"></div>
 
     <div class="top-bar">
@@ -581,18 +488,21 @@
     <h1 class="page-title">🎁 PHẦN THƯỞNG HÀNG NGÀY</h1>
     <p class="page-subtitle">Đăng nhập mỗi ngày để nhận thưởng liên tục!</p>
 
+    <!-- STREAK -->
     <div class="streak-bar" id="streakBar"></div>
 
+    <!-- WHEEL -->
     <div class="wheel-section">
         <div class="wheel-container">
             <div class="wheel-pointer">🔽</div>
-            <canvas class="wheel-canvas" id="wheelCanvas" width="310" height="310"></canvas>
+            <canvas class="wheel-canvas" id="wheelCanvas" width="320" height="320"></canvas>
             <div class="wheel-center">🎯</div>
         </div>
         <button class="spin-wheel-btn" id="spinWheelBtn" onclick="spinWheel()">🎁 NHẬN THƯỞNG</button>
         <div class="cooldown-msg" id="cooldownMsg"></div>
     </div>
 
+    <!-- Result Popup -->
     <div class="result-popup" id="resultPopup">
         <div class="result-box">
             <h2>🎉 CHÚC MỪNG!</h2>
@@ -626,8 +536,11 @@
             { day: 7, reward: 10000, emoji: '👑' },
         ];
 
-        let balance = 0, currentAngle = 0, isSpinning = false;
+        let balance = 0;
+        let currentAngle = 0;
+        let isSpinning = false;
 
+        // Sound Effects
         const SFX = {
             spin: new Audio('/sounds/spin.mp3'),
             win: new Audio('/sounds/win.mp3'),
@@ -636,13 +549,16 @@
         };
         Object.values(SFX).forEach(a => { a.volume = 0.5; a.preload = 'auto'; });
         SFX.win.volume = 0.7;
-        function playSound(n) { try { SFX[n].currentTime = 0; SFX[n].play().catch(() => { }); } catch (e) { } }
+        function playSound(name) { try { SFX[name].currentTime = 0; SFX[name].play().catch(() => { }); } catch (e) { } }
 
+        // Draw wheel
         function drawWheel() {
             const canvas = document.getElementById('wheelCanvas');
             const ctx = canvas.getContext('2d');
-            const size = 310;
-            const cx = size / 2, cy = size / 2, r = cx - 5;
+            const size = 320; // logical size (DPR-independent)
+            const cx = size / 2;
+            const cy = size / 2;
+            const r = cx - 5;
             const segAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
 
             ctx.clearRect(0, 0, size, size);
@@ -651,54 +567,57 @@
                 const startAngle = i * segAngle - Math.PI / 2;
                 const endAngle = startAngle + segAngle;
 
-                // Gradient fill for each segment
-                const midAngle = startAngle + segAngle / 2;
-                const grad = ctx.createLinearGradient(
-                    cx + Math.cos(startAngle) * r * 0.3, cy + Math.sin(startAngle) * r * 0.3,
-                    cx + Math.cos(endAngle) * r, cy + Math.sin(endAngle) * r
-                );
-                grad.addColorStop(0, seg.color);
-                grad.addColorStop(1, adjustBrightness(seg.color, -25));
-
-                ctx.beginPath(); ctx.moveTo(cx, cy);
+                // Draw segment
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
                 ctx.arc(cx, cy, r, startAngle, endAngle);
-                ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
-                ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5; ctx.stroke();
+                ctx.closePath();
+                ctx.fillStyle = seg.color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
 
-                // Text
-                ctx.save(); ctx.translate(cx, cy);
+                // Draw text — always readable from center outward
+                ctx.save();
+                ctx.translate(cx, cy);
+                const midAngle = startAngle + segAngle / 2;
                 ctx.rotate(midAngle);
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#fff';
-                ctx.font = 'bold 17px Nunito';
+                ctx.font = 'bold 18px Nunito';
                 ctx.fillText(seg.emoji, r * 0.72, 0);
-                ctx.font = 'bold 12px Nunito';
-                ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
+                ctx.font = 'bold 13px Nunito';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 3;
                 ctx.fillText(seg.label, r * 0.48, 0);
                 ctx.shadowBlur = 0;
                 ctx.restore();
             });
 
-            ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+            // Center circle overlay
+            ctx.beginPath();
+            ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fill();
         }
 
-        function adjustBrightness(hex, amount) {
-            const num = parseInt(hex.slice(1), 16);
-            const r = Math.max(0, Math.min(255, (num >> 16) + amount));
-            const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
-            const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
-            return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
-        }
-
+        // Fetch balance
         async function fetchBalance() {
             try {
                 const res = await fetch('/api/me');
-                if (res.ok) { const d = await res.json(); balance = Number(d.balance); document.getElementById('balance').textContent = balance.toLocaleString(); }
-                else window.location.href = '/';
+                if (res.ok) {
+                    const data = await res.json();
+                    balance = Number(data.balance);
+                    document.getElementById('balance').textContent = balance.toLocaleString();
+                } else {
+                    window.location.href = '/';
+                }
             } catch (e) { console.error(e); }
         }
 
+        // Load daily status
         async function loadDailyStatus() {
             try {
                 const res = await fetch('/api/daily/status');
@@ -708,8 +627,11 @@
                 const btn = document.getElementById('spinWheelBtn');
                 const msg = document.getElementById('cooldownMsg');
                 if (data.claimed_today) {
-                    btn.disabled = true; btn.textContent = '✅ ĐÃ NHẬN HÔM NAY';
-                    if (data.next_claim_in) msg.textContent = `⏰ Quay lại sau ${data.next_claim_in}`;
+                    btn.disabled = true;
+                    btn.textContent = '✅ ĐÃ NHẬN HÔM NAY';
+                    if (data.next_claim_in) {
+                        msg.textContent = `⏰ Quay lại sau ${data.next_claim_in}`;
+                    }
                 }
             } catch (e) { console.error(e); }
         }
@@ -722,7 +644,11 @@
                 div.className = 'streak-day';
                 if (i < streak || (i === streak && claimedToday)) div.classList.add('claimed');
                 if (i === streak && !claimedToday) div.classList.add('today');
-                div.innerHTML = `<span class="streak-reward">${sr.emoji}</span><span class="streak-gold">${sr.reward >= 1000 ? (sr.reward / 1000) + 'K' : sr.reward}</span><span class="streak-label">Ngày ${sr.day}</span>`;
+                div.innerHTML = `
+                    <span class="streak-reward">${sr.emoji}</span>
+                    <span class="streak-gold">${sr.reward >= 1000 ? (sr.reward / 1000) + 'K' : sr.reward}</span>
+                    <span class="streak-label">Ngày ${sr.day}</span>
+                `;
                 bar.appendChild(div);
             });
         }
@@ -731,18 +657,23 @@
             if (isSpinning) return;
             isSpinning = true;
             const btn = document.getElementById('spinWheelBtn');
-            btn.disabled = true; btn.textContent = '🔄 ĐANG QUAY...';
+            btn.disabled = true;
+            btn.textContent = '🔄 ĐANG QUAY...';
             playSound('spin');
 
             try {
                 const res = await fetch('/api/daily/claim', { method: 'POST' });
                 const data = await res.json();
+
                 if (data.error) {
                     document.getElementById('cooldownMsg').textContent = '❌ ' + data.error;
-                    btn.disabled = false; btn.textContent = '🎁 NHẬN THƯỞNG';
-                    isSpinning = false; return;
+                    btn.disabled = false;
+                    btn.textContent = '🎁 NHẬN THƯỞNG';
+                    isSpinning = false;
+                    return;
                 }
 
+                // Animate wheel to the winning segment
                 const segAngle = 360 / WHEEL_SEGMENTS.length;
                 const winIndex = data.segment_index || 0;
                 const targetAngle = 360 - (winIndex * segAngle + segAngle / 2);
@@ -753,52 +684,63 @@
                 currentAngle += totalAngle;
                 canvas.style.transform = `rotate(${currentAngle}deg)`;
 
+                // Wait for animation
                 await new Promise(r => setTimeout(r, 4500));
 
+                // Update
                 balance = Number(data.newBalance);
                 document.getElementById('balance').textContent = balance.toLocaleString();
 
+                // Show result
                 playSound('win');
                 document.getElementById('rewardEmoji').textContent = data.emoji || '💰';
                 document.getElementById('rewardAmount').textContent = '+' + Number(data.reward).toLocaleString() + ' $';
                 document.getElementById('resultPopup').classList.add('active');
                 spawnConfetti();
+
                 btn.textContent = '✅ ĐÃ NHẬN HÔM NAY';
                 loadDailyStatus();
+
             } catch (e) {
                 document.getElementById('cooldownMsg').textContent = '❌ Lỗi kết nối!';
-                btn.disabled = false; btn.textContent = '🎁 NHẬN THƯỞNG';
+                btn.disabled = false;
+                btn.textContent = '🎁 NHẬN THƯỞNG';
             }
             isSpinning = false;
         }
 
-        function closeResult() { document.getElementById('resultPopup').classList.remove('active'); }
+        function closeResult() {
+            document.getElementById('resultPopup').classList.remove('active');
+        }
 
         function spawnConfetti() {
-            const c = document.getElementById('confettiContainer');
-            const cols = ['#ffe600', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff', '#ff9e00'];
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#ffe600', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff', '#ff9e00'];
             for (let i = 0; i < 50; i++) {
                 const el = document.createElement('div');
                 el.className = 'confetti';
                 el.style.left = Math.random() * 100 + '%';
-                el.style.background = cols[Math.floor(Math.random() * cols.length)];
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
                 el.style.animationDelay = Math.random() * 2 + 's';
                 el.style.animationDuration = (2 + Math.random() * 2) + 's';
                 el.style.width = (5 + Math.random() * 10) + 'px';
                 el.style.height = (5 + Math.random() * 10) + 'px';
                 el.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
-                c.appendChild(el);
+                container.appendChild(el);
             }
-            setTimeout(() => c.innerHTML = '', 4000);
+            setTimeout(() => { container.innerHTML = ''; }, 4000);
         }
 
-        // INIT
+        // Init
+        // Handle high-DPI canvas for crisp text
         (function setupCanvas() {
             const canvas = document.getElementById('wheelCanvas');
             const dpr = window.devicePixelRatio || 1;
-            const size = 310;
-            canvas.width = size * dpr; canvas.height = size * dpr;
-            canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
+            const size = 320;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
             const ctx = canvas.getContext('2d');
             ctx.scale(dpr, dpr);
         })();
@@ -806,20 +748,20 @@
         fetchBalance();
         loadDailyStatus();
 
-        // Sparkles
-        (function () {
-            const c = document.getElementById('sparkleContainer');
-            const cols = ['#ffe600', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff'];
-            for (let i = 0; i < 18; i++) {
+        // Sparkle particles
+        (function initSparkles() {
+            const container = document.getElementById('sparkleContainer');
+            const colors = ['#ffe600', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff'];
+            for (let i = 0; i < 20; i++) {
                 const s = document.createElement('div');
                 s.className = 'sparkle';
                 s.style.left = Math.random() * 100 + '%';
-                const col = cols[Math.floor(Math.random() * cols.length)];
-                s.style.background = col; s.style.color = col;
-                s.style.animationDuration = (7 + Math.random() * 10) + 's';
+                s.style.background = colors[Math.floor(Math.random() * colors.length)];
+                s.style.boxShadow = `0 0 6px ${s.style.background}`;
+                s.style.animationDuration = (6 + Math.random() * 10) + 's';
                 s.style.animationDelay = Math.random() * 8 + 's';
-                s.style.width = s.style.height = (2 + Math.random() * 3) + 'px';
-                c.appendChild(s);
+                s.style.width = s.style.height = (2 + Math.random() * 4) + 'px';
+                container.appendChild(s);
             }
         })();
     </script>

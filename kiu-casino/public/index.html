@@ -5,23 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="PIXEL PLAYZONE - Thế giới game giải trí: Tài Xỉu, Poker, Flappy Bird. Chơi miễn phí!">
+        content="PIXEL PLAYZONE - Thế giới game giải trí: Tài Xỉu, Poker, Flappy Bird, Slot Machine. Chơi miễn phí!">
     <meta name="theme-color" content="#0a0b1e">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="PIXEL PLAYZONE - Game Giải Trí">
-    <meta property="og:description" content="Thế giới game giải trí đỉnh cao: Tài Xỉu, Poker, Flappy Bird">
+    <meta property="og:description" content="Thế giới game giải trí đỉnh cao">
     <meta property="og:type" content="website">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <title>PIXEL PLAYZONE - Thế giới game giải trí</title>
-
-    <!-- Google Fonts: Nunito for Body text readability -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* REGISTER CUSTOM FONTS */
         @font-face {
             font-family: 'DearPix';
             src: url('fonts/dearpix-1-94.ttf') format('truetype');
@@ -53,9 +50,8 @@
             --neon-green: #00ff9d;
             --neon-orange: #ff9e00;
             --neon-yellow: #ffe600;
-            --bg-dark: #0a0b1e;
-            --card-bg: rgba(20, 20, 40, 0.7);
-
+            --bg-dark: #06071a;
+            --card-bg: rgba(12, 12, 30, 0.85);
             --font-hero: 'DearPix', sans-serif;
             --font-pixel: 'DearPix', sans-serif;
             --font-body: 'Nunito', sans-serif;
@@ -68,6 +64,10 @@
             user-select: none;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Nunito', sans-serif;
             background-color: var(--bg-dark);
@@ -75,283 +75,92 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            background-repeat: no-repeat;
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
+            transition: opacity 0.3s;
         }
 
-        /* Overlay to ensure text readability if BG is too bright */
         .bg-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(10, 11, 30, 0.4);
-            z-index: -1;
+            background: linear-gradient(180deg, rgba(6, 7, 26, 0.5) 0%, rgba(6, 7, 26, 0.65) 50%, rgba(6, 7, 26, 0.85) 100%);
+            z-index: -3;
             pointer-events: none;
         }
 
-        /* === NAVBAR === */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 40px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-        }
-
-        .brand-text {
-            font-family: var(--font-hero);
-            font-size: 38px;
-            /* Slightly larger for StarGuard */
-            line-height: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .brand-text span {
-            display: block;
-            color: #fff;
-        }
-
-        .brand-text span:last-child {
-            color: var(--neon-pink);
-            text-shadow: 0 0 10px var(--neon-pink);
-        }
-
-        .brand-icon {
-            font-size: 36px;
-            color: var(--neon-blue);
-            animation: pulse-icon 2s infinite;
-        }
-
-        @keyframes pulse-icon {
-
-            0%,
-            100% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 5px var(--neon-blue));
-            }
-
-            50% {
-                transform: scale(1.1);
-                filter: drop-shadow(0 0 15px var(--neon-blue));
-            }
-        }
-
-        /* USER PANEL */
-        .user-panel {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        /* Balance Pill styles */
-        .balance-display {
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid var(--neon-yellow);
-            border-radius: 50px;
-            padding: 8px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
-        }
-
-        .balance-value {
-            font-family: var(--font-pixel);
-            font-size: 18px;
-            color: var(--neon-yellow);
-            letter-spacing: 1px;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px 15px 5px 5px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-blue);
-            object-fit: cover;
-        }
-
-        .username {
-            font-weight: 700;
-            font-size: 15px;
-            color: #fff;
-        }
-
-        .btn-logout {
-            background: linear-gradient(90deg, #ff3b5c, #ff0055);
-            border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            color: #fff;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);
-            transition: transform 0.2s;
-        }
-
-        .btn-logout:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-login {
-            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
-            border: none;
-            padding: 10px 30px;
-            border-radius: 30px;
-            color: #fff;
-            font-weight: 800;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-            animation: pulse-btn 2s infinite;
-        }
-
-        /* === HERO SECTION === */
-        .hero {
-            text-align: center;
-            padding: 60px 20px 40px;
-            position: relative;
-        }
-
-        .welcome-title {
-            font-family: var(--font-hero);
-            /* StarGuard for Impact */
-            font-weight: 400;
-            /* Custom font handles weight */
-            font-size: 56px;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            letter-spacing: 3px;
-        }
-
-        .welcome-title span {
-            color: var(--neon-yellow);
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-
-        .hero-tags {
+        /* ═══ LOADING ═══ */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 99999;
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 40px;
-        }
-
-        .tag {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
             align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            transition: opacity 0.8s ease;
         }
 
-        .tag i {
-            font-style: normal;
+        .loader-wrap {
+            position: relative;
+            width: 90px;
+            height: 90px;
         }
 
-        /* Floating Icons */
-        .floating-icon {
+        .loader-ring {
             position: absolute;
-            font-size: 40px;
-            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
-            animation: float 4s ease-in-out infinite;
+            inset: 0;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            animation: lspin 1.5s linear infinite;
         }
 
-        .icon-1 {
-            top: 20%;
-            left: 15%;
-            animation-delay: 0s;
-            transform: rotate(-15deg);
+        .loader-ring:nth-child(1) {
+            border-top-color: var(--neon-blue);
         }
 
-        .icon-2 {
-            top: 30%;
-            right: 15%;
-            animation-delay: 1.5s;
-            transform: rotate(15deg);
+        .loader-ring:nth-child(2) {
+            inset: 8px;
+            border-right-color: var(--neon-pink);
+            animation-duration: 2s;
+            animation-direction: reverse;
         }
 
-        .icon-3 {
-            top: 15%;
-            right: 25%;
-            font-size: 30px;
-            animation-delay: 2.5s;
+        .loader-ring:nth-child(3) {
+            inset: 16px;
+            border-bottom-color: var(--neon-green);
+            animation-duration: 2.5s;
         }
 
-        @keyframes float {
+        .loader-text {
+            margin-top: 25px;
+            font-family: var(--font-pixel);
+            font-size: 16px;
+            color: var(--neon-blue);
+            letter-spacing: 4px;
+            animation: lpulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes lspin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes lpulse {
 
             0%,
             100% {
-                transform: translateY(0) rotate(var(--rot, 0deg));
+                opacity: 0.4;
             }
 
             50% {
-                transform: translateY(-20px) rotate(var(--rot, 0deg));
+                opacity: 1;
             }
         }
 
-        /* === ULTRA UPGRADES === */
-
-        /* Custom Cursor */
-        #cursor {
-            position: fixed;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--neon-blue);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10000;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px var(--neon-blue);
-        }
-
-        #cursor-trail {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: var(--neon-pink);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            transform: translate(-50%, -50%);
-            opacity: 0.6;
-        }
-
-        /* Full Screen Background Canvas */
+        /* ═══ BG EFFECTS ═══ */
         #bg-canvas {
             position: fixed;
             top: 0;
@@ -359,10 +168,8 @@
             width: 100%;
             height: 100%;
             z-index: -2;
-            /* Behind everything */
         }
 
-        /* Retro Moving Grid */
         .retro-grid {
             position: fixed;
             bottom: -50%;
@@ -370,12 +177,13 @@
             width: 200%;
             height: 100%;
             background-image:
-                linear-gradient(rgba(188, 19, 254, 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(188, 19, 254, 0.3) 1px, transparent 1px);
+                linear-gradient(rgba(188, 19, 254, 0.12) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(188, 19, 254, 0.12) 1px, transparent 1px);
             background-size: 50px 50px;
             transform: perspective(500px) rotateX(60deg);
             animation: grid-move 20s linear infinite;
             z-index: -1;
+            opacity: 0.5;
             mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
         }
 
@@ -389,28 +197,355 @@
             }
         }
 
-        /* === VISUAL EFFECTS === */
-
-        /* CRT Scanline */
         .crt-overlay {
             position: fixed;
             inset: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 4px, 6px 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.04) 50%);
+            background-size: 100% 4px;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.8;
+            opacity: 0.35;
         }
 
-        .shine-layer {
+        /* ═══ NAVBAR ═══ */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 35px;
+            background: rgba(6, 7, 26, 0.55);
+            backdrop-filter: blur(20px) saturate(1.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: 0.4s;
+        }
+
+        .navbar.scrolled {
+            background: rgba(6, 7, 26, 0.92);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .brand-text {
+            font-family: var(--font-hero);
+            font-size: 32px;
+            line-height: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .brand-text span {
+            display: block;
+            color: #fff;
+        }
+
+        .brand-text span:last-child {
+            color: var(--neon-pink);
+            text-shadow: 0 0 15px var(--neon-pink), 0 0 40px rgba(188, 19, 254, 0.25);
+        }
+
+        .brand-icon {
+            font-size: 34px;
+            animation: pulse-icon 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-icon {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 5px var(--neon-blue));
+            }
+
+            50% {
+                transform: scale(1.12);
+                filter: drop-shadow(0 0 18px var(--neon-blue));
+            }
+        }
+
+        /* USER PANEL */
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .balance-display {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-yellow);
+            border-radius: 50px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 18px rgba(255, 230, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-display::before {
+            content: '';
             position: absolute;
-            inset: 0;
-            border-radius: 24px;
-            pointer-events: none;
-            z-index: 5;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.12), transparent);
+            animation: bshine 3s ease infinite;
         }
 
-        /* Glitch Text Effect */
+        @keyframes bshine {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 200%;
+            }
+        }
+
+        .balance-value {
+            font-family: var(--font-pixel);
+            font-size: 17px;
+            color: var(--neon-yellow);
+            letter-spacing: 1px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 5px 14px 5px 5px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: 0.3s;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.13);
+            border-color: var(--neon-blue);
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+            object-fit: cover;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.25);
+        }
+
+        .username {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #ff3b5c, #ff0055);
+            border: none;
+            padding: 7px 18px;
+            border-radius: 20px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.25);
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 0, 85, 0.4);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            padding: 10px 28px;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.35);
+            animation: pulse-btn 2s infinite;
+            transition: 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse-btn {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(138, 43, 226, 0.25);
+            }
+
+            50% {
+                box-shadow: 0 0 35px rgba(138, 43, 226, 0.55);
+            }
+        }
+
+        /* ═══ HERO ═══ */
+        .hero {
+            text-align: center;
+            padding: 70px 20px 45px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 500px;
+            background: radial-gradient(ellipse, rgba(188, 19, 254, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-title {
+            font-family: var(--font-hero);
+            font-size: 52px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 3px;
+            line-height: 1.1;
+            animation: title-in 0.8s ease-out;
+        }
+
+        .welcome-title span {
+            color: var(--neon-yellow);
+            text-shadow: 0 0 25px rgba(255, 230, 0, 0.4);
+        }
+
+        @keyframes title-in {
+            0% {
+                transform: translateY(25px);
+                opacity: 0;
+                filter: blur(8px);
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+
+        .hero-subtitle {
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 25px;
+            font-weight: 600;
+            animation: sub-in 0.8s ease-out 0.15s both;
+        }
+
+        @keyframes sub-in {
+            0% {
+                transform: translateY(15px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .hero-tags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 35px;
+            animation: tag-in 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes tag-in {
+            0% {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 9px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            backdrop-filter: blur(8px);
+            transition: 0.3s;
+        }
+
+        .tag:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tag i {
+            font-style: normal;
+        }
+
+        .floating-icon {
+            position: absolute;
+            font-size: 38px;
+            filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.5));
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .icon-1 {
+            top: 20%;
+            left: 15%;
+        }
+
+        .icon-2 {
+            top: 30%;
+            right: 15%;
+            animation-delay: 1.5s;
+        }
+
+        .icon-3 {
+            top: 15%;
+            right: 25%;
+            font-size: 28px;
+            animation-delay: 2.5s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(var(--rot, 0deg));
+            }
+
+            50% {
+                transform: translateY(-18px) rotate(var(--rot, 0deg));
+            }
+        }
+
         .glitch-text {
             position: relative;
             color: #fff;
@@ -424,24 +559,24 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--bg-dark);
+            background: transparent;
         }
 
         .glitch-text::before {
             left: 2px;
-            text-shadow: -1px 0 var(--neon-pink);
+            text-shadow: -2px 0 var(--neon-pink);
             clip-path: inset(44% 0 61% 0);
-            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+            animation: g1 2.5s infinite linear alternate-reverse;
         }
 
         .glitch-text::after {
             left: -2px;
-            text-shadow: -1px 0 var(--neon-blue);
+            text-shadow: 2px 0 var(--neon-blue);
             clip-path: inset(54% 0 11% 0);
-            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+            animation: g2 3.5s infinite linear alternate-reverse;
         }
 
-        @keyframes glitch-anim-1 {
+        @keyframes g1 {
             0% {
                 clip-path: inset(20% 0 50% 0);
             }
@@ -451,7 +586,7 @@
             }
         }
 
-        @keyframes glitch-anim-2 {
+        @keyframes g2 {
             0% {
                 clip-path: inset(10% 0 60% 0);
             }
@@ -461,301 +596,217 @@
             }
         }
 
-        /* Button Shine Animation */
-        .btn-play {
-            position: relative;
-            overflow: hidden;
-            /* ... existing ... */
-        }
-
-        .btn-play::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: 0.5s;
-        }
-
-        .btn-play:hover::after {
-            left: 100%;
-        }
-
-        /* === GAME GRID === */
+        /* ═══ SECTION ═══ */
         .section-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 35px;
         }
 
         .section-title {
             font-family: var(--font-pixel);
-            /* Pixel font for headers */
-            font-size: 36px;
+            font-size: 30px;
             color: #fff;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
+            position: relative;
+            display: inline-block;
         }
 
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue));
+            border-radius: 3px;
+        }
+
+        /* ═══ GAME GRID ═══ */
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 25px;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px 80px;
+            padding: 0 25px 50px;
         }
 
         .game-card {
-            background: linear-gradient(180deg, rgba(30, 30, 60, 0.9) 0%, rgba(15, 15, 30, 0.95) 100%);
-            border-radius: 24px;
-            padding: 20px;
-            border: 2px solid transparent;
+            background: var(--card-bg);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
             position: relative;
-            transition: transform 0.1s;
-            /* Faster response for tilt */
             cursor: pointer;
             display: flex;
             flex-direction: column;
             transform-style: preserve-3d;
-            /* Enable 3D children */
             transform: perspective(1000px);
+            transition: transform 0.15s ease-out, box-shadow 0.3s;
+            overflow: hidden;
         }
 
-        /* ... existing border styles ... */
-        .card-taixiu {
-            border-color: var(--neon-orange);
-            box-shadow: 0 0 20px rgba(255, 158, 0, 0.2);
+        .game-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 18px;
+            background: conic-gradient(from 180deg, transparent 0%, rgba(255, 255, 255, 0.06) 25%, transparent 50%, rgba(255, 255, 255, 0.06) 75%, transparent 100%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s;
         }
 
-        .card-poker {
-            border-color: var(--neon-green);
-            box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
-        }
-
-        .card-flappy {
-            border-color: var(--neon-yellow);
-            box-shadow: 0 0 20px rgba(255, 230, 0, 0.2);
-        }
-
-        .card-slot {
-            border-color: var(--neon-purple);
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
-        }
-
-        .card-daily {
-            border-color: #ff6b6b;
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
-        }
-
-        .card-leaderboard {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        .game-card:hover::before {
+            opacity: 1;
         }
 
         .game-card:hover {
             z-index: 10;
         }
 
-        /* Bring to front on hover */
+        .card-taixiu {
+            border-color: rgba(255, 158, 0, 0.25);
+        }
 
-        /* 3D LAYERS - Pop out elements */
+        .card-poker {
+            border-color: rgba(0, 255, 157, 0.25);
+        }
+
+        .card-flappy {
+            border-color: rgba(255, 230, 0, 0.25);
+        }
+
+        .card-slot {
+            border-color: rgba(138, 43, 226, 0.25);
+        }
+
+        .card-daily {
+            border-color: rgba(255, 107, 107, 0.25);
+        }
+
+        .card-leaderboard {
+            border-color: rgba(0, 243, 255, 0.25);
+        }
+
+        .card-taixiu:hover {
+            box-shadow: 0 8px 45px rgba(255, 158, 0, 0.18);
+            border-color: rgba(255, 158, 0, 0.6);
+        }
+
+        .card-poker:hover {
+            box-shadow: 0 8px 45px rgba(0, 255, 157, 0.18);
+            border-color: rgba(0, 255, 157, 0.6);
+        }
+
+        .card-flappy:hover {
+            box-shadow: 0 8px 45px rgba(255, 230, 0, 0.12);
+            border-color: rgba(255, 230, 0, 0.6);
+        }
+
+        .card-slot:hover {
+            box-shadow: 0 8px 45px rgba(138, 43, 226, 0.18);
+            border-color: rgba(138, 43, 226, 0.6);
+        }
+
+        .card-daily:hover {
+            box-shadow: 0 8px 45px rgba(255, 107, 107, 0.18);
+            border-color: rgba(255, 107, 107, 0.6);
+        }
+
+        .card-leaderboard:hover {
+            box-shadow: 0 8px 45px rgba(0, 243, 255, 0.12);
+            border-color: rgba(0, 243, 255, 0.6);
+        }
+
         .card-image {
-            height: 180px;
-            border-radius: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            height: 170px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             background-size: cover;
             background-position: center;
-            margin-bottom: 20px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            transition: all 0.4s ease;
-            transform: translateZ(30px);
-            /* Banner pops out 30px */
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            /* Deep shadow */
-        }
-
-        .card-title,
-        .card-desc,
-        .card-stats {
-            transform: translateZ(20px);
-            /* Text pops out 20px */
-        }
-
-        .btn-play {
-            /* ... existing styles ... */
-            transform: translateZ(40px);
-            /* Button pops out most (40px) */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-            /* Ensure button positioning relative to 3d context */
-            margin-top: auto;
-            /* Re-add button basics if overwrite risks */
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            /* Fallback */
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 12px;
-            font-family: var(--font-pixel);
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-taixiu {
-            background: linear-gradient(90deg, #ff512f, #dd2476);
-            color: white;
-        }
-
-        .btn-poker {
-            background: linear-gradient(90deg, #11998e, #38ef7d);
-            color: #000;
-        }
-
-        .btn-flappy {
-            background: linear-gradient(90deg, #fce38a, #f38181);
-            color: #000;
-        }
-
-        .btn-play:hover {
-            transform: translateZ(50px) scale(1.05);
-            /* Hover pop even more */
-            box-shadow: 0 0 20px currentColor;
-        }
-
-        /* Neon Borders & Glow for Banners */
-        .card-taixiu .card-image {
-            border-color: var(--neon-orange);
-            box-shadow: 0 0 10px rgba(255, 158, 0, 0.3);
-        }
-
-        .card-poker .card-image {
-            border-color: var(--neon-green);
-            box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
-        }
-
-        .card-flappy .card-image {
-            border-color: var(--neon-yellow);
-            box-shadow: 0 0 10px rgba(255, 230, 0, 0.3);
-        }
-
-        /* Hover: Light up and Strong Glow */
-        .card-taixiu:hover .card-image {
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px var(--neon-orange), inset 0 0 15px var(--neon-orange);
-            border-color: #fff;
-        }
-
-        .card-poker:hover .card-image {
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px var(--neon-green), inset 0 0 15px var(--neon-green);
-            border-color: #fff;
-        }
-
-        .card-flappy:hover .card-image {
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px var(--neon-yellow), inset 0 0 15px var(--neon-yellow);
-            border-color: #fff;
+            transition: 0.5s;
         }
 
         .card-image::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), transparent);
+            background: linear-gradient(0deg, rgba(12, 12, 30, 0.9) 0%, rgba(12, 12, 30, 0.25) 40%, transparent 100%);
             transition: opacity 0.3s;
         }
 
         .game-card:hover .card-image::after {
-            opacity: 0.3;
-            /* Lighten the overlay on hover */
+            opacity: 0.5;
         }
 
         .img-taixiu {
-            background: url('images/ui/banner_taixiu.png');
-            background-size: cover;
-            /* Reset zoom for new HQ images */
-            background-position: center;
+            background: url('images/ui/banner_taixiu.png') center/cover;
         }
 
         .img-poker {
-            background: url('images/ui/banner_poker.png');
-            background-size: cover;
-            background-position: center;
+            background: url('images/ui/banner_poker.png') center/cover;
         }
 
         .img-flappy {
-            background: url('images/ui/banner_flappy.png');
-            background-size: cover;
-            background-position: center;
+            background: url('images/ui/banner_flappy.png') center/cover;
         }
 
         .img-slot {
-            background: linear-gradient(135deg, #2a1a4e 0%, #4a1a6e 30%, #1a0a3e 60%, #3a1a5e 100%);
-            background-size: 200% 200%;
-            animation: gradient-shift 4s ease infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(135deg, #1a0a3e, #3a1a6e 40%, #2a0a4e 70%, #4a1a7e);
+            background-size: 300% 300%;
+            animation: gshift 5s ease infinite;
         }
 
         .img-slot::before {
             content: '🍒  7️⃣  💎';
             position: absolute;
-            font-size: 20px;
-            bottom: 12px;
-            opacity: 0.3;
+            font-size: 17px;
+            bottom: 10px;
+            opacity: 0.2;
             letter-spacing: 8px;
-            animation: float-icons 3s ease-in-out infinite;
+            animation: fi 3s ease-in-out infinite;
+            z-index: 1;
         }
 
         .img-daily {
-            background: linear-gradient(135deg, #2a0a1e 0%, #4a1a2e 30%, #1a0a2e 60%, #3a0a2e 100%);
-            background-size: 200% 200%;
-            animation: gradient-shift 5s ease infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(135deg, #2a0a1e, #4a1a2e 40%, #2a0a3e 70%, #5a1a3e);
+            background-size: 300% 300%;
+            animation: gshift 6s ease infinite;
         }
 
         .img-daily::before {
             content: '✨';
             position: absolute;
-            font-size: 120px;
-            opacity: 0.08;
-            animation: spin-slow 10s linear infinite;
+            font-size: 90px;
+            opacity: 0.05;
+            animation: sslow 15s linear infinite;
+            z-index: 1;
         }
 
         .img-leaderboard {
-            background: linear-gradient(135deg, #0a1628 0%, #1a2a5e 30%, #0a1e3e 60%, #1a3a6e 100%);
-            background-size: 200% 200%;
-            animation: gradient-shift 6s ease infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(135deg, #0a1628, #1a2a5e 40%, #0a1e3e 70%, #1a3a6e);
+            background-size: 300% 300%;
+            animation: gshift 7s ease infinite;
         }
 
         .img-leaderboard::before {
             content: '🥇 🥈 🥉';
             position: absolute;
-            font-size: 18px;
-            bottom: 12px;
-            opacity: 0.35;
+            font-size: 15px;
+            bottom: 10px;
+            opacity: 0.25;
             letter-spacing: 5px;
+            z-index: 1;
         }
 
-        @keyframes gradient-shift {
+        @keyframes gshift {
 
             0%,
             100% {
@@ -767,7 +818,7 @@
             }
         }
 
-        @keyframes float-icons {
+        @keyframes fi {
 
             0%,
             100% {
@@ -779,7 +830,7 @@
             }
         }
 
-        @keyframes spin-slow {
+        @keyframes sslow {
             from {
                 transform: rotate(0deg);
             }
@@ -790,14 +841,14 @@
         }
 
         .card-icon {
-            font-size: 72px;
+            font-size: 68px;
             z-index: 2;
-            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
-            transition: transform 0.4s, filter 0.4s;
-            animation: icon-float 3s ease-in-out infinite;
+            filter: drop-shadow(0 5px 18px rgba(0, 0, 0, 0.6));
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.4s;
+            animation: ifloat 3s ease-in-out infinite;
         }
 
-        @keyframes icon-float {
+        @keyframes ifloat {
 
             0%,
             100% {
@@ -805,148 +856,141 @@
             }
 
             50% {
-                transform: translateY(-8px) scale(1.05);
+                transform: translateY(-8px) scale(1.04);
             }
         }
 
         .game-card:hover .card-icon {
-            transform: scale(1.2) rotate(5deg);
-            filter: drop-shadow(0 8px 25px rgba(255, 255, 255, 0.3));
+            transform: scale(1.2) rotate(6deg);
+            filter: drop-shadow(0 8px 25px rgba(255, 255, 255, 0.25));
+        }
+
+        .card-body {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .card-title {
             font-family: var(--font-pixel);
-            font-size: 24px;
+            font-size: 19px;
             text-transform: uppercase;
-            margin-bottom: 8px;
-            color: #fff;
+            margin-bottom: 6px;
             letter-spacing: 1px;
         }
 
         .card-desc {
             font-size: 13px;
-            color: #ccc;
-            margin-bottom: 20px;
-            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 12px;
+            line-height: 1.5;
             flex-grow: 1;
         }
 
         .card-stats {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            font-size: 12px;
+            margin-bottom: 12px;
+            font-size: 11px;
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.45);
         }
 
         .stat-item i {
             color: var(--neon-yellow);
-            margin-right: 4px;
+            margin-right: 3px;
+            font-style: normal;
         }
 
         .btn-play {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             border-radius: 12px;
             border: none;
             font-family: var(--font-pixel);
-            font-size: 20px;
+            font-size: 17px;
             text-transform: uppercase;
             cursor: pointer;
-            transition: background 0.3s;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .btn-play::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transition: 0.6s;
+        }
+
+        .btn-play:hover::after {
+            left: 100%;
+        }
+
+        .btn-play:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-play:active {
+            transform: translateY(0);
         }
 
         .btn-taixiu {
-            background: var(--neon-orange);
+            background: linear-gradient(135deg, #ff512f, #f09819);
             color: #fff;
-            box-shadow: 0 5px 15px rgba(255, 158, 0, 0.4);
+            box-shadow: 0 4px 18px rgba(255, 158, 0, 0.25);
         }
 
         .btn-poker {
-            background: var(--neon-green);
+            background: linear-gradient(135deg, #11998e, #38ef7d);
             color: #0a0b1e;
-            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.4);
+            box-shadow: 0 4px 18px rgba(0, 255, 157, 0.25);
         }
 
         .btn-flappy {
-            background: var(--neon-yellow);
+            background: linear-gradient(135deg, #fce38a, #f38181);
             color: #0a0b1e;
-            box-shadow: 0 5px 15px rgba(255, 230, 0, 0.4);
+            box-shadow: 0 4px 18px rgba(255, 230, 0, 0.25);
         }
 
         .btn-slot {
-            background: linear-gradient(90deg, #bc13fe, #8a2be2);
+            background: linear-gradient(135deg, #bc13fe, #6c5ce7);
             color: #fff;
-            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+            box-shadow: 0 4px 18px rgba(138, 43, 226, 0.25);
         }
 
         .btn-daily {
-            background: linear-gradient(90deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
             color: #fff;
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 4px 18px rgba(255, 107, 107, 0.25);
         }
 
         .btn-leaderboard {
-            background: linear-gradient(90deg, var(--neon-blue), #0077ff);
+            background: linear-gradient(135deg, var(--neon-blue), #0077ff);
             color: #fff;
-            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.4);
+            box-shadow: 0 4px 18px rgba(0, 243, 255, 0.25);
         }
 
-        /* Hover glow for new cards */
-        .card-slot:hover .card-image {
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px var(--neon-purple), inset 0 0 15px var(--neon-purple);
-            border-color: #fff;
-        }
-
-        .card-daily:hover .card-image {
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px #ff6b6b, inset 0 0 15px #ff6b6b;
-            border-color: #fff;
-        }
-
-        .card-leaderboard:hover .card-image {
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px var(--neon-blue), inset 0 0 15px var(--neon-blue);
-            border-color: #fff;
-        }
-
-        /* LOADING */
-        #loading {
-            position: fixed;
+        .shine-layer {
+            position: absolute;
             inset: 0;
-            background: #0a0b1e;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            transition: opacity 0.5s;
+            border-radius: 18px;
+            pointer-events: none;
+            z-index: 5;
         }
 
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--neon-blue);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* MODAL */
+        /* ═══ MODAL ═══ */
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
             z-index: 2000;
             display: none;
             justify-content: center;
@@ -954,33 +998,95 @@
         }
 
         .modal-content {
-            background: #1a1b3a;
+            background: linear-gradient(135deg, #0e0e28, #1a1a3e);
             padding: 40px;
-            border-radius: 20px;
-            border: 2px solid var(--neon-pink);
+            border-radius: 22px;
+            border: 1px solid rgba(188, 19, 254, 0.25);
             text-align: center;
             max-width: 400px;
-            box-shadow: 0 0 50px rgba(188, 19, 254, 0.3);
+            box-shadow: 0 0 50px rgba(188, 19, 254, 0.15);
+            animation: mpop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes mpop {
+            0% {
+                transform: scale(0.85);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .modal h2 {
             color: var(--neon-pink);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            font-size: 20px;
         }
 
         .modal p {
-            margin-bottom: 25px;
-            color: #ccc;
+            margin-bottom: 22px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+            font-size: 14px;
         }
 
-        /* Responsive */
-        @media(max-width: 768px) {
+        /* ═══ CURSOR ═══ */
+        #cursor {
+            position: fixed;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px var(--neon-blue);
+            transition: width 0.2s, height 0.2s, border-color 0.2s;
+        }
+
+        #cursor.hover {
+            width: 36px;
+            height: 36px;
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        #cursor-trail {
+            position: fixed;
+            width: 7px;
+            height: 7px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            opacity: 0.5;
+        }
+
+        /* ═══ FOOTER ═══ */
+        .footer {
+            text-align: center;
+            padding: 25px 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .footer span {
+            color: var(--neon-pink);
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 768px) {
             .hero-tags {
                 flex-wrap: wrap;
             }
 
             .welcome-title {
-                font-size: 32px;
+                font-size: 30px;
             }
 
             .navbar {
@@ -988,16 +1094,16 @@
             }
 
             .brand-text {
-                font-size: 24px;
+                font-size: 22px;
             }
 
             .user-panel {
                 flex-wrap: wrap;
-                gap: 10px;
+                gap: 8px;
             }
 
             .balance-display {
-                padding: 6px 12px;
+                padding: 5px 12px;
             }
 
             .balance-value {
@@ -1005,58 +1111,57 @@
             }
 
             .hero {
-                padding: 30px 15px 20px;
+                padding: 35px 15px 20px;
             }
 
             .section-title {
-                font-size: 24px;
+                font-size: 20px;
             }
 
             .game-grid {
                 grid-template-columns: 1fr;
-                gap: 20px;
-                padding: 0 15px 60px;
+                gap: 18px;
+                padding: 0 15px 35px;
             }
 
-            .floating-icon {
-                display: none;
+            .card-image {
+                height: 140px;
             }
 
+            .floating-icon,
             #cursor,
-            #cursor-trail {
+            #cursor-trail,
+            .crt-overlay,
+            .retro-grid {
                 display: none !important;
-            }
-
-            .crt-overlay {
-                display: none;
             }
         }
 
-        @media(max-width: 400px) {
+        @media (max-width: 400px) {
             .welcome-title {
-                font-size: 24px;
+                font-size: 22px;
             }
 
             .brand-text {
-                font-size: 20px;
+                font-size: 18px;
             }
 
             .tag {
-                font-size: 12px;
-                padding: 6px 12px;
+                font-size: 11px;
+                padding: 6px 10px;
             }
 
             .user-profile {
-                padding: 4px 10px 4px 4px;
+                padding: 3px 8px 3px 3px;
             }
 
             .avatar {
-                width: 30px;
-                height: 30px;
+                width: 28px;
+                height: 28px;
             }
 
             .username {
-                font-size: 13px;
+                font-size: 12px;
             }
         }
     </style>
@@ -1066,11 +1171,14 @@
     <div class="bg-overlay"></div>
 
     <div id="loading">
-        <div class="loader"></div>
-        <p style="margin-top:20px; color:var(--neon-blue); font-weight:700;">LOADING...</p>
+        <div class="loader-wrap">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+        <p class="loader-text">LOADING...</p>
     </div>
 
-    <!-- Login Modal -->
     <div id="login-modal" class="modal">
         <div class="modal-content">
             <h2>🔒 YÊU CẦU ĐĂNG NHẬP</h2>
@@ -1078,44 +1186,29 @@
             <button id="btn-discord-login" class="btn-play btn-taixiu" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP
                 (Discord)</button>
             <button
-                style="background:transparent; border:none; color:#ffff; margin-top:15px; cursor:pointer; text-decoration:underline;"
+                style="background:transparent; border:none; color:#666; margin-top:12px; cursor:pointer; text-decoration:underline; font-size:12px;"
                 onclick="document.getElementById('login-modal').style.display='none'">Đóng</button>
         </div>
     </div>
 
-    <nav class="navbar">
+    <nav class="navbar" id="navbar">
         <div class="brand" onclick="location.reload()">
             <div class="brand-icon">🎮</div>
-            <div class="brand-text">
-                <span>PIXEL</span>
-                <span>PLAYZONE</span>
-            </div>
+            <div class="brand-text"><span>PIXEL</span><span>PLAYZONE</span></div>
         </div>
-        <div id="user-area">
-            <!-- Injected via JS -->
-            <button class="btn-login" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP</button>
-        </div>
+        <div id="user-area"><button class="btn-login" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP</button></div>
     </nav>
 
     <div class="hero">
-        <!-- Decoration Icons -->
         <div class="floating-icon icon-1" style="--rot: -15deg">🕹️</div>
         <div class="floating-icon icon-2" style="--rot: 15deg">🎁</div>
         <div class="floating-icon icon-3">🏆</div>
-
         <h1 class="welcome-title" id="welcome-text">XIN CHÀO <span id="user-name-display">GUEST</span></h1>
         <p class="hero-subtitle">Thế giới game giải trí đỉnh cao!</p>
-
         <div class="hero-tags">
-            <div class="tag" style="background:linear-gradient(90deg, #333, #444); color:var(--neon-green)">
-                <i>🎮</i> GAME MỚI
-            </div>
-            <div class="tag" style="background:linear-gradient(90deg, #333, #444); color:var(--neon-yellow)">
-                <i>🏆</i> ĐUA TOP
-            </div>
-            <div class="tag" style="background:linear-gradient(90deg, #333, #444); color:var(--neon-pink)">
-                <i>🎁</i> QUÀ TẶNG
-            </div>
+            <div class="tag" style="color:var(--neon-green)"><i>🎮</i> GAME MỚI</div>
+            <div class="tag" style="color:var(--neon-yellow)"><i>🏆</i> ĐUA TOP</div>
+            <div class="tag" style="color:var(--neon-pink)"><i>🎁</i> QUÀ TẶNG</div>
         </div>
     </div>
 
@@ -1124,385 +1217,256 @@
     </div>
 
     <div class="game-grid">
-        <!-- Tai Xiu -->
         <div class="game-card card-taixiu" onclick="enterGame('/taixiu')">
-            <div class="card-image img-taixiu">
-                <!-- Icon removed -->
+            <div class="card-image img-taixiu"></div>
+            <div class="card-body">
+                <div class="card-title">TÀI XỈU SIÊU TỐC</div>
+                <div class="card-desc">Game chẵn lẻ kinh điển, vui nhộn, thử thách vận may của bạn!</div>
+                <div class="card-stats">
+                    <div class="stat-item"><i>📡</i> Online: 24/7</div>
+                    <div class="stat-item"><i>💰</i> Min: 1k</div>
+                </div>
+                <button class="btn-play btn-taixiu">CHƠI NGAY</button>
             </div>
-            <div class="card-title">TÀI XỈU SIÊU TỐC</div>
-            <div class="card-desc">Game chẵn lẻ kinh điển, vui nhộn, thử thách vận may của bạn!</div>
-            <div class="card-stats">
-                <div class="stat-item"><i>📡</i> Online: 24/7</div>
-                <div class="stat-item"><i>💰</i> Min: 1k</div>
-            </div>
-            <button class="btn-play btn-taixiu">CHƠI NGAY</button>
         </div>
-
-        <!-- Poker -->
         <div class="game-card card-poker" onclick="enterGame('/poker')">
-            <div class="card-image img-poker">
-                <!-- Icon removed -->
+            <div class="card-image img-poker"></div>
+            <div class="card-body">
+                <div class="card-title">THẦN BÀI MA CAO</div>
+                <div class="card-desc">Texas Hold'em đỉnh cao. Thử thách bản lĩnh, tâm lý và vận may!</div>
+                <div class="card-stats">
+                    <div class="stat-item"><i>👥</i> 2-9 Người</div>
+                    <div class="stat-item"><i>🏆</i> Ranked</div>
+                </div>
+                <button class="btn-play btn-poker">VÀO BÀN</button>
             </div>
-            <div class="card-title">THẦN BÀI MA CAO</div>
-            <div class="card-desc">Texas Hold'em đỉnh cao. Thử thách bản lĩnh, tâm lý và vận may của bạn!</div>
-            <div class="card-stats">
-                <div class="stat-item"><i>👥</i> 2-9 Người</div>
-                <div class="stat-item"><i>🏆</i> Ranked</div>
-            </div>
-            <button class="btn-play btn-poker">VÀO BÀN</button>
         </div>
-
-        <!-- Flappy Bird -->
         <div class="game-card card-flappy" onclick="enterGame('/flappybird.html')">
-            <div class="card-image img-flappy">
-                <!-- Icon removed -->
+            <div class="card-image img-flappy"></div>
+            <div class="card-body">
+                <div class="card-title">FLAPPY BIRD</div>
+                <div class="card-desc">Bay lượn và kiếm tiền vàng. 1 Điểm = 10 Vàng. Thử thách sự khéo léo!</div>
+                <div class="card-stats">
+                    <div class="stat-item"><i>🕹️</i> Solo</div>
+                    <div class="stat-item"><i>✨</i> Skill</div>
+                </div>
+                <button class="btn-play btn-flappy">BAY NGAY</button>
             </div>
-            <div class="card-title">FLAPPY BIRD</div>
-            <div class="card-desc">Bay lượn và kiếm tiền vàng. 1 Điểm = 10 Vàng. Thử thách sự khéo léo!</div>
-            <div class="card-stats">
-                <div class="stat-item"><i>🕹️</i> Solo</div>
-                <div class="stat-item"><i>✨</i> Skill</div>
-            </div>
-            <button class="btn-play btn-flappy">BAY NGAY</button>
         </div>
-
-        <!-- Slot Machine -->
         <div class="game-card card-slot" onclick="enterGame('/slot')">
-            <div class="card-image img-slot">
-                <span class="card-icon">🎰</span>
+            <div class="card-image img-slot"><span class="card-icon">🎰</span></div>
+            <div class="card-body">
+                <div class="card-title">MEGA SLOT</div>
+                <div class="card-desc">Quay số may mắn! Trúng 3 💎 nhận x50 tiền cược. Vận may trong tay bạn!</div>
+                <div class="card-stats">
+                    <div class="stat-item"><i>🎯</i> Solo</div>
+                    <div class="stat-item"><i>💎</i> Jackpot x50</div>
+                </div>
+                <button class="btn-play btn-slot">QUAY NGAY</button>
             </div>
-            <div class="card-title">MEGA SLOT</div>
-            <div class="card-desc">Quay số may mắn! Trúng 3 💎 nhận x50 tiền cược. Vận may trong tay bạn!</div>
-            <div class="card-stats">
-                <div class="stat-item"><i>🎯</i> Solo</div>
-                <div class="stat-item"><i>💎</i> Jackpot x50</div>
-            </div>
-            <button class="btn-play btn-slot">QUAY NGAY</button>
         </div>
     </div>
 
-    <!-- FEATURE SECTION -->
-    <div class="section-header" style="margin-top: 20px;">
+    <div class="section-header" style="margin-top: 5px;">
         <div class="section-title">TIỆN ÍCH</div>
     </div>
 
     <div class="game-grid">
-        <!-- Daily Reward -->
         <div class="game-card card-daily" onclick="enterGame('/daily')">
-            <div class="card-image img-daily">
-                <span class="card-icon">🎁</span>
+            <div class="card-image img-daily"><span class="card-icon">🎁</span></div>
+            <div class="card-body">
+                <div class="card-title">THƯỞNG HÀNG NGÀY</div>
+                <div class="card-desc">Đăng nhập mỗi ngày, quay vòng quay may mắn và nhận thưởng liên tục!</div>
+                <div class="card-stats">
+                    <div class="stat-item"><i>📅</i> Mỗi ngày</div>
+                    <div class="stat-item"><i>🔥</i> Streak x7</div>
+                </div>
+                <button class="btn-play btn-daily">NHẬN THƯỞNG</button>
             </div>
-            <div class="card-title">THƯỞNG HÀNG NGÀY</div>
-            <div class="card-desc">Đăng nhập mỗi ngày, quay vòng quay may mắn và nhận thưởng liên tục!</div>
-            <div class="card-stats">
-                <div class="stat-item"><i>📅</i> Mỗi ngày</div>
-                <div class="stat-item"><i>🔥</i> Streak x7</div>
-            </div>
-            <button class="btn-play btn-daily">NHẬN THƯỞNG</button>
         </div>
-
-        <!-- Leaderboard -->
         <div class="game-card card-leaderboard" onclick="enterGame('/leaderboard')">
-            <div class="card-image img-leaderboard">
-                <span class="card-icon">🏆</span>
+            <div class="card-image img-leaderboard"><span class="card-icon">🏆</span></div>
+            <div class="card-body">
+                <div class="card-title">BẢNG XẾP HẠNG</div>
+                <div class="card-desc">Xem ai là người giàu nhất server! Cạnh tranh để leo top đầu bảng.</div>
+                <div class="card-stats">
+                    <div class="stat-item"><i>👑</i> Top 50</div>
+                    <div class="stat-item"><i>📊</i> Realtime</div>
+                </div>
+                <button class="btn-play btn-leaderboard">XEM NGAY</button>
             </div>
-            <div class="card-title">BẢNG XẾP HẠNG</div>
-            <div class="card-desc">Xem ai là người giàu nhất server! Cạnh tranh để leo top đầu bảng.</div>
-            <div class="card-stats">
-                <div class="stat-item"><i>👑</i> Top 50</div>
-                <div class="stat-item"><i>📊</i> Realtime</div>
-            </div>
-            <button class="btn-play btn-leaderboard">XEM NGAY</button>
         </div>
     </div>
 
-    <!-- Custom Cursor -->
+    <footer class="footer">
+        <p>© 2025 <span>PIXEL PLAYZONE</span> — All rights reserved.</p>
+    </footer>
+
     <div id="cursor"></div>
     <div id="cursor-trail"></div>
-
-    <!-- Background Canvas for Particles -->
     <canvas id="bg-canvas"></canvas>
-
-    <!-- Retro Wave Grid -->
     <div class="retro-grid"></div>
-
-    <!-- CRT Scanline Overlay -->
     <div class="crt-overlay"></div>
 
     <script>
-        // --- CUSTOM CURSOR ---
+        // NAVBAR SCROLL
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 50));
+
+        // CURSOR
         const cursor = document.getElementById('cursor');
         const trail = document.getElementById('cursor-trail');
-
         document.addEventListener('mousemove', (e) => {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
-
-            trail.animate({
-                left: e.clientX + 'px',
-                top: e.clientY + 'px'
-            }, { duration: 500, fill: 'forwards' });
+            trail.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 400, fill: 'forwards' });
+        });
+        document.querySelectorAll('button, a, .game-card').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
         });
 
-        // --- PARTICLE SYSTEM ---
+        // PARTICLES
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let particlesArray = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas();
         const isMobile = window.innerWidth < 768;
-        const numberOfParticles = isMobile ? 30 : 60; // Reduced for perf
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 1;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 - 0.5;
-                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        const NP = isMobile ? 20 : 45;
+        let pts = [];
+        class Pt {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.sz = Math.random() * 1.8 + 0.5;
+                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.hue = Math.random() * 60 + 220;
+                this.alpha = Math.random() * 0.4 + 0.15;
+                this.ph = Math.random() * Math.PI * 2;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
-                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+                this.x += this.vx; this.y += this.vy; this.ph += 0.015;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
             }
             draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+                const a = this.alpha * (0.6 + Math.sin(this.ph) * 0.4);
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.sz, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${a})`; ctx.fill();
             }
         }
-
-        function initParticles() {
-            particlesArray = [];
-            for (let i = 0; i < numberOfParticles; i++) {
-                particlesArray.push(new Particle());
-            }
-        }
-        initParticles();
-
-        function animateParticles() {
+        function initPts() { pts = []; for (let i = 0; i < NP; i++) pts.push(new Pt()); }
+        initPts();
+        function animPts() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-                particlesArray[i].draw();
-
-                // Connect particles
-                for (let j = i; j < particlesArray.length; j++) {
-                    const dx = particlesArray[i].x - particlesArray[j].x;
-                    const dy = particlesArray[i].y - particlesArray[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 100) {
+            for (let i = 0; i < pts.length; i++) {
+                pts[i].update(); pts[i].draw();
+                for (let j = i + 1; j < pts.length; j++) {
+                    const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 110) {
                         ctx.beginPath();
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 - distance / 1000})`;
-                        ctx.lineWidth = 1;
-                        ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
-                        ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+                        ctx.strokeStyle = `rgba(100,140,255,${0.06 * (1 - d / 110)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
                         ctx.stroke();
                     }
                 }
             }
-            requestAnimationFrame(animateParticles);
+            requestAnimationFrame(animPts);
         }
-        animateParticles();
+        animPts();
+        window.addEventListener('resize', () => { resizeCanvas(); initPts(); });
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initParticles();
-        });
-
-        // --- ULTRA 3D PARALLAX TILT ---
+        // 3D TILT
         document.querySelectorAll('.game-card').forEach(card => {
             card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-
-                // Aggressive rotation
-                const rotateX = ((y - centerY) / centerY) * -20;
-                const rotateY = ((x - centerX) / centerX) * 20;
-
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.1)`;
-
-                // PARALLAX: Move Icon opposite to rotation
-                const icon = card.querySelector('.card-icon');
-                if (icon) {
-                    const moveX = ((x - centerX) / centerX) * 50;
-                    const moveY = ((y - centerY) / centerY) * 50;
-                    icon.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.2)`;
-                }
-
-                // Shine effect
-                const shine = card.querySelector('.shine-layer') || document.createElement('div');
-                if (!shine.className.includes('shine-layer')) {
-                    shine.className = 'shine-layer';
-                    card.appendChild(shine);
-                }
-                shine.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.4), transparent 70%)`;
-                shine.style.mixBlendMode = 'overlay';
+                const r = card.getBoundingClientRect();
+                const x = e.clientX - r.left, y = e.clientY - r.top;
+                const cx = r.width / 2, cy = r.height / 2;
+                const rx = ((y - cy) / cy) * -10, ry = ((x - cx) / cx) * 10;
+                card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.03)`;
+                const ic = card.querySelector('.card-icon');
+                if (ic) { ic.style.transform = `translate(${((x - cx) / cx) * 25}px, ${((y - cy) / cy) * 25}px) scale(1.12)`; }
+                let sh = card.querySelector('.shine-layer');
+                if (!sh) { sh = document.createElement('div'); sh.className = 'shine-layer'; card.appendChild(sh); }
+                sh.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.12), transparent 60%)`;
             });
-
             card.addEventListener('mouseleave', () => {
                 card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-                const icon = card.querySelector('.card-icon');
-                if (icon) icon.style.transform = 'translate(0,0) scale(1)';
-
-                const shine = card.querySelector('.shine-layer');
-                if (shine) shine.style.background = 'transparent';
+                const ic = card.querySelector('.card-icon'); if (ic) ic.style.transform = '';
+                const sh = card.querySelector('.shine-layer'); if (sh) sh.style.background = 'transparent';
             });
         });
 
-        // --- AUTH LOGIC ---
-        let isLoggedIn = false;
+        // SCROLL REVEAL
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.game-card').forEach((c, i) => {
+            c.style.opacity = '0'; c.style.transform = 'translateY(35px)';
+            c.style.transition = `opacity 0.5s ease ${i * 0.08}s, transform 0.5s ease ${i * 0.08}s`;
+            obs.observe(c);
+        });
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
+        // AUTH
+        let isLoggedIn = false;
+        function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
         async function checkAuth() {
             const userArea = document.getElementById('user-area');
-            const welcomeName = document.getElementById('user-name-display');
-
+            const wn = document.getElementById('user-name-display');
             try {
                 const res = await fetch('/api/me');
                 if (res.ok) {
-                    const u = await res.json();
-                    isLoggedIn = true;
-                    const safeName = escapeHtml(u.username).toUpperCase();
-                    welcomeName.innerHTML = `<span class="glitch-text" data-text="${safeName}">${safeName}</span>`;
-
-                    const avatarFallback = `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(u.username)}`;
-                    const avatarUrl = u.avatar || avatarFallback;
-
+                    const u = await res.json(); isLoggedIn = true;
+                    const sn = escapeHtml(u.username).toUpperCase();
+                    wn.innerHTML = `<span class="glitch-text" data-text="${sn}">${sn}</span>`;
+                    const af = `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(u.username)}`;
                     userArea.innerHTML = `
-                            <div class="user-panel glass-panel">
-                                <div class="balance-display">
-                                    <i>💰</i> <span class="balance-value">${Number(u.balance).toLocaleString()} $</span>
-                                </div>
-                                <div class="user-profile">
-                                    <img src="${avatarUrl}" class="avatar" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=U'">
-                                    <span class="username">${escapeHtml(u.username)}</span>
-                                </div>
-                                <button onclick="logout()" class="btn-logout" aria-label="Đăng xuất">EXIT</button>
+                        <div class="user-panel">
+                            <div class="balance-display"><i>💰</i> <span class="balance-value">${Number(u.balance).toLocaleString()} $</span></div>
+                            <div class="user-profile">
+                                <img src="${u.avatar || af}" class="avatar" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=U'">
+                                <span class="username">${escapeHtml(u.username)}</span>
                             </div>
-                        `;
-                } else {
-                    welcomeName.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`;
-                }
-            } catch (e) {
-                console.error(e);
-                welcomeName.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`;
-            }
-
-            // Hide loading
-            setTimeout(() => {
-                document.getElementById('loading').style.opacity = '0';
-                setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
-            }, 500);
+                            <button onclick="logout()" class="btn-logout">EXIT</button>
+                        </div>`;
+                } else { wn.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`; }
+            } catch (e) { console.error(e); wn.innerHTML = `<span class="glitch-text" data-text="GUEST">GUEST</span>`; }
+            setTimeout(() => { const l = document.getElementById('loading'); l.style.opacity = '0'; setTimeout(() => l.style.display = 'none', 800); }, 500);
         }
 
         function enterGame(url) {
-            if (!isLoggedIn) {
-                document.getElementById('login-modal').style.display = 'flex';
-                return;
-            }
-            window.location.href = url;
+            if (!isLoggedIn) { document.getElementById('login-modal').style.display = 'flex'; return; }
+            document.body.style.opacity = '0'; setTimeout(() => window.location.href = url, 300);
         }
+        function logout() { if (confirm("Đăng xuất?")) window.location.href = '/auth/logout'; }
 
-        function logout() {
-            if (confirm("Đăng xuất?")) {
-                window.location.href = '/auth/logout';
-            }
-        }
-
-        // --- ANTI-SPAM LOGIN (Debounce + Loading) ---
-        let isLoginProcessing = false;
-        let lastLoginAttempt = 0;
-        const LOGIN_COOLDOWN = 5000; // 5 seconds between login attempts
-
+        let isLP = false, lastLA = 0; const LC = 5000;
         function handleDiscordLogin(btn) {
             const now = Date.now();
-
-            // Check cooldown
-            if (now - lastLoginAttempt < LOGIN_COOLDOWN) {
-                const remaining = Math.ceil((LOGIN_COOLDOWN - (now - lastLoginAttempt)) / 1000);
-                showLoginWarning(`Vui lòng đợi ${remaining}s...`);
-                return;
-            }
-
-            // Prevent double-click
-            if (isLoginProcessing) {
-                showLoginWarning('Đang xử lý, vui lòng đợi...');
-                return;
-            }
-
-            isLoginProcessing = true;
-            lastLoginAttempt = now;
-
-            // Show loading state
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ ĐANG KẾT NỐI...';
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
-            btn.style.cursor = 'not-allowed';
-
-            // Disable all login buttons
-            document.querySelectorAll('.btn-login, #btn-discord-login, #btn-dev-login').forEach(b => {
-                b.disabled = true;
-                b.style.opacity = '0.7';
-            });
-
-            // Navigate after short delay (visual feedback)
+            if (now - lastLA < LC) { showLW(`Vui lòng đợi ${Math.ceil((LC - (now - lastLA)) / 1000)}s...`); return; }
+            if (isLP) { showLW('Đang xử lý...'); return; }
+            isLP = true; lastLA = now;
+            const ot = btn.innerHTML; btn.innerHTML = '⏳ ĐANG KẾT NỐI...'; btn.disabled = true; btn.style.opacity = '0.6';
+            document.querySelectorAll('.btn-login, #btn-discord-login').forEach(b => { b.disabled = true; b.style.opacity = '0.6'; });
+            setTimeout(() => window.location.href = '/auth/discord', 300);
             setTimeout(() => {
-                window.location.href = '/auth/discord';
-            }, 300);
-
-            // Reset after timeout (in case user comes back)
-            setTimeout(() => {
-                isLoginProcessing = false;
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-                document.querySelectorAll('.btn-login, #btn-discord-login, #btn-dev-login').forEach(b => {
-                    b.disabled = false;
-                    b.style.opacity = '1';
-                });
+                isLP = false; btn.innerHTML = ot; btn.disabled = false; btn.style.opacity = '1';
+                document.querySelectorAll('.btn-login, #btn-discord-login').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
             }, 10000);
         }
-
-
-
-        function showLoginWarning(msg) {
-            // Create or update warning toast
-            let toast = document.getElementById('login-toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'login-toast';
-                toast.style.cssText = `
-                    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-                    background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white;
-                    padding: 15px 30px; border-radius: 10px; font-weight: bold;
-                    z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-                    animation: slideDown 0.3s ease;
-                `;
-                document.body.appendChild(toast);
+        function showLW(msg) {
+            let t = document.getElementById('login-toast');
+            if (!t) {
+                t = document.createElement('div'); t.id = 'login-toast';
+                t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:white;padding:12px 25px;border-radius:12px;font-weight:bold;z-index:10000;box-shadow:0 5px 25px rgba(0,0,0,0.4);';
+                document.body.appendChild(t);
             }
-            toast.textContent = '⚠️ ' + msg;
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+            t.textContent = '⚠️ ' + msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
         }
-
         window.onload = checkAuth;
     </script>
 </body>

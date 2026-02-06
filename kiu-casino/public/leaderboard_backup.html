@@ -9,6 +9,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
     <title>🏆 Bảng Xếp Hạng - Pixel PlayZone</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -22,7 +23,7 @@
 
         body {
             font-family: 'Nunito', sans-serif;
-            background: linear-gradient(160deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
+            background: linear-gradient(135deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
@@ -31,7 +32,7 @@
             align-items: center;
         }
 
-        /* ═══ AMBIENT ═══ */
+        /* AMBIENT GLOW */
         .ambient-orb {
             position: fixed;
             border-radius: 50%;
@@ -42,29 +43,20 @@
         }
 
         .orb-1 {
-            width: 320px;
-            height: 320px;
-            background: rgba(255, 215, 0, 0.07);
-            top: -2%;
-            left: -8%;
+            width: 350px;
+            height: 350px;
+            background: rgba(255, 215, 0, 0.08);
+            top: 0;
+            left: -10%;
         }
 
         .orb-2 {
-            width: 260px;
-            height: 260px;
-            background: rgba(0, 243, 255, 0.05);
+            width: 280px;
+            height: 280px;
+            background: rgba(0, 243, 255, 0.06);
             bottom: 5%;
             right: -5%;
             animation-delay: 5s;
-        }
-
-        .orb-3 {
-            width: 200px;
-            height: 200px;
-            background: rgba(188, 19, 254, 0.04);
-            top: 45%;
-            right: 20%;
-            animation-delay: 3s;
         }
 
         @keyframes orb-drift {
@@ -73,10 +65,11 @@
             }
 
             100% {
-                transform: translate(18px, -12px) scale(1.1);
+                transform: translate(20px, -15px) scale(1.1);
             }
         }
 
+        /* FLOATING STARS */
         .star-container {
             position: fixed;
             inset: 0;
@@ -87,55 +80,53 @@
 
         .star {
             position: absolute;
-            width: 2px;
-            height: 2px;
+            width: 3px;
+            height: 3px;
             background: #ffe600;
             border-radius: 50%;
             animation: star-twinkle 3s ease-in-out infinite;
-            box-shadow: 0 0 4px currentColor;
+            box-shadow: 0 0 4px #ffe600;
         }
 
         @keyframes star-twinkle {
 
             0%,
             100% {
-                opacity: 0.15;
+                opacity: 0.2;
                 transform: scale(0.8);
             }
 
             50% {
-                opacity: 0.9;
-                transform: scale(1.3);
+                opacity: 1;
+                transform: scale(1.2);
             }
         }
 
-        /* ═══ TOP BAR ═══ */
         .top-bar {
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 25px;
+            padding: 15px 30px;
             background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .back-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .top-bar .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
             padding: 8px 20px;
-            border-radius: 22px;
+            border-radius: 20px;
             cursor: pointer;
             font-weight: 700;
-            text-decoration: none;
-            font-size: 13px;
             transition: 0.3s;
+            text-decoration: none;
         }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .top-bar .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .balance-pill {
@@ -145,108 +136,69 @@
             padding: 8px 20px;
             font-weight: 800;
             color: #ffe600;
-            font-size: 15px;
-            box-shadow: 0 0 18px rgba(255, 230, 0, 0.2);
-            position: relative;
-            overflow: hidden;
+            font-size: 16px;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
         }
 
-        .balance-pill::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.1), transparent);
-            animation: bshine 3s ease infinite;
-        }
-
-        @keyframes bshine {
-            0% {
-                left: -100%;
-            }
-
-            100% {
-                left: 200%;
-            }
-        }
-
-        /* ═══ HEADER ═══ */
         .page-title {
-            margin-top: 28px;
-            font-size: 30px;
+            margin-top: 30px;
+            font-size: 32px;
             font-weight: 900;
             text-align: center;
-            background: linear-gradient(90deg, #ffe600, #ff9e00, #ffe600);
-            background-size: 200% 100%;
+            background: linear-gradient(90deg, #ffe600, #ff9e00);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 2px;
-            animation: tshimmer 3s ease infinite;
-        }
-
-        @keyframes tshimmer {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
         }
 
         .page-subtitle {
-            color: rgba(255, 255, 255, 0.45);
-            font-size: 13px;
+            color: #aaa;
+            font-size: 14px;
             margin-top: 5px;
             text-align: center;
         }
 
-        /* ═══ MY RANK ═══ */
+        /* MY RANK */
         .my-rank-card {
-            margin-top: 22px;
-            background: linear-gradient(135deg, rgba(188, 19, 254, 0.12), rgba(0, 243, 255, 0.06));
-            border: 1px solid rgba(188, 19, 254, 0.25);
-            border-radius: 18px;
-            padding: 18px 25px;
+            margin-top: 25px;
+            background: linear-gradient(135deg, rgba(188, 19, 254, 0.2), rgba(0, 243, 255, 0.1));
+            border: 2px solid #bc13fe;
+            border-radius: 20px;
+            padding: 20px 30px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 15px;
             width: 90vw;
-            max-width: 580px;
-            box-shadow: 0 0 25px rgba(188, 19, 254, 0.12);
-            animation: rglow 3s ease-in-out infinite alternate;
+            max-width: 600px;
+            box-shadow: 0 0 30px rgba(188, 19, 254, 0.2);
+            animation: rank-glow 3s ease-in-out infinite alternate;
             backdrop-filter: blur(10px);
         }
 
-        @keyframes rglow {
+        @keyframes rank-glow {
             0% {
-                box-shadow: 0 0 15px rgba(188, 19, 254, 0.1);
+                box-shadow: 0 0 20px rgba(188, 19, 254, 0.15);
             }
 
             100% {
-                box-shadow: 0 0 35px rgba(188, 19, 254, 0.25);
+                box-shadow: 0 0 40px rgba(188, 19, 254, 0.35);
             }
         }
 
         .my-rank-pos {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 900;
             color: #ffe600;
-            min-width: 45px;
+            min-width: 50px;
             text-align: center;
         }
 
         .my-rank-avatar {
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            border: 2px solid #bc13fe;
+            border: 3px solid #bc13fe;
             object-fit: cover;
-            box-shadow: 0 0 10px rgba(188, 19, 254, 0.3);
         }
 
         .my-rank-info {
@@ -255,162 +207,47 @@
 
         .my-rank-name {
             font-weight: 800;
-            font-size: 15px;
+            font-size: 16px;
         }
 
         .my-rank-balance {
             color: #ffe600;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .my-rank-label {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            color: #aaa;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* ═══ PODIUM ═══ */
-        .podium {
-            margin-top: 22px;
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .podium-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .podium-avatar {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            transition: 0.3s;
-        }
-
-        .podium-item:hover .podium-avatar {
-            transform: scale(1.08);
-        }
-
-        .podium-1 .podium-avatar {
-            width: 72px;
-            height: 72px;
-            border-color: #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
-        }
-
-        .podium-2 .podium-avatar {
-            border-color: #c0c0c0;
-            box-shadow: 0 0 12px rgba(192, 192, 192, 0.25);
-        }
-
-        .podium-3 .podium-avatar {
-            border-color: #cd7f32;
-            box-shadow: 0 0 12px rgba(205, 127, 50, 0.25);
-        }
-
-        .podium-name {
-            font-size: 12px;
-            font-weight: 700;
-            max-width: 75px;
-            text-align: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .podium-balance {
-            font-size: 11px;
-            color: #ffe600;
-            font-weight: 800;
-        }
-
-        .podium-medal {
-            font-size: 26px;
-        }
-
-        .podium-bar {
-            width: 75px;
-            border-radius: 10px 10px 0 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 18px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .podium-bar::after {
-            content: '';
-            position: absolute;
-            top: -100%;
-            left: -100%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-            animation: shimmer 3s linear infinite;
-        }
-
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%) translateY(-100%);
-            }
-
-            100% {
-                transform: translateX(100%) translateY(100%);
-            }
-        }
-
-        .podium-1 .podium-bar {
-            height: 95px;
-            background: linear-gradient(180deg, #ffd700, #b8860b);
-        }
-
-        .podium-2 .podium-bar {
-            height: 65px;
-            background: linear-gradient(180deg, #c0c0c0, #808080);
-        }
-
-        .podium-3 .podium-bar {
-            height: 45px;
-            background: linear-gradient(180deg, #cd7f32, #8b4513);
-        }
-
-        /* ═══ LEADERBOARD ═══ */
+        /* LEADERBOARD TABLE */
         .leaderboard {
-            margin-top: 22px;
+            margin-top: 25px;
             width: 90vw;
-            max-width: 580px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 18px;
-            padding: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            margin-bottom: 30px;
-            backdrop-filter: blur(5px);
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
         }
 
         .lb-header {
             display: flex;
-            padding: 8px 14px;
-            font-size: 11px;
+            padding: 10px 15px;
+            font-size: 12px;
             font-weight: 800;
-            color: rgba(255, 255, 255, 0.35);
+            color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .lb-header .col-rank {
-            width: 45px;
+            width: 50px;
         }
 
         .lb-header .col-user {
@@ -418,57 +255,44 @@
         }
 
         .lb-header .col-balance {
-            width: 110px;
+            width: 120px;
             text-align: right;
         }
 
         .lb-row {
             display: flex;
             align-items: center;
-            padding: 10px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            transition: 0.25s;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.2s;
             border-radius: 10px;
-            animation: rowIn 0.3s ease-out both;
-        }
-
-        @keyframes rowIn {
-            0% {
-                opacity: 0;
-                transform: translateX(-8px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateX(0);
-            }
         }
 
         .lb-row:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .lb-row.top-1 {
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
         }
 
         .lb-row.top-2 {
-            background: linear-gradient(90deg, rgba(192, 192, 192, 0.07), transparent);
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.1), transparent);
         }
 
         .lb-row.top-3 {
-            background: linear-gradient(90deg, rgba(205, 127, 50, 0.07), transparent);
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), transparent);
         }
 
         .lb-row.is-me {
-            background: rgba(188, 19, 254, 0.1);
-            border: 1px solid rgba(188, 19, 254, 0.2);
+            background: rgba(188, 19, 254, 0.15);
+            border: 1px solid rgba(188, 19, 254, 0.3);
         }
 
         .lb-rank {
-            width: 45px;
+            width: 50px;
             font-weight: 900;
-            font-size: 15px;
+            font-size: 16px;
             text-align: center;
         }
 
@@ -492,74 +316,179 @@
         }
 
         .lb-avatar {
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             object-fit: cover;
         }
 
         .lb-name {
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .lb-balance {
-            width: 110px;
+            width: 120px;
             text-align: right;
             font-weight: 800;
             color: #ffe600;
+            font-size: 14px;
+        }
+
+        /* TOP 3 PODIUM */
+        .podium {
+            margin-top: 25px;
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .podium-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .podium-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #555;
+        }
+
+        .podium-1 .podium-avatar {
+            width: 80px;
+            height: 80px;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .podium-2 .podium-avatar {
+            border-color: #c0c0c0;
+            box-shadow: 0 0 15px rgba(192, 192, 192, 0.3);
+        }
+
+        .podium-3 .podium-avatar {
+            border-color: #cd7f32;
+            box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+        }
+
+        .podium-name {
             font-size: 13px;
+            font-weight: 700;
+            max-width: 80px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .podium-balance {
+            font-size: 12px;
+            color: #ffe600;
+            font-weight: 800;
+        }
+
+        .podium-medal {
+            font-size: 28px;
+        }
+
+        .podium-bar {
+            width: 80px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .podium-bar::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(-100%);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%);
+            }
+        }
+
+        .podium-1 .podium-bar {
+            height: 100px;
+            background: linear-gradient(180deg, #ffd700, #b8860b);
+        }
+
+        .podium-2 .podium-bar {
+            height: 70px;
+            background: linear-gradient(180deg, #c0c0c0, #808080);
+        }
+
+        .podium-3 .podium-bar {
+            height: 50px;
+            background: linear-gradient(180deg, #cd7f32, #8b4513);
         }
 
         .refresh-btn {
-            margin-top: 12px;
-            margin-bottom: 30px;
+            margin-top: 15px;
             padding: 10px 25px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
             font-size: 13px;
-            backdrop-filter: blur(5px);
         }
 
         .refresh-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .loading-text {
-            color: rgba(255, 255, 255, 0.4);
+            color: #888;
             font-size: 14px;
-            margin-top: 25px;
+            margin-top: 30px;
         }
 
-        /* ═══ RESPONSIVE ═══ */
         @media (max-width: 500px) {
             .podium-1 .podium-avatar {
-                width: 55px;
-                height: 55px;
+                width: 60px;
+                height: 60px;
             }
 
             .podium-avatar {
-                width: 42px;
-                height: 42px;
+                width: 45px;
+                height: 45px;
             }
 
             .podium-bar {
-                width: 56px;
+                width: 60px;
             }
 
             .my-rank-card {
-                padding: 14px;
+                padding: 15px;
             }
 
             .page-title {
-                font-size: 22px;
+                font-size: 24px;
             }
         }
     </style>
@@ -568,7 +497,6 @@
 <body>
     <div class="ambient-orb orb-1"></div>
     <div class="ambient-orb orb-2"></div>
-    <div class="ambient-orb orb-3"></div>
     <div class="star-container" id="starContainer"></div>
 
     <div class="top-bar">
@@ -579,6 +507,7 @@
     <h1 class="page-title">🏆 BẢNG XẾP HẠNG</h1>
     <p class="page-subtitle">Top người chơi giàu nhất server</p>
 
+    <!-- MY RANK -->
     <div class="my-rank-card" id="myRankCard" style="display:none;">
         <div class="my-rank-pos" id="myRankPos">#?</div>
         <img class="my-rank-avatar" id="myRankAvatar" src="https://ui-avatars.com/api/?name=U" alt="avatar">
@@ -589,8 +518,10 @@
         </div>
     </div>
 
+    <!-- PODIUM -->
     <div class="podium" id="podium"></div>
 
+    <!-- LEADERBOARD -->
     <div class="leaderboard">
         <div class="lb-header">
             <div class="col-rank">#</div>
@@ -607,13 +538,22 @@
     <script>
         let myUserId = null;
 
-        function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
         async function fetchBalance() {
             try {
                 const res = await fetch('/api/me');
-                if (res.ok) { const d = await res.json(); document.getElementById('balance').textContent = Number(d.balance).toLocaleString(); return d; }
-                else window.location.href = '/';
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('balance').textContent = Number(data.balance).toLocaleString();
+                    return data;
+                } else {
+                    window.location.href = '/';
+                }
             } catch (e) { console.error(e); }
             return null;
         }
@@ -621,16 +561,22 @@
         async function loadLeaderboard() {
             const lbBody = document.getElementById('lbBody');
             try {
-                const [meRes, lbRes] = await Promise.all([fetch('/api/me'), fetch('/api/leaderboard')]);
+                const [meRes, lbRes] = await Promise.all([
+                    fetch('/api/me'),
+                    fetch('/api/leaderboard')
+                ]);
+
                 if (!meRes.ok) { window.location.href = '/'; return; }
                 const me = await meRes.json();
+
                 document.getElementById('balance').textContent = Number(me.balance).toLocaleString();
 
                 if (!lbRes.ok) {
-                    const err = await lbRes.json().catch(() => ({}));
-                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ ${escapeHtml(err.error || 'Lỗi tải bảng xếp hạng')}</p>`;
+                    const errData = await lbRes.json().catch(() => ({}));
+                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ ${escapeHtml(errData.error || 'Lỗi tải bảng xếp hạng')}</p>`;
                     return;
                 }
+
                 const lb = await lbRes.json();
 
                 if (!lb || !lb.leaderboard || !lb.leaderboard.length) {
@@ -641,6 +587,7 @@
 
                 const list = lb.leaderboard;
 
+                // Show my rank card
                 if (lb.my_rank) {
                     const card = document.getElementById('myRankCard');
                     card.style.display = 'flex';
@@ -650,10 +597,16 @@
                     document.getElementById('myRankBalance').textContent = Number(me.balance).toLocaleString() + ' $';
                 }
 
-                if (list.length >= 3) renderPodium(list.slice(0, 3));
-                else document.getElementById('podium').innerHTML = '';
+                // Podium (top 3) — only show if we have at least 3 users
+                if (list.length >= 3) {
+                    renderPodium(list.slice(0, 3));
+                } else {
+                    document.getElementById('podium').innerHTML = '';
+                }
 
+                // Full list
                 renderList(list, lb.my_user_id);
+
             } catch (e) {
                 console.error('Leaderboard error:', e);
                 lbBody.innerHTML = '<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ Không thể kết nối server</p>';
@@ -663,9 +616,12 @@
         function renderPodium(top3) {
             const podium = document.getElementById('podium');
             if (top3.length < 3) { podium.innerHTML = ''; return; }
+
+            // Order: 2nd, 1st, 3rd
             const order = [top3[1], top3[0], top3[2]];
             const classes = ['podium-2', 'podium-1', 'podium-3'];
             const medals = ['🥈', '🥇', '🥉'];
+
             podium.innerHTML = order.map((u, i) => `
                 <div class="podium-item ${classes[i]}">
                     <div class="podium-medal">${medals[i]}</div>
@@ -679,42 +635,51 @@
 
         function renderList(list, myId) {
             const body = document.getElementById('lbBody');
-            if (!list.length) { body.innerHTML = '<p class="loading-text" style="text-align:center;">Chưa có dữ liệu</p>'; return; }
+            if (!list.length) {
+                body.innerHTML = '<p class="loading-text" style="text-align:center;">Chưa có dữ liệu</p>';
+                return;
+            }
+
             body.innerHTML = list.map((u, i) => {
                 const rank = i + 1;
-                let rankClass = rank === 1 ? 'top-1' : rank === 2 ? 'top-2' : rank === 3 ? 'top-3' : '';
+                let rankClass = '';
+                if (rank === 1) rankClass = 'top-1';
+                else if (rank === 2) rankClass = 'top-2';
+                else if (rank === 3) rankClass = 'top-3';
+
                 const isMe = u.user_id === myId;
                 const rankColor = rank <= 3 ? `rank-${rank}` : '';
-                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                const medalEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+
                 return `
-                    <div class="lb-row ${rankClass} ${isMe ? 'is-me' : ''}" style="animation-delay: ${i * 0.03}s">
-                        <div class="lb-rank ${rankColor}">${medal}</div>
+                    <div class="lb-row ${rankClass} ${isMe ? 'is-me' : ''}">
+                        <div class="lb-rank ${rankColor}">${medalEmoji}</div>
                         <div class="lb-user">
                             <img class="lb-avatar" src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.username || 'U')}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U'">
                             <span class="lb-name">${escapeHtml(u.username || 'User')} ${isMe ? '(Bạn)' : ''}</span>
                         </div>
                         <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>
-                    </div>`;
+                    </div>
+                `;
             }).join('');
         }
 
         // Stars
         function createStars() {
-            const c = document.getElementById('starContainer');
-            const cols = ['#ffe600', '#00f3ff', '#bc13fe', '#fff'];
-            for (let i = 0; i < 35; i++) {
-                const s = document.createElement('div');
-                s.className = 'star';
-                s.style.left = Math.random() * 100 + '%';
-                s.style.top = Math.random() * 100 + '%';
-                s.style.animationDelay = Math.random() * 3 + 's';
-                const col = cols[Math.floor(Math.random() * cols.length)];
-                s.style.background = col; s.style.color = col;
-                s.style.width = s.style.height = (Math.random() * 2.5 + 1) + 'px';
-                c.appendChild(s);
+            const container = document.getElementById('starContainer');
+            for (let i = 0; i < 30; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+                container.appendChild(star);
             }
         }
         createStars();
+
+        // Init
         loadLeaderboard();
     </script>
 </body>
