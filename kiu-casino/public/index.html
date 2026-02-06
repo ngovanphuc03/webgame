@@ -917,8 +917,6 @@
             <p>Vui lòng đăng nhập để tham gia tranh tài và nhận thưởng!</p>
             <button id="btn-discord-login" class="btn-play btn-taixiu" onclick="handleDiscordLogin(this)">ĐĂNG NHẬP
                 (Discord)</button>
-            <button id="btn-dev-login" class="btn-play btn-flappy" style="margin-top: 10px; background: #666;"
-                onclick="handleDevLogin(this)">DEV LOGIN (Test)</button>
             <button
                 style="background:transparent; border:none; color:#ffff; margin-top:15px; cursor:pointer; text-decoration:underline;"
                 onclick="document.getElementById('login-modal').style.display='none'">Đóng</button>
@@ -1274,18 +1272,7 @@
             }, 10000);
         }
 
-        function handleDevLogin(btn) {
-            if (isLoginProcessing) {
-                showLoginWarning('Đang xử lý, vui lòng đợi...');
-                return;
-            }
-            isLoginProcessing = true;
-            btn.innerHTML = '⏳ ĐANG XỬ LÝ...';
-            btn.disabled = true;
-            setTimeout(() => {
-                window.location.href = '/auth/fake';
-            }, 300);
-        }
+
 
         function showLoginWarning(msg) {
             // Create or update warning toast

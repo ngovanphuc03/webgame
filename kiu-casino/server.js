@@ -215,25 +215,7 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
     }
 });
 
-// --- DEV LOGIN (BYPASS) - ONLY IN DEVELOPMENT ---
-app.get('/auth/fake', async (req, res) => {
-    if (IS_PROD) return res.status(403).send('Dev login disabled in production.');
 
-    const id = 'dev_' + Math.floor(Math.random() * 1000000);
-    const username = 'Dev_User_' + id.slice(-4);
-    const avatar = '';
-
-    try {
-        const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, id]);
-        if (rows.length === 0) await dbPool.execute('INSERT INTO wallet (guild_id, user_id, balance) VALUES (?,?,?)', [TARGET_GUILD_ID, id, 50000]);
-    } catch (e) { console.error("Dev Login DB Error:", e.message); }
-
-    res.cookie('user_id', id, COOKIE_OPTS);
-    const info = JSON.stringify({ username: encodeURIComponent(username), avatar: avatar });
-    res.cookie('user_info', info, COOKIE_OPTS_CLIENT);
-
-    res.redirect('/');
-});
 
 // --- LOGOUT (SERVER-SIDE) ---
 app.get('/auth/logout', (req, res) => {
