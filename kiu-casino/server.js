@@ -579,7 +579,7 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
                 [TARGET_GUILD_ID]
             );
         } catch (colErr) {
-            // Fallback: columns don't exist yet
+            console.log('[Leaderboard] Fallback to basic query:', colErr.message);
             [rows] = await dbPool.execute(
                 'SELECT user_id, balance FROM wallet WHERE guild_id=? ORDER BY balance DESC LIMIT 50',
                 [TARGET_GUILD_ID]
@@ -589,23 +589,33 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
         const leaderboard = rows.map(r => ({
             user_id: r.user_id,
             balance: Number(r.balance),
-            username: r.username || ('User_' + r.user_id.slice(-4)),
+            username: r.username || ('User_' + String(r.user_id).slice(-4)),
             avatar: r.avatar || ''
         }));
 
-        // Find my rank
-        const [myRankRows] = await dbPool.execute(
-            `SELECT COUNT(*) as rank FROM wallet WHERE guild_id=? AND balance > (
-                SELECT COALESCE(balance, 0) FROM wallet WHERE guild_id=? AND user_id=?
-            )`,
-            [TARGET_GUILD_ID, TARGET_GUILD_ID, uid]
-        );
-        const myRank = myRankRows.length ? Number(myRankRows[0].rank) + 1 : null;
+        // Find my rank - safer query that handles missing user
+        let myRank = null;
+        try {
+            const [myWallet] = await dbPool.execute(
+                'SELECT balance FROM wallet WHERE guild_id=? AND user_id=?',
+                [TARGET_GUILD_ID, uid]
+            );
+            if (myWallet.length > 0) {
+                const myBalance = Number(myWallet[0].balance);
+                const [rankRows] = await dbPool.execute(
+                    'SELECT COUNT(*) as cnt FROM wallet WHERE guild_id=? AND balance > ?',
+                    [TARGET_GUILD_ID, myBalance]
+                );
+                myRank = Number(rankRows[0].cnt) + 1;
+            }
+        } catch (rankErr) {
+            console.log('[Leaderboard] Rank query error:', rankErr.message);
+        }
 
         res.json({ leaderboard, my_user_id: uid, my_rank: myRank });
     } catch (e) {
-        console.error('Leaderboard Error:', e);
-        res.status(500).json({ error: 'Lỗi Database' });
+        console.error('Leaderboard Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database: ' + e.message });
     }
 });
 
