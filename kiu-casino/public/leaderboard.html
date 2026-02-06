@@ -559,6 +559,7 @@
         }
 
         async function loadLeaderboard() {
+            const lbBody = document.getElementById('lbBody');
             try {
                 const [meRes, lbRes] = await Promise.all([
                     fetch('/api/me'),
@@ -567,35 +568,48 @@
 
                 if (!meRes.ok) { window.location.href = '/'; return; }
                 const me = await meRes.json();
-                const lb = await lbRes.json();
 
                 document.getElementById('balance').textContent = Number(me.balance).toLocaleString();
 
-                if (!lb || !lb.leaderboard) return;
+                if (!lbRes.ok) {
+                    const errData = await lbRes.json().catch(() => ({}));
+                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ ${escapeHtml(errData.error || 'Lỗi tải bảng xếp hạng')}</p>`;
+                    return;
+                }
+
+                const lb = await lbRes.json();
+
+                if (!lb || !lb.leaderboard || !lb.leaderboard.length) {
+                    document.getElementById('podium').innerHTML = '';
+                    lbBody.innerHTML = '<p class="loading-text" style="text-align:center;padding:20px;">📭 Chưa có dữ liệu xếp hạng</p>';
+                    return;
+                }
 
                 const list = lb.leaderboard;
 
-                // Find my rank
-                const myIdx = list.findIndex(u => u.user_id === lb.my_user_id);
-                if (myIdx >= 0 || lb.my_rank) {
+                // Show my rank card
+                if (lb.my_rank) {
                     const card = document.getElementById('myRankCard');
                     card.style.display = 'flex';
-                    const rank = lb.my_rank || (myIdx + 1);
-                    document.getElementById('myRankPos').textContent = '#' + rank;
+                    document.getElementById('myRankPos').textContent = '#' + lb.my_rank;
                     document.getElementById('myRankName').textContent = me.username;
-                    document.getElementById('myRankAvatar').src = me.avatar || 'https://ui-avatars.com/api/?name=U';
+                    document.getElementById('myRankAvatar').src = me.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(me.username || 'U');
                     document.getElementById('myRankBalance').textContent = Number(me.balance).toLocaleString() + ' $';
                 }
 
-                // Podium (top 3)
-                renderPodium(list.slice(0, 3));
+                // Podium (top 3) — only show if we have at least 3 users
+                if (list.length >= 3) {
+                    renderPodium(list.slice(0, 3));
+                } else {
+                    document.getElementById('podium').innerHTML = '';
+                }
 
                 // Full list
                 renderList(list, lb.my_user_id);
 
             } catch (e) {
-                console.error(e);
-                document.getElementById('lbBody').innerHTML = '<p class="loading-text" style="text-align:center;color:#ff6b6b;">❌ Lỗi tải bảng xếp hạng</p>';
+                console.error('Leaderboard error:', e);
+                lbBody.innerHTML = '<p class="loading-text" style="text-align:center;color:#ff6b6b;padding:20px;">❌ Không thể kết nối server</p>';
             }
         }
 

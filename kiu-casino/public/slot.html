@@ -253,7 +253,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 30%, transparent 70%, rgba(255, 255, 255, 0.08));
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 25%, transparent 75%, rgba(0, 0, 0, 0.4));
             pointer-events: none;
             border-radius: 12px;
             z-index: 2;
@@ -753,18 +753,18 @@
             return SYMBOLS[0];
         }
 
-        // Init reels
+        // Init reels with visual symbols
         function initReels() {
             for (let i = 1; i <= 3; i++) {
                 const strip = document.querySelector(`#reel${i} .reel-strip`);
                 strip.innerHTML = '';
-                // Add initial symbols
-                for (let j = 0; j < 1; j++) {
-                    const item = document.createElement('div');
-                    item.className = 'reel-item';
-                    item.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-                    strip.appendChild(item);
-                }
+                const item = document.createElement('div');
+                item.className = 'reel-item';
+                item.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                strip.appendChild(item);
+                // Reset position
+                strip.style.transition = 'none';
+                strip.style.transform = 'translateY(0)';
             }
         }
 

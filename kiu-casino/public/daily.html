@@ -555,12 +555,13 @@
         function drawWheel() {
             const canvas = document.getElementById('wheelCanvas');
             const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+            const size = 320; // logical size (DPR-independent)
+            const cx = size / 2;
+            const cy = size / 2;
             const r = cx - 5;
             const segAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, size, size);
 
             WHEEL_SEGMENTS.forEach((seg, i) => {
                 const startAngle = i * segAngle - Math.PI / 2;
@@ -577,18 +578,29 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Draw text
+                // Draw text — always readable from center outward
                 ctx.save();
                 ctx.translate(cx, cy);
-                ctx.rotate(startAngle + segAngle / 2);
+                const midAngle = startAngle + segAngle / 2;
+                ctx.rotate(midAngle);
                 ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#fff';
-                ctx.font = 'bold 14px Nunito';
-                ctx.fillText(seg.emoji, r * 0.65, 5);
-                ctx.font = 'bold 12px Nunito';
-                ctx.fillText(seg.label, r * 0.45, 5);
+                ctx.font = 'bold 18px Nunito';
+                ctx.fillText(seg.emoji, r * 0.72, 0);
+                ctx.font = 'bold 13px Nunito';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 3;
+                ctx.fillText(seg.label, r * 0.48, 0);
+                ctx.shadowBlur = 0;
                 ctx.restore();
             });
+
+            // Center circle overlay
+            ctx.beginPath();
+            ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fill();
         }
 
         // Fetch balance
@@ -720,6 +732,18 @@
         }
 
         // Init
+        // Handle high-DPI canvas for crisp text
+        (function setupCanvas() {
+            const canvas = document.getElementById('wheelCanvas');
+            const dpr = window.devicePixelRatio || 1;
+            const size = 320;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+        })();
         drawWheel();
         fetchBalance();
         loadDailyStatus();

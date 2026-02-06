@@ -571,11 +571,20 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
 app.get('/api/leaderboard', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
     try {
-        // Get top 50 users by balance (with username/avatar from DB)
-        const [rows] = await dbPool.execute(
-            'SELECT user_id, balance, username, avatar FROM wallet WHERE guild_id=? ORDER BY balance DESC LIMIT 50',
-            [TARGET_GUILD_ID]
-        );
+        // Try with username/avatar columns first, fallback to basic query
+        let rows;
+        try {
+            [rows] = await dbPool.execute(
+                'SELECT user_id, balance, username, avatar FROM wallet WHERE guild_id=? ORDER BY balance DESC LIMIT 50',
+                [TARGET_GUILD_ID]
+            );
+        } catch (colErr) {
+            // Fallback: columns don't exist yet
+            [rows] = await dbPool.execute(
+                'SELECT user_id, balance FROM wallet WHERE guild_id=? ORDER BY balance DESC LIMIT 50',
+                [TARGET_GUILD_ID]
+            );
+        }
 
         const leaderboard = rows.map(r => ({
             user_id: r.user_id,
