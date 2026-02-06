@@ -924,8 +924,9 @@
                     strip.offsetHeight;
 
                     const reelEl = document.getElementById(`reel${reelNum}`);
-                    const itemH = reelEl.clientHeight;
-                    const offset = -(totalItems - 1) * itemH;
+                    const firstItem = strip.firstElementChild;
+                    const itemH = firstItem ? firstItem.getBoundingClientRect().height : reelEl.clientHeight;
+                    const offset = -Math.round((totalItems - 1) * itemH);
 
                     strip.style.transition = `transform ${1 + reelNum * 0.3}s cubic-bezier(0.15, 0.8, 0.3, 1)`;
                     strip.style.transform = `translateY(${offset}px)`;
