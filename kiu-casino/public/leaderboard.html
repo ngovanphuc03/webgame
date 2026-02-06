@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Bảng Xếp Hạng - Top người chơi tại Pixel PlayZone">
+    <meta name="theme-color" content="#0a1628">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
+    <title>🏆 Bảng Xếp Hạng - Pixel PlayZone</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* AMBIENT GLOW */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: -1;
+            animation: orb-drift 10s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 350px;
+            height: 350px;
+            background: rgba(255, 215, 0, 0.08);
+            top: 0;
+            left: -10%;
+        }
+
+        .orb-2 {
+            width: 280px;
+            height: 280px;
+            background: rgba(0, 243, 255, 0.06);
+            bottom: 5%;
+            right: -5%;
+            animation-delay: 5s;
+        }
+
+        @keyframes orb-drift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(20px, -15px) scale(1.1);
+            }
+        }
+
+        /* FLOATING STARS */
+        .star-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #ffe600;
+            border-radius: 50%;
+            animation: star-twinkle 3s ease-in-out infinite;
+            box-shadow: 0 0 4px #ffe600;
+        }
+
+        @keyframes star-twinkle {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .top-bar .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .top-bar .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .balance-pill {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffe600;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 800;
+            color: #ffe600;
+            font-size: 16px;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
+        }
+
+        .page-title {
+            margin-top: 30px;
+            font-size: 32px;
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(90deg, #ffe600, #ff9e00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .page-subtitle {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* MY RANK */
+        .my-rank-card {
+            margin-top: 25px;
+            background: linear-gradient(135deg, rgba(188, 19, 254, 0.2), rgba(0, 243, 255, 0.1));
+            border: 2px solid #bc13fe;
+            border-radius: 20px;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 90vw;
+            max-width: 600px;
+            box-shadow: 0 0 30px rgba(188, 19, 254, 0.2);
+            animation: rank-glow 3s ease-in-out infinite alternate;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes rank-glow {
+            0% {
+                box-shadow: 0 0 20px rgba(188, 19, 254, 0.15);
+            }
+
+            100% {
+                box-shadow: 0 0 40px rgba(188, 19, 254, 0.35);
+            }
+        }
+
+        .my-rank-pos {
+            font-size: 28px;
+            font-weight: 900;
+            color: #ffe600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .my-rank-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #bc13fe;
+            object-fit: cover;
+        }
+
+        .my-rank-info {
+            flex: 1;
+        }
+
+        .my-rank-name {
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .my-rank-balance {
+            color: #ffe600;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .my-rank-label {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* LEADERBOARD TABLE */
+        .leaderboard {
+            margin-top: 25px;
+            width: 90vw;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .lb-header {
+            display: flex;
+            padding: 10px 15px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lb-header .col-rank {
+            width: 50px;
+        }
+
+        .lb-header .col-user {
+            flex: 1;
+        }
+
+        .lb-header .col-balance {
+            width: 120px;
+            text-align: right;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.2s;
+            border-radius: 10px;
+        }
+
+        .lb-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .lb-row.top-1 {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
+        }
+
+        .lb-row.top-2 {
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.1), transparent);
+        }
+
+        .lb-row.top-3 {
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), transparent);
+        }
+
+        .lb-row.is-me {
+            background: rgba(188, 19, 254, 0.15);
+            border: 1px solid rgba(188, 19, 254, 0.3);
+        }
+
+        .lb-rank {
+            width: 50px;
+            font-weight: 900;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .rank-1 {
+            color: #ffd700;
+        }
+
+        .rank-2 {
+            color: #c0c0c0;
+        }
+
+        .rank-3 {
+            color: #cd7f32;
+        }
+
+        .lb-user {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lb-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            object-fit: cover;
+        }
+
+        .lb-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .lb-balance {
+            width: 120px;
+            text-align: right;
+            font-weight: 800;
+            color: #ffe600;
+            font-size: 14px;
+        }
+
+        /* TOP 3 PODIUM */
+        .podium {
+            margin-top: 25px;
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .podium-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .podium-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #555;
+        }
+
+        .podium-1 .podium-avatar {
+            width: 80px;
+            height: 80px;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .podium-2 .podium-avatar {
+            border-color: #c0c0c0;
+            box-shadow: 0 0 15px rgba(192, 192, 192, 0.3);
+        }
+
+        .podium-3 .podium-avatar {
+            border-color: #cd7f32;
+            box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+        }
+
+        .podium-name {
+            font-size: 13px;
+            font-weight: 700;
+            max-width: 80px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .podium-balance {
+            font-size: 12px;
+            color: #ffe600;
+            font-weight: 800;
+        }
+
+        .podium-medal {
+            font-size: 28px;
+        }
+
+        .podium-bar {
+            width: 80px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .podium-bar::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(-100%);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%);
+            }
+        }
+
+        .podium-1 .podium-bar {
+            height: 100px;
+            background: linear-gradient(180deg, #ffd700, #b8860b);
+        }
+
+        .podium-2 .podium-bar {
+            height: 70px;
+            background: linear-gradient(180deg, #c0c0c0, #808080);
+        }
+
+        .podium-3 .podium-bar {
+            height: 50px;
+            background: linear-gradient(180deg, #cd7f32, #8b4513);
+        }
+
+        .refresh-btn {
+            margin-top: 15px;
+            padding: 10px 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .loading-text {
+            color: #888;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 500px) {
+            .podium-1 .podium-avatar {
+                width: 60px;
+                height: 60px;
+            }
+
+            .podium-avatar {
+                width: 45px;
+                height: 45px;
+            }
+
+            .podium-bar {
+                width: 60px;
+            }
+
+            .my-rank-card {
+                padding: 15px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="star-container" id="starContainer"></div>
+
+    <div class="top-bar">
+        <a href="/" class="back-btn">← LOBBY</a>
+        <div class="balance-pill">💰 <span id="balance">0</span> $</div>
+    </div>
+
+    <h1 class="page-title">🏆 BẢNG XẾP HẠNG</h1>
+    <p class="page-subtitle">Top người chơi giàu nhất server</p>
+
+    <!-- MY RANK -->
+    <div class="my-rank-card" id="myRankCard" style="display:none;">
+        <div class="my-rank-pos" id="myRankPos">#?</div>
+        <img class="my-rank-avatar" id="myRankAvatar" src="https://ui-avatars.com/api/?name=U" alt="avatar">
+        <div class="my-rank-info">
+            <div class="my-rank-label">Hạng của bạn</div>
+            <div class="my-rank-name" id="myRankName">-</div>
+            <div class="my-rank-balance" id="myRankBalance">0 $</div>
+        </div>
+    </div>
+
+    <!-- PODIUM -->
+    <div class="podium" id="podium"></div>
+
+    <!-- LEADERBOARD -->
+    <div class="leaderboard">
+        <div class="lb-header">
+            <div class="col-rank">#</div>
+            <div class="col-user">Người chơi</div>
+            <div class="col-balance">Tài sản</div>
+        </div>
+        <div id="lbBody">
+            <p class="loading-text" style="text-align:center;padding:20px;">⏳ Đang tải...</p>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadLeaderboard()">🔄 Làm mới</button>
+
+    <script>
+        let myUserId = null;
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function fetchBalance() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('balance').textContent = Number(data.balance).toLocaleString();
+                    return data;
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (e) { console.error(e); }
+            return null;
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const [meRes, lbRes] = await Promise.all([
+                    fetch('/api/me'),
+                    fetch('/api/leaderboard')
+                ]);
+
+                if (!meRes.ok) { window.location.href = '/'; return; }
+                const me = await meRes.json();
+                const lb = await lbRes.json();
+
+                document.getElementById('balance').textContent = Number(me.balance).toLocaleString();
+
+                if (!lb || !lb.leaderboard) return;
+
+                const list = lb.leaderboard;
+
+                // Find my rank
+                const myIdx = list.findIndex(u => u.user_id === lb.my_user_id);
+                if (myIdx >= 0 || lb.my_rank) {
+                    const card = document.getElementById('myRankCard');
+                    card.style.display = 'flex';
+                    const rank = lb.my_rank || (myIdx + 1);
+                    document.getElementById('myRankPos').textContent = '#' + rank;
+                    document.getElementById('myRankName').textContent = me.username;
+                    document.getElementById('myRankAvatar').src = me.avatar || 'https://ui-avatars.com/api/?name=U';
+                    document.getElementById('myRankBalance').textContent = Number(me.balance).toLocaleString() + ' $';
+                }
+
+                // Podium (top 3)
+                renderPodium(list.slice(0, 3));
+
+                // Full list
+                renderList(list, lb.my_user_id);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('lbBody').innerHTML = '<p class="loading-text" style="text-align:center;color:#ff6b6b;">❌ Lỗi tải bảng xếp hạng</p>';
+            }
+        }
+
+        function renderPodium(top3) {
+            const podium = document.getElementById('podium');
+            if (top3.length < 3) { podium.innerHTML = ''; return; }
+
+            // Order: 2nd, 1st, 3rd
+            const order = [top3[1], top3[0], top3[2]];
+            const classes = ['podium-2', 'podium-1', 'podium-3'];
+            const medals = ['🥈', '🥇', '🥉'];
+
+            podium.innerHTML = order.map((u, i) => `
+                <div class="podium-item ${classes[i]}">
+                    <div class="podium-medal">${medals[i]}</div>
+                    <img class="podium-avatar" src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.username || 'U')}" alt="avatar" onerror="this.src='https://ui-avatars.com/api/?name=U'">
+                    <div class="podium-name">${escapeHtml(u.username || 'User')}</div>
+                    <div class="podium-balance">${Number(u.balance).toLocaleString()} $</div>
+                    <div class="podium-bar">${i === 1 ? '1' : (i === 0 ? '2' : '3')}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderList(list, myId) {
+            const body = document.getElementById('lbBody');
+            if (!list.length) {
+                body.innerHTML = '<p class="loading-text" style="text-align:center;">Chưa có dữ liệu</p>';
+                return;
+            }
+
+            body.innerHTML = list.map((u, i) => {
+                const rank = i + 1;
+                let rankClass = '';
+                if (rank === 1) rankClass = 'top-1';
+                else if (rank === 2) rankClass = 'top-2';
+                else if (rank === 3) rankClass = 'top-3';
+
+                const isMe = u.user_id === myId;
+                const rankColor = rank <= 3 ? `rank-${rank}` : '';
+                const medalEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+
+                return `
+                    <div class="lb-row ${rankClass} ${isMe ? 'is-me' : ''}">
+                        <div class="lb-rank ${rankColor}">${medalEmoji}</div>
+                        <div class="lb-user">
+                            <img class="lb-avatar" src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.username || 'U')}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U'">
+                            <span class="lb-name">${escapeHtml(u.username || 'User')} ${isMe ? '(Bạn)' : ''}</span>
+                        </div>
+                        <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Stars
+        function createStars() {
+            const container = document.getElementById('starContainer');
+            for (let i = 0; i < 30; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+                container.appendChild(star);
+            }
+        }
+        createStars();
+
+        // Init
+        loadLeaderboard();
+    </script>
+</body>
+
+</html>

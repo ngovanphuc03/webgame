@@ -130,6 +130,15 @@ const dbPool = mysql.createPool({
     bigNumberStrings: true
 });
 
+// --- AUTO-MIGRATE: Add username/avatar columns to wallet ---
+(async () => {
+    try {
+        await dbPool.execute("ALTER TABLE wallet ADD COLUMN username VARCHAR(128) DEFAULT ''").catch(() => { });
+        await dbPool.execute("ALTER TABLE wallet ADD COLUMN avatar VARCHAR(512) DEFAULT ''").catch(() => { });
+        console.log('✅ wallet table columns checked (username, avatar)');
+    } catch (e) { /* columns already exist */ }
+})();
+
 // --- AUTH ---
 // Discord OAuth routes (enabled when env is configured)
 app.get('/auth/discord', discordAuthLimiter, (req, res) => {
@@ -160,13 +169,6 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
         });
         const { id, username, avatar } = uRes.data;
 
-        try {
-            const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, id]);
-            if (rows.length === 0) await dbPool.execute('INSERT INTO wallet (guild_id, user_id, balance) VALUES (?,?,?)', [TARGET_GUILD_ID, id, 10000]);
-        } catch (e) { console.error("Lỗi DB:", e.message); }
-
-        res.cookie('user_id', id, COOKIE_OPTS);
-
         let avatarUrl = "";
         if (avatar) {
             avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
@@ -178,6 +180,17 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
                 avatarUrl = "https://cdn.discordapp.com/embed/avatars/0.png";
             }
         }
+
+        try {
+            const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, id]);
+            if (rows.length === 0) {
+                await dbPool.execute('INSERT INTO wallet (guild_id, user_id, balance, username, avatar) VALUES (?,?,?,?,?)', [TARGET_GUILD_ID, id, 10000, username, avatarUrl]);
+            } else {
+                await dbPool.execute('UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?', [username, avatarUrl, TARGET_GUILD_ID, id]);
+            }
+        } catch (e) { console.error("Lỗi DB:", e.message); }
+
+        res.cookie('user_id', id, COOKIE_OPTS);
 
         const info = JSON.stringify({ username: encodeURIComponent(username), avatar: avatarUrl });
         res.cookie('user_info', info, COOKIE_OPTS_CLIENT);
@@ -315,6 +328,279 @@ app.post('/api/flappy/reward', requireAuth, flappyRewardLimiter, async (req, res
 
 
 // ============================================================
+// SLOT MACHINE API
+// ============================================================
+const slotLimiter = rateLimit({
+    windowMs: 5 * 1000,
+    max: 3,
+    message: { error: 'Quay quá nhanh! Đợi vài giây.' }
+});
+
+const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '⭐', '7️⃣', '💎'];
+const SLOT_WEIGHTS = [25, 22, 20, 18, 10, 5];
+const SLOT_PAYOUTS = { '💎': 50, '7️⃣': 30, '⭐': 20, '🍒': 10, '🍋': 5, '🍊': 3 };
+
+function getSlotSymbol() {
+    const total = SLOT_WEIGHTS.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < SLOT_SYMBOLS.length; i++) {
+        r -= SLOT_WEIGHTS[i];
+        if (r <= 0) return SLOT_SYMBOLS[i];
+    }
+    return SLOT_SYMBOLS[0];
+}
+
+app.post('/api/slot/spin', requireAuth, slotLimiter, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { bet } = req.body;
+
+    if (!bet || !Number.isInteger(bet) || bet < 500 || bet > 100000) {
+        return res.status(400).json({ error: 'Cược không hợp lệ (500 - 100,000)' });
+    }
+
+    try {
+        // Check balance
+        const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        if (!rows.length || Number(rows[0].balance) < bet) {
+            return res.status(400).json({ error: 'Không đủ tiền!' });
+        }
+
+        // Generate 3 symbols
+        const symbols = [getSlotSymbol(), getSlotSymbol(), getSlotSymbol()];
+
+        // Calculate win
+        let multiplier = 0;
+        if (symbols[0] === symbols[1] && symbols[1] === symbols[2]) {
+            // 3 of a kind
+            multiplier = SLOT_PAYOUTS[symbols[0]] || 3;
+        } else if (symbols[0] === symbols[1] || symbols[1] === symbols[2] || symbols[0] === symbols[2]) {
+            // 2 of a kind
+            multiplier = 1.5;
+        }
+
+        const winAmount = Math.floor(bet * multiplier);
+        const netChange = winAmount - bet;
+
+        // Update balance
+        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [netChange, TARGET_GUILD_ID, uid]);
+
+        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+
+        console.log(`[Slot] User ${uid} bet ${bet} -> ${symbols.join(' ')} -> ${winAmount > 0 ? '+' + winAmount : netChange}`);
+
+        res.json({
+            symbols,
+            multiplier,
+            win: winAmount,
+            bet,
+            netChange,
+            newBalance
+        });
+    } catch (e) {
+        console.error('Slot Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// ============================================================
+// DAILY REWARD API
+// ============================================================
+
+// Init daily_rewards table
+(async () => {
+    try {
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS daily_rewards (
+                user_id VARCHAR(64) NOT NULL,
+                guild_id VARCHAR(64) NOT NULL,
+                last_claim DATETIME NOT NULL,
+                streak INT DEFAULT 1,
+                PRIMARY KEY (user_id, guild_id)
+            )
+        `);
+        console.log('✅ daily_rewards table ready');
+    } catch (e) {
+        console.error('Daily rewards table error:', e.message);
+    }
+})();
+
+const DAILY_WHEEL_SEGMENTS = [
+    { label: '500', value: 500, emoji: '🪙' },
+    { label: '1,000', value: 1000, emoji: '💰' },
+    { label: '2,000', value: 2000, emoji: '💎' },
+    { label: '500', value: 500, emoji: '🪙' },
+    { label: '3,000', value: 3000, emoji: '🌟' },
+    { label: '1,000', value: 1000, emoji: '💰' },
+    { label: '5,000', value: 5000, emoji: '👑' },
+    { label: '1,500', value: 1500, emoji: '🔥' },
+];
+
+const STREAK_BONUS = [0, 500, 1000, 1500, 2000, 3000, 4000, 10000]; // day 0-7
+
+app.get('/api/daily/status', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            'SELECT last_claim, streak FROM daily_rewards WHERE user_id=? AND guild_id=?',
+            [uid, TARGET_GUILD_ID]
+        );
+
+        const now = new Date();
+        let streak = 0;
+        let claimedToday = false;
+        let nextClaimIn = null;
+
+        if (rows.length > 0) {
+            const lastClaim = new Date(rows[0].last_claim);
+            streak = rows[0].streak || 0;
+
+            const lastDate = lastClaim.toISOString().split('T')[0];
+            const todayDate = now.toISOString().split('T')[0];
+
+            if (lastDate === todayDate) {
+                claimedToday = true;
+                // Calculate time until midnight UTC
+                const tomorrow = new Date(now);
+                tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+                tomorrow.setUTCHours(0, 0, 0, 0);
+                const diffMs = tomorrow - now;
+                const hours = Math.floor(diffMs / 3600000);
+                const mins = Math.floor((diffMs % 3600000) / 60000);
+                nextClaimIn = `${hours}h ${mins}m`;
+            }
+
+            // Reset streak if missed a day
+            const yesterday = new Date(now);
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayDate = yesterday.toISOString().split('T')[0];
+            if (lastDate !== todayDate && lastDate !== yesterdayDate) {
+                streak = 0;
+            }
+        }
+
+        res.json({ streak: Math.min(streak, 7), claimed_today: claimedToday, next_claim_in: nextClaimIn });
+    } catch (e) {
+        console.error('Daily Status Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+app.post('/api/daily/claim', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            'SELECT last_claim, streak FROM daily_rewards WHERE user_id=? AND guild_id=?',
+            [uid, TARGET_GUILD_ID]
+        );
+
+        const now = new Date();
+        const todayDate = now.toISOString().split('T')[0];
+        let streak = 0;
+
+        if (rows.length > 0) {
+            const lastClaim = new Date(rows[0].last_claim);
+            const lastDate = lastClaim.toISOString().split('T')[0];
+
+            if (lastDate === todayDate) {
+                return res.status(400).json({ error: 'Bạn đã nhận thưởng hôm nay rồi!' });
+            }
+
+            const yesterday = new Date(now);
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayDate = yesterday.toISOString().split('T')[0];
+
+            if (lastDate === yesterdayDate) {
+                streak = Math.min((rows[0].streak || 0) + 1, 7);
+            } else {
+                streak = 1;
+            }
+        } else {
+            streak = 1;
+        }
+
+        // Random wheel segment
+        const segIndex = Math.floor(Math.random() * DAILY_WHEEL_SEGMENTS.length);
+        const segment = DAILY_WHEEL_SEGMENTS[segIndex];
+        const streakBonus = STREAK_BONUS[Math.min(streak, 7)] || 0;
+        const totalReward = segment.value + streakBonus;
+
+        // Update DB
+        if (rows.length > 0) {
+            await dbPool.execute(
+                'UPDATE daily_rewards SET last_claim=NOW(), streak=? WHERE user_id=? AND guild_id=?',
+                [streak, uid, TARGET_GUILD_ID]
+            );
+        } else {
+            await dbPool.execute(
+                'INSERT INTO daily_rewards (user_id, guild_id, last_claim, streak) VALUES (?, ?, NOW(), ?)',
+                [uid, TARGET_GUILD_ID, streak]
+            );
+        }
+
+        // Add to wallet
+        await dbPool.execute(
+            'UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?',
+            [totalReward, TARGET_GUILD_ID, uid]
+        );
+
+        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+
+        console.log(`[Daily] User ${uid} claimed daily reward: ${totalReward} (wheel: ${segment.value}, streak bonus: ${streakBonus}, streak: ${streak})`);
+
+        res.json({
+            success: true,
+            reward: totalReward,
+            wheel_value: segment.value,
+            streak_bonus: streakBonus,
+            streak,
+            segment_index: segIndex,
+            emoji: segment.emoji,
+            newBalance
+        });
+    } catch (e) {
+        console.error('Daily Claim Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// ============================================================
+// LEADERBOARD API
+// ============================================================
+app.get('/api/leaderboard', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        // Get top 50 users by balance (with username/avatar from DB)
+        const [rows] = await dbPool.execute(
+            'SELECT user_id, balance, username, avatar FROM wallet WHERE guild_id=? ORDER BY balance DESC LIMIT 50',
+            [TARGET_GUILD_ID]
+        );
+
+        const leaderboard = rows.map(r => ({
+            user_id: r.user_id,
+            balance: Number(r.balance),
+            username: r.username || ('User_' + r.user_id.slice(-4)),
+            avatar: r.avatar || ''
+        }));
+
+        // Find my rank
+        const [myRankRows] = await dbPool.execute(
+            `SELECT COUNT(*) as rank FROM wallet WHERE guild_id=? AND balance > (
+                SELECT COALESCE(balance, 0) FROM wallet WHERE guild_id=? AND user_id=?
+            )`,
+            [TARGET_GUILD_ID, TARGET_GUILD_ID, uid]
+        );
+        const myRank = myRankRows.length ? Number(myRankRows[0].rank) + 1 : null;
+
+        res.json({ leaderboard, my_user_id: uid, my_rank: myRank });
+    } catch (e) {
+        console.error('Leaderboard Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// ============================================================
 // MANAGER GAME
 // ============================================================
 
@@ -372,6 +658,24 @@ app.get('/taixiu', (req, res) => {
 app.get('/poker', (req, res) => {
     if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'poker.html'));
+});
+
+// Serve Slot Machine page
+app.get('/slot', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'slot.html'));
+});
+
+// Serve Daily Reward page
+app.get('/daily', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'daily.html'));
+});
+
+// Serve Leaderboard page
+app.get('/leaderboard', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'leaderboard.html'));
 });
 
 

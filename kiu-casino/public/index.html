@@ -539,6 +539,21 @@
             box-shadow: 0 0 20px rgba(255, 230, 0, 0.2);
         }
 
+        .card-slot {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+        }
+
+        .card-daily {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
+        }
+
+        .card-leaderboard {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
         .game-card:hover {
             z-index: 10;
         }
@@ -680,15 +695,123 @@
             background-position: center;
         }
 
+        .img-slot {
+            background: linear-gradient(135deg, #2a1a4e 0%, #4a1a6e 30%, #1a0a3e 60%, #3a1a5e 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 4s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .img-slot::before {
+            content: '🍒  7️⃣  💎';
+            position: absolute;
+            font-size: 20px;
+            bottom: 12px;
+            opacity: 0.3;
+            letter-spacing: 8px;
+            animation: float-icons 3s ease-in-out infinite;
+        }
+
+        .img-daily {
+            background: linear-gradient(135deg, #2a0a1e 0%, #4a1a2e 30%, #1a0a2e 60%, #3a0a2e 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 5s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .img-daily::before {
+            content: '✨';
+            position: absolute;
+            font-size: 120px;
+            opacity: 0.08;
+            animation: spin-slow 10s linear infinite;
+        }
+
+        .img-leaderboard {
+            background: linear-gradient(135deg, #0a1628 0%, #1a2a5e 30%, #0a1e3e 60%, #1a3a6e 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 6s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .img-leaderboard::before {
+            content: '🥇 🥈 🥉';
+            position: absolute;
+            font-size: 18px;
+            bottom: 12px;
+            opacity: 0.35;
+            letter-spacing: 5px;
+        }
+
+        @keyframes gradient-shift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes float-icons {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes spin-slow {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .card-icon {
-            font-size: 64px;
+            font-size: 72px;
             z-index: 2;
-            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5));
-            transition: transform 0.3s;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+            transition: transform 0.4s, filter 0.4s;
+            animation: icon-float 3s ease-in-out infinite;
+        }
+
+        @keyframes icon-float {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-8px) scale(1.05);
+            }
         }
 
         .game-card:hover .card-icon {
-            transform: scale(1.1);
+            transform: scale(1.2) rotate(5deg);
+            filter: drop-shadow(0 8px 25px rgba(255, 255, 255, 0.3));
         }
 
         .card-title {
@@ -751,6 +874,43 @@
             background: var(--neon-yellow);
             color: #0a0b1e;
             box-shadow: 0 5px 15px rgba(255, 230, 0, 0.4);
+        }
+
+        .btn-slot {
+            background: linear-gradient(90deg, #bc13fe, #8a2be2);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .btn-daily {
+            background: linear-gradient(90deg, #ff6b6b, #ee5a24);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-leaderboard {
+            background: linear-gradient(90deg, var(--neon-blue), #0077ff);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.4);
+        }
+
+        /* Hover glow for new cards */
+        .card-slot:hover .card-image {
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px var(--neon-purple), inset 0 0 15px var(--neon-purple);
+            border-color: #fff;
+        }
+
+        .card-daily:hover .card-image {
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px #ff6b6b, inset 0 0 15px #ff6b6b;
+            border-color: #fff;
+        }
+
+        .card-leaderboard:hover .card-image {
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px var(--neon-blue), inset 0 0 15px var(--neon-blue);
+            border-color: #fff;
         }
 
         /* LOADING */
@@ -1004,6 +1164,55 @@
                 <div class="stat-item"><i>✨</i> Skill</div>
             </div>
             <button class="btn-play btn-flappy">BAY NGAY</button>
+        </div>
+
+        <!-- Slot Machine -->
+        <div class="game-card card-slot" onclick="enterGame('/slot')">
+            <div class="card-image img-slot">
+                <span class="card-icon">🎰</span>
+            </div>
+            <div class="card-title">MEGA SLOT</div>
+            <div class="card-desc">Quay số may mắn! Trúng 3 💎 nhận x50 tiền cược. Vận may trong tay bạn!</div>
+            <div class="card-stats">
+                <div class="stat-item"><i>🎯</i> Solo</div>
+                <div class="stat-item"><i>💎</i> Jackpot x50</div>
+            </div>
+            <button class="btn-play btn-slot">QUAY NGAY</button>
+        </div>
+    </div>
+
+    <!-- FEATURE SECTION -->
+    <div class="section-header" style="margin-top: 20px;">
+        <div class="section-title">TIỆN ÍCH</div>
+    </div>
+
+    <div class="game-grid">
+        <!-- Daily Reward -->
+        <div class="game-card card-daily" onclick="enterGame('/daily')">
+            <div class="card-image img-daily">
+                <span class="card-icon">🎁</span>
+            </div>
+            <div class="card-title">THƯỞNG HÀNG NGÀY</div>
+            <div class="card-desc">Đăng nhập mỗi ngày, quay vòng quay may mắn và nhận thưởng liên tục!</div>
+            <div class="card-stats">
+                <div class="stat-item"><i>📅</i> Mỗi ngày</div>
+                <div class="stat-item"><i>🔥</i> Streak x7</div>
+            </div>
+            <button class="btn-play btn-daily">NHẬN THƯỞNG</button>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="game-card card-leaderboard" onclick="enterGame('/leaderboard')">
+            <div class="card-image img-leaderboard">
+                <span class="card-icon">🏆</span>
+            </div>
+            <div class="card-title">BẢNG XẾP HẠNG</div>
+            <div class="card-desc">Xem ai là người giàu nhất server! Cạnh tranh để leo top đầu bảng.</div>
+            <div class="card-stats">
+                <div class="stat-item"><i>👑</i> Top 50</div>
+                <div class="stat-item"><i>📊</i> Realtime</div>
+            </div>
+            <button class="btn-play btn-leaderboard">XEM NGAY</button>
         </div>
     </div>
 

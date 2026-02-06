@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Daily Reward - Vòng quay may mắn hàng ngày tại Pixel PlayZone">
+    <meta name="theme-color" content="#0a1628">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+    <title>🎁 Daily Reward - Pixel PlayZone</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a0a2e 50%, #0a1628 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* AMBIENT GLOW */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: -1;
+            animation: orb-drift 8s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 107, 107, 0.12);
+            top: 5%;
+            right: -5%;
+        }
+
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: rgba(255, 230, 0, 0.1);
+            bottom: 15%;
+            left: -5%;
+            animation-delay: 4s;
+        }
+
+        @keyframes orb-drift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(25px, -15px) scale(1.15);
+            }
+        }
+
+        /* SPARKLES */
+        .sparkle-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffe600;
+            border-radius: 50%;
+            animation: sparkle-float linear infinite;
+            box-shadow: 0 0 6px #ffe600;
+        }
+
+        @keyframes sparkle-float {
+            0% {
+                transform: translateY(100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            85% {
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .top-bar .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .top-bar .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .balance-pill {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffe600;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 800;
+            color: #ffe600;
+            font-size: 16px;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
+        }
+
+        .page-title {
+            margin-top: 30px;
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(90deg, #ffe600, #ff9e00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .page-subtitle {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* STREAK */
+        .streak-bar {
+            margin-top: 25px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 500px;
+        }
+
+        .streak-day {
+            width: 60px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            gap: 2px;
+            position: relative;
+            transition: 0.4s;
+            backdrop-filter: blur(5px);
+        }
+
+        .streak-day:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .streak-day.claimed {
+            border-color: #00ff9d;
+            background: rgba(0, 255, 157, 0.15);
+            box-shadow: 0 0 12px rgba(0, 255, 157, 0.2);
+        }
+
+        .streak-day.claimed::after {
+            content: '✓';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #00ff9d;
+            color: #000;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        .streak-day.today {
+            border-color: #ffe600;
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
+            animation: pulse-today 2s infinite;
+        }
+
+        @keyframes pulse-today {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(255, 230, 0, 0.5);
+            }
+        }
+
+        .streak-reward {
+            font-size: 18px;
+        }
+
+        .streak-label {
+            color: #aaa;
+            font-size: 10px;
+        }
+
+        .streak-gold {
+            color: #ffe600;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        /* WHEEL */
+        .wheel-section {
+            margin-top: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        .wheel-canvas {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            border: 5px solid #ffe600;
+            box-shadow: 0 0 40px rgba(255, 230, 0, 0.3), 0 0 80px rgba(255, 230, 0, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
+        }
+
+        .wheel-container::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 230, 0, 0.2);
+            animation: wheel-ring-spin 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes wheel-ring-spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+            z-index: 10;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffe600, #ff9e00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.5);
+            z-index: 5;
+        }
+
+        .spin-wheel-btn {
+            margin-top: 25px;
+            padding: 16px 50px;
+            border: none;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffe600, #ff9e00);
+            color: #000;
+            box-shadow: 0 5px 25px rgba(255, 230, 0, 0.4);
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .spin-wheel-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .spin-wheel-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .cooldown-msg {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ff6b6b;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .result-popup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .result-popup.active {
+            display: flex;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #1a0a2e, #2a1a4e);
+            border: 3px solid #ffe600;
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(255, 230, 0, 0.3);
+            animation: pop-in 0.5s;
+        }
+
+        @keyframes pop-in {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-box h2 {
+            font-size: 28px;
+            color: #ffe600;
+            margin-bottom: 10px;
+        }
+
+        .result-box .reward-amount {
+            font-size: 42px;
+            color: #00ff9d;
+            font-weight: 900;
+            margin: 15px 0;
+        }
+
+        .result-box .reward-emoji {
+            font-size: 60px;
+        }
+
+        .result-box button {
+            margin-top: 20px;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 12px;
+            background: #ffe600;
+            color: #000;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* CONFETTI */
+        .confetti-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 400px) {
+
+            .wheel-container,
+            .wheel-canvas {
+                width: 280px;
+                height: 280px;
+            }
+
+            .streak-day {
+                width: 50px;
+                height: 60px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Ambient Effects -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="sparkle-container" id="sparkleContainer"></div>
+
+    <div class="top-bar">
+        <a href="/" class="back-btn">← LOBBY</a>
+        <div class="balance-pill">💰 <span id="balance">0</span> $</div>
+    </div>
+
+    <h1 class="page-title">🎁 PHẦN THƯỞNG HÀNG NGÀY</h1>
+    <p class="page-subtitle">Đăng nhập mỗi ngày để nhận thưởng liên tục!</p>
+
+    <!-- STREAK -->
+    <div class="streak-bar" id="streakBar"></div>
+
+    <!-- WHEEL -->
+    <div class="wheel-section">
+        <div class="wheel-container">
+            <div class="wheel-pointer">🔽</div>
+            <canvas class="wheel-canvas" id="wheelCanvas" width="320" height="320"></canvas>
+            <div class="wheel-center">🎯</div>
+        </div>
+        <button class="spin-wheel-btn" id="spinWheelBtn" onclick="spinWheel()">🎁 NHẬN THƯỞNG</button>
+        <div class="cooldown-msg" id="cooldownMsg"></div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="result-popup" id="resultPopup">
+        <div class="result-box">
+            <h2>🎉 CHÚC MỪNG!</h2>
+            <div class="reward-emoji" id="rewardEmoji">💰</div>
+            <div class="reward-amount" id="rewardAmount">+5,000 $</div>
+            <button onclick="closeResult()">TUYỆT VỜI!</button>
+        </div>
+    </div>
+
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <script>
+        const WHEEL_SEGMENTS = [
+            { label: '500', value: 500, color: '#e74c3c', emoji: '🪙' },
+            { label: '1,000', value: 1000, color: '#e67e22', emoji: '💰' },
+            { label: '2,000', value: 2000, color: '#f1c40f', emoji: '💎' },
+            { label: '500', value: 500, color: '#2ecc71', emoji: '🪙' },
+            { label: '3,000', value: 3000, color: '#1abc9c', emoji: '🌟' },
+            { label: '1,000', value: 1000, color: '#3498db', emoji: '💰' },
+            { label: '5,000', value: 5000, color: '#9b59b6', emoji: '👑' },
+            { label: '1,500', value: 1500, color: '#e91e63', emoji: '🔥' },
+        ];
+
+        const STREAK_REWARDS = [
+            { day: 1, reward: 500, emoji: '🪙' },
+            { day: 2, reward: 1000, emoji: '💰' },
+            { day: 3, reward: 1500, emoji: '💎' },
+            { day: 4, reward: 2000, emoji: '⭐' },
+            { day: 5, reward: 3000, emoji: '🔥' },
+            { day: 6, reward: 4000, emoji: '🌟' },
+            { day: 7, reward: 10000, emoji: '👑' },
+        ];
+
+        let balance = 0;
+        let currentAngle = 0;
+        let isSpinning = false;
+
+        // Sound Effects
+        const SFX = {
+            spin: new Audio('/sounds/spin.mp3'),
+            win: new Audio('/sounds/win.mp3'),
+            tick: new Audio('/sounds/tick.mp3'),
+            click: new Audio('/sounds/click.mp3'),
+        };
+        Object.values(SFX).forEach(a => { a.volume = 0.5; a.preload = 'auto'; });
+        SFX.win.volume = 0.7;
+        function playSound(name) { try { SFX[name].currentTime = 0; SFX[name].play().catch(() => { }); } catch (e) { } }
+
+        // Draw wheel
+        function drawWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const r = cx - 5;
+            const segAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            WHEEL_SEGMENTS.forEach((seg, i) => {
+                const startAngle = i * segAngle - Math.PI / 2;
+                const endAngle = startAngle + segAngle;
+
+                // Draw segment
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = seg.color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw text
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(startAngle + segAngle / 2);
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Nunito';
+                ctx.fillText(seg.emoji, r * 0.65, 5);
+                ctx.font = 'bold 12px Nunito';
+                ctx.fillText(seg.label, r * 0.45, 5);
+                ctx.restore();
+            });
+        }
+
+        // Fetch balance
+        async function fetchBalance() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    balance = Number(data.balance);
+                    document.getElementById('balance').textContent = balance.toLocaleString();
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Load daily status
+        async function loadDailyStatus() {
+            try {
+                const res = await fetch('/api/daily/status');
+                if (!res.ok) return;
+                const data = await res.json();
+                renderStreak(data.streak, data.claimed_today);
+                const btn = document.getElementById('spinWheelBtn');
+                const msg = document.getElementById('cooldownMsg');
+                if (data.claimed_today) {
+                    btn.disabled = true;
+                    btn.textContent = '✅ ĐÃ NHẬN HÔM NAY';
+                    if (data.next_claim_in) {
+                        msg.textContent = `⏰ Quay lại sau ${data.next_claim_in}`;
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderStreak(streak, claimedToday) {
+            const bar = document.getElementById('streakBar');
+            bar.innerHTML = '';
+            STREAK_REWARDS.forEach((sr, i) => {
+                const div = document.createElement('div');
+                div.className = 'streak-day';
+                if (i < streak || (i === streak && claimedToday)) div.classList.add('claimed');
+                if (i === streak && !claimedToday) div.classList.add('today');
+                div.innerHTML = `
+                    <span class="streak-reward">${sr.emoji}</span>
+                    <span class="streak-gold">${sr.reward >= 1000 ? (sr.reward / 1000) + 'K' : sr.reward}</span>
+                    <span class="streak-label">Ngày ${sr.day}</span>
+                `;
+                bar.appendChild(div);
+            });
+        }
+
+        async function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            const btn = document.getElementById('spinWheelBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 ĐANG QUAY...';
+            playSound('spin');
+
+            try {
+                const res = await fetch('/api/daily/claim', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.error) {
+                    document.getElementById('cooldownMsg').textContent = '❌ ' + data.error;
+                    btn.disabled = false;
+                    btn.textContent = '🎁 NHẬN THƯỞNG';
+                    isSpinning = false;
+                    return;
+                }
+
+                // Animate wheel to the winning segment
+                const segAngle = 360 / WHEEL_SEGMENTS.length;
+                const winIndex = data.segment_index || 0;
+                const targetAngle = 360 - (winIndex * segAngle + segAngle / 2);
+                const spins = 5 + Math.floor(Math.random() * 3);
+                const totalAngle = spins * 360 + targetAngle;
+
+                const canvas = document.getElementById('wheelCanvas');
+                currentAngle += totalAngle;
+                canvas.style.transform = `rotate(${currentAngle}deg)`;
+
+                // Wait for animation
+                await new Promise(r => setTimeout(r, 4500));
+
+                // Update
+                balance = Number(data.newBalance);
+                document.getElementById('balance').textContent = balance.toLocaleString();
+
+                // Show result
+                playSound('win');
+                document.getElementById('rewardEmoji').textContent = data.emoji || '💰';
+                document.getElementById('rewardAmount').textContent = '+' + Number(data.reward).toLocaleString() + ' $';
+                document.getElementById('resultPopup').classList.add('active');
+                spawnConfetti();
+
+                btn.textContent = '✅ ĐÃ NHẬN HÔM NAY';
+                loadDailyStatus();
+
+            } catch (e) {
+                document.getElementById('cooldownMsg').textContent = '❌ Lỗi kết nối!';
+                btn.disabled = false;
+                btn.textContent = '🎁 NHẬN THƯỞNG';
+            }
+            isSpinning = false;
+        }
+
+        function closeResult() {
+            document.getElementById('resultPopup').classList.remove('active');
+        }
+
+        function spawnConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#ffe600', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff', '#ff9e00'];
+            for (let i = 0; i < 50; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.animationDelay = Math.random() * 2 + 's';
+                el.style.animationDuration = (2 + Math.random() * 2) + 's';
+                el.style.width = (5 + Math.random() * 10) + 'px';
+                el.style.height = (5 + Math.random() * 10) + 'px';
+                el.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                container.appendChild(el);
+            }
+            setTimeout(() => { container.innerHTML = ''; }, 4000);
+        }
+
+        // Init
+        drawWheel();
+        fetchBalance();
+        loadDailyStatus();
+
+        // Sparkle particles
+        (function initSparkles() {
+            const container = document.getElementById('sparkleContainer');
+            const colors = ['#ffe600', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff'];
+            for (let i = 0; i < 20; i++) {
+                const s = document.createElement('div');
+                s.className = 'sparkle';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.background = colors[Math.floor(Math.random() * colors.length)];
+                s.style.boxShadow = `0 0 6px ${s.style.background}`;
+                s.style.animationDuration = (6 + Math.random() * 10) + 's';
+                s.style.animationDelay = Math.random() * 8 + 's';
+                s.style.width = s.style.height = (2 + Math.random() * 4) + 'px';
+                container.appendChild(s);
+            }
+        })();
+    </script>
+</body>
+
+</html>
