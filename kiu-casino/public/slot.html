@@ -910,7 +910,6 @@
             return new Promise(resolve => {
                 setTimeout(() => {
                     const strip = document.querySelector(`#reel${reelNum} .reel-strip`);
-                    const itemH = getReelHeight();
                     const totalItems = 15 + reelNum * 3;
 
                     // Build spinning strip
@@ -929,10 +928,10 @@
                         strip.appendChild(item);
                     }
 
-                    // Force reflow
+                    // Force reflow then measure ACTUAL rendered height of one item
                     strip.offsetHeight;
-
-                    const offset = -(totalItems - 1) * itemH;
+                    const actualItemH = strip.children[0].offsetHeight;
+                    const offset = -(totalItems - 1) * actualItemH;
                     const duration = 1 + reelNum * 0.3;
 
                     strip.style.transition = `transform ${duration}s cubic-bezier(0.15, 0.8, 0.3, 1)`;
