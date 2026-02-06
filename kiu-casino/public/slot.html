@@ -288,9 +288,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 54px;
-            line-height: 1;
+            font-size: 50px;
+            line-height: var(--reel-h);
             flex-shrink: 0;
+            overflow: hidden;
         }
 
         /* Win line */
@@ -779,17 +780,19 @@
         }
 
         // Init reels with visual symbols
+        // Get the actual pixel value of --reel-h
+        function getReelHeight() {
+            return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--reel-h')) || 120;
+        }
+
         function initReels() {
             for (let i = 1; i <= 3; i++) {
                 const strip = document.querySelector(`#reel${i} .reel-strip`);
-                const reelEl = document.getElementById(`reel${i}`);
                 strip.innerHTML = '';
                 const item = document.createElement('div');
                 item.className = 'reel-item';
-                item.style.height = reelEl.clientHeight + 'px';
                 item.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
                 strip.appendChild(item);
-                // Reset position
                 strip.style.transition = 'none';
                 strip.style.transform = 'translateY(0)';
             }
@@ -906,11 +909,10 @@
             return new Promise(resolve => {
                 setTimeout(() => {
                     const strip = document.querySelector(`#reel${reelNum} .reel-strip`);
-                    const reelEl = document.getElementById(`reel${reelNum}`);
-                    const reelH = reelEl.clientHeight;
+                    const itemH = getReelHeight();
                     const totalItems = 15 + reelNum * 3;
 
-                    // Build spinning strip — each item forced to exact reel height
+                    // Build spinning strip
                     strip.innerHTML = '';
                     strip.style.transition = 'none';
                     strip.style.transform = 'translateY(0)';
@@ -918,7 +920,6 @@
                     for (let i = 0; i < totalItems; i++) {
                         const item = document.createElement('div');
                         item.className = 'reel-item';
-                        item.style.height = reelH + 'px';
                         if (i === totalItems - 1) {
                             item.textContent = result;
                         } else {
@@ -930,13 +931,13 @@
                     // Force reflow
                     strip.offsetHeight;
 
-                    const offset = -(totalItems - 1) * reelH;
+                    const offset = -(totalItems - 1) * itemH;
                     const duration = 1 + reelNum * 0.3;
 
                     strip.style.transition = `transform ${duration}s cubic-bezier(0.15, 0.8, 0.3, 1)`;
                     strip.style.transform = `translateY(${offset}px)`;
 
-                    // After animation finishes, reset to single item for clean display
+                    // After animation finishes, reset to single result item
                     const cleanupDelay = duration * 1000 + 100;
                     setTimeout(() => {
                         strip.style.transition = 'none';
@@ -944,7 +945,6 @@
                         strip.innerHTML = '';
                         const finalItem = document.createElement('div');
                         finalItem.className = 'reel-item';
-                        finalItem.style.height = reelH + 'px';
                         finalItem.textContent = result;
                         strip.appendChild(finalItem);
                         resolve();
