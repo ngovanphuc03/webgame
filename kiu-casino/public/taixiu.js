@@ -2,7 +2,7 @@
 const socket = io();
 let currentBalance = 0;
 let selectedAmount = 1;
-let canNan = false;
+let canOpenBowl = false;
 let isBettingPhase = false;
 
 // --- SAFE DOM HELPERS (prevents null errors on mobile) ---
@@ -161,9 +161,9 @@ let currentResultSide = null; // Store result to show only when bowl opens
 let currentUserWon = false;   // Store if user won to determine lose sound
 let hasUserBet = false;       // Store if user bet
 
-hammer.on("panstart", () => { if (!canNan) return; bowlWrap.style.transition = 'none'; });
-hammer.on("panmove", (ev) => { if (!canNan) return; bowlWrap.style.transform = `translate(calc(-50% + ${ev.deltaX}px), calc(-50% + ${ev.deltaY}px))`; cx = ev.deltaX; cy = ev.deltaY; });
-hammer.on("panend", () => { if (!canNan) return; if (Math.sqrt(cx * cx + cy * cy) > 150) openBowl(); else resetBowlPosition(); });
+hammer.on("panstart", () => { if (!canOpenBowl) return; bowlWrap.style.transition = 'none'; });
+hammer.on("panmove", (ev) => { if (!canOpenBowl) return; bowlWrap.style.transform = `translate(calc(-50% + ${ev.deltaX}px), calc(-50% + ${ev.deltaY}px))`; cx = ev.deltaX; cy = ev.deltaY; });
+hammer.on("panend", () => { if (!canOpenBowl) return; if (Math.sqrt(cx * cx + cy * cy) > 150) openBowl(); else resetBowlPosition(); });
 
 function openBowl() {
     bowlWrap.style.transition = 'all 0.5s ease-out';
@@ -260,7 +260,7 @@ socket.on('tx_update', (data) => {
         if (data.msg) showNotif(data.msg);
 
         if (data.phase === 'shaking') {
-            isBettingPhase = false; canNan = false; resetBowl();
+            isBettingPhase = false; canOpenBowl = false; resetBowl();
             bowlWrap.classList.add('shaking');
             SoundManager.play('shaking');
 
@@ -277,9 +277,9 @@ socket.on('tx_update', (data) => {
             bowlWrap.classList.remove('shaking');
             SoundManager.stop('shaking');
 
-            if (data.phase === 'betting') { isBettingPhase = true; canNan = false; resetBowl(); }
+            if (data.phase === 'betting') { isBettingPhase = true; canOpenBowl = false; resetBowl(); }
             else if (data.phase === 'opening' || data.phase === 'result') {
-                isBettingPhase = false; canNan = (data.phase === 'opening');
+                isBettingPhase = false; canOpenBowl = (data.phase === 'opening');
                 if (data.dice) {
                     for (let i = 0; i < 3; i++) {
                         const d = document.getElementById(`d${i + 1}`);
@@ -294,7 +294,7 @@ socket.on('tx_update', (data) => {
 });
 
 socket.on('tx_phase_open', (data) => {
-    canNan = true; isBettingPhase = false; showNotif("MỞ BÁT !");
+    canOpenBowl = true; isBettingPhase = false; showNotif("MỞ BÁT !");
     if (data.dice) for (let i = 0; i < 3; i++) { const d = document.getElementById(`d${i + 1}`); if (d) d.src = `images/dice/${data.dice[i]}.png?t=${Date.now()}`; }
     let txt = data.result.toUpperCase(); if (data.result === 'bao') txt = "BÃO";
     let color = data.result === 'tai' ? '#e74c3c' : (data.result === 'xiu' ? '#3498db' : '#ffd700');

@@ -48,6 +48,17 @@ app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    // CSP: Allow inline styles/scripts (required by inline HTML pages), Google Fonts, Discord CDN, Socket.IO
+    res.setHeader('Content-Security-Policy', [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: https://cdn.discordapp.com",
+        "connect-src 'self' ws: wss:",
+        "frame-ancestors 'none'"
+    ].join('; '));
     next();
 });
 
@@ -136,8 +147,62 @@ const dbPool = mysql.createPool({
         await dbPool.execute("ALTER TABLE wallet ADD COLUMN username VARCHAR(128) DEFAULT ''").catch(() => { });
         await dbPool.execute("ALTER TABLE wallet ADD COLUMN avatar VARCHAR(512) DEFAULT ''").catch(() => { });
         console.log('✅ wallet table columns checked (username, avatar)');
-    } catch (e) { /* columns already exist */ }
+
+        // --- CREATE TRANSACTIONS TABLE (audit log) ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS transactions (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(64) NOT NULL,
+                guild_id VARCHAR(64) NOT NULL,
+                type VARCHAR(32) NOT NULL COMMENT 'mines_bet, mines_win, mines_lose, flappy_reward, daily_reward, poker_win, poker_lose, taixiu_bet, taixiu_win',
+                amount BIGINT NOT NULL COMMENT 'positive=credit, negative=debit',
+                balance_before BIGINT NOT NULL,
+                balance_after BIGINT NOT NULL,
+                details JSON DEFAULT NULL COMMENT 'game-specific metadata',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_guild (user_id, guild_id),
+                INDEX idx_type (type),
+                INDEX idx_created (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+        console.log('✅ transactions table ready');
+
+        // --- CREATE MINES_GAMES TABLE (persistent state) ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS mines_games (
+                user_id VARCHAR(64) NOT NULL,
+                guild_id VARCHAR(64) NOT NULL,
+                bet BIGINT NOT NULL,
+                mine_count INT NOT NULL,
+                mines JSON NOT NULL,
+                revealed JSON NOT NULL DEFAULT '[]',
+                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, guild_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+        console.log('✅ mines_games table ready');
+
+    } catch (e) { console.error('Auto-migrate error:', e.message); }
 })();
+
+// --- TRANSACTION LOGGER ---
+async function logTx(conn, uid, type, amount, balBefore, balAfter, details) {
+    try {
+        await conn.execute(
+            'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+            [uid, TARGET_GUILD_ID, type, amount, balBefore, balAfter, details ? JSON.stringify(details) : null]
+        );
+    } catch (e) { console.error('[TX LOG]', e.message); }
+}
+// Shorthand for non-transactional logging
+async function logTxSimple(uid, type, amount, balBefore, balAfter, details) {
+    try {
+        await dbPool.execute(
+            'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+            [uid, TARGET_GUILD_ID, type, amount, balBefore, balAfter, details ? JSON.stringify(details) : null]
+        );
+    } catch (e) { console.error('[TX LOG]', e.message); }
+}
 
 // --- DISCORD BOT: Auto-sync user info ---
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
@@ -258,12 +323,17 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
         }
 
         try {
-            const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, id]);
+            const conn = await dbPool.getConnection();
+            await conn.beginTransaction();
+            const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, id]);
             if (rows.length === 0) {
-                await dbPool.execute('INSERT INTO wallet (guild_id, user_id, balance, username, avatar) VALUES (?,?,?,?,?)', [TARGET_GUILD_ID, id, 10000, username, avatarUrl]);
+                await conn.execute('INSERT INTO wallet (guild_id, user_id, balance, username, avatar) VALUES (?,?,?,?,?)', [TARGET_GUILD_ID, id, 10000, username, avatarUrl]);
+                await logTx(conn, id, 'signup_bonus', 10000, 0, 10000, { source: 'discord_oauth' });
             } else {
-                await dbPool.execute('UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?', [username, avatarUrl, TARGET_GUILD_ID, id]);
+                await conn.execute('UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?', [username, avatarUrl, TARGET_GUILD_ID, id]);
             }
+            await conn.commit();
+            conn.release();
         } catch (e) { console.error("Lỗi DB:", e.message); }
 
         res.cookie('user_id', id, COOKIE_OPTS);
@@ -394,20 +464,33 @@ app.post('/api/flappy/reward', requireAuth, flappyRewardLimiter, async (req, res
     if (score > 1000) return res.status(400).json({ error: 'Điểm quá cao bất thường' });
 
     const goldReward = score * 10;
+    const conn = await dbPool.getConnection();
 
     try {
-        const [result] = await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
+        await conn.beginTransaction();
 
-        if (result.affectedRows === 0) {
-            console.error(`[FlappyBird] ERROR: User ${uid} not found in Guild ${TARGET_GUILD_ID}. Update failed.`);
-            return res.status(400).json({ error: 'Lỗi: Không tìm thấy ví tiền (Sai GuildID?)' });
+        const [rows] = await conn.execute(
+            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, uid]
+        );
+        if (!rows.length) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Lỗi: Không tìm thấy ví tiền' });
         }
 
-        const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = rows.length ? rows[0].balance : 0;
-        console.log(`[FlappyBird] User ${uid} score ${score} -> +${goldReward} gold. New Balance: ${newBalance}`);
-        res.json({ success: true, addedGold: goldReward, newBalance });
+        const balBefore = Number(rows[0].balance);
+        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
+        const balAfter = balBefore + goldReward;
+
+        await logTx(conn, uid, 'flappy_reward', goldReward, balBefore, balAfter, { score });
+        await conn.commit();
+        conn.release();
+
+        console.log(`[FlappyBird] User ${uid} score ${score} -> +${goldReward} gold. New Balance: ${balAfter}`);
+        res.json({ success: true, addedGold: goldReward, newBalance: balAfter });
     } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
         console.error('Flappy Reward Error:', e);
         res.status(500).json({ error: 'Lỗi Database' });
     }
@@ -415,84 +498,12 @@ app.post('/api/flappy/reward', requireAuth, flappyRewardLimiter, async (req, res
 
 
 // ============================================================
-// MINES GAME API
+// MINES GAME API (DB-persistent, transactional)
 // ============================================================
 const minesLimiter = rateLimit({
     windowMs: 3 * 1000,
     max: 10,
     message: { error: 'Quá nhanh! Đợi vài giây.' }
-});
-
-// Active mines games stored in memory (userId -> gameState)
-const activeMinesGames = new Map();
-
-// Start a new mines game
-app.post('/api/mines/start', requireAuth, minesLimiter, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const { bet, mineCount } = req.body;
-
-    if (!bet || !Number.isInteger(bet) || bet < 500 || bet > 100000) {
-        return res.status(400).json({ error: 'Cược không hợp lệ (500 - 100,000)' });
-    }
-    if (!mineCount || !Number.isInteger(mineCount) || mineCount < 1 || mineCount > 24) {
-        return res.status(400).json({ error: 'Số mìn không hợp lệ (1 - 24)' });
-    }
-
-    // If player already has active game, reject
-    if (activeMinesGames.has(uid)) {
-        return res.status(400).json({ error: 'Bạn đang có ván chưa kết thúc!' });
-    }
-
-    try {
-        const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        if (!rows.length || Number(rows[0].balance) < bet) {
-            return res.status(400).json({ error: 'Không đủ tiền!' });
-        }
-
-        // Deduct bet immediately
-        await dbPool.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [bet, TARGET_GUILD_ID, uid]);
-
-        // Generate mine positions (25 cells, 0-24)
-        const mines = new Set();
-        while (mines.size < mineCount) {
-            mines.add(Math.floor(Math.random() * 25));
-        }
-
-        const gameState = {
-            bet,
-            mineCount,
-            mines: [...mines],
-            revealed: [],
-            cashedOut: false,
-            startTime: Date.now()
-        };
-
-        activeMinesGames.set(uid, gameState);
-
-        // Auto-expire after 10 minutes
-        setTimeout(() => {
-            if (activeMinesGames.has(uid) && activeMinesGames.get(uid).startTime === gameState.startTime) {
-                activeMinesGames.delete(uid);
-                console.log(`[Mines] Game expired for user ${uid}`);
-            }
-        }, 10 * 60 * 1000);
-
-        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
-
-        console.log(`[Mines] User ${uid} started game: bet=${bet}, mines=${mineCount}`);
-
-        res.json({
-            success: true,
-            bet,
-            mineCount,
-            totalCells: 25,
-            newBalance
-        });
-    } catch (e) {
-        console.error('Mines Start Error:', e);
-        res.status(500).json({ error: 'Lỗi Database' });
-    }
 });
 
 // Calculate multiplier for mines game
@@ -509,144 +520,283 @@ function calcMinesMultiplier(mineCount, revealedCount) {
     return Math.min(multiplier, cap);
 }
 
+// Helper: get active mines game from DB
+async function getMinesGame(conn, uid) {
+    const [rows] = await conn.execute(
+        'SELECT bet, mine_count, mines, revealed, started_at FROM mines_games WHERE user_id=? AND guild_id=?',
+        [uid, TARGET_GUILD_ID]
+    );
+    if (!rows.length) return null;
+    return {
+        bet: Number(rows[0].bet),
+        mineCount: rows[0].mine_count,
+        mines: JSON.parse(rows[0].mines),
+        revealed: JSON.parse(rows[0].revealed),
+        startTime: new Date(rows[0].started_at).getTime()
+    };
+}
+
+// Auto-expire old mines games (>10 minutes) — refund bets
+setInterval(async () => {
+    try {
+        // Find expired games first so we can refund
+        const [expiredGames] = await dbPool.execute(
+            'SELECT user_id, bet FROM mines_games WHERE guild_id=? AND started_at < DATE_SUB(NOW(), INTERVAL 10 MINUTE)',
+            [TARGET_GUILD_ID]
+        );
+        if (expiredGames.length === 0) return;
+
+        for (const game of expiredGames) {
+            const conn = await dbPool.getConnection();
+            try {
+                await conn.beginTransaction();
+                // Refund bet
+                const [walletRows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, game.user_id]);
+                const balBefore = walletRows.length ? Number(walletRows[0].balance) : 0;
+                await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [Number(game.bet), TARGET_GUILD_ID, game.user_id]);
+                const balAfter = balBefore + Number(game.bet);
+                // Delete game
+                await conn.execute('DELETE FROM mines_games WHERE user_id=? AND guild_id=?', [game.user_id, TARGET_GUILD_ID]);
+                // Log refund
+                await logTx(conn, game.user_id, 'mines_expire_refund', Number(game.bet), balBefore, balAfter, { reason: 'game_timeout' });
+                await conn.commit();
+                conn.release();
+                console.log(`[Mines] Expired & refunded ${game.bet} to user ${game.user_id}`);
+            } catch (e) {
+                await conn.rollback().catch(() => { });
+                conn.release();
+                console.error('[Mines] Expire refund error:', e.message);
+            }
+        }
+    } catch (e) { /* ignore */ }
+}, 60000);
+
+// Start a new mines game
+app.post('/api/mines/start', requireAuth, minesLimiter, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { bet, mineCount } = req.body;
+
+    if (!bet || !Number.isInteger(bet) || bet < 500 || bet > 100000) {
+        return res.status(400).json({ error: 'Cược không hợp lệ (500 - 100,000)' });
+    }
+    if (!mineCount || !Number.isInteger(mineCount) || mineCount < 1 || mineCount > 24) {
+        return res.status(400).json({ error: 'Số mìn không hợp lệ (1 - 24)' });
+    }
+
+    const conn = await dbPool.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        // Check for existing active game
+        const existing = await getMinesGame(conn, uid);
+        if (existing) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Bạn đang có ván chưa kết thúc!' });
+        }
+
+        // Lock wallet row and check balance
+        const [rows] = await conn.execute(
+            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, uid]
+        );
+        if (!rows.length || Number(rows[0].balance) < bet) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Không đủ tiền!' });
+        }
+
+        const balBefore = Number(rows[0].balance);
+
+        // Deduct bet
+        await conn.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [bet, TARGET_GUILD_ID, uid]);
+        const balAfter = balBefore - bet;
+
+        // Generate mine positions (25 cells, 0-24)
+        const mines = new Set();
+        while (mines.size < mineCount) {
+            mines.add(Math.floor(Math.random() * 25));
+        }
+        const minesArr = [...mines];
+
+        // Save game state to DB
+        await conn.execute(
+            'INSERT INTO mines_games (user_id, guild_id, bet, mine_count, mines, revealed) VALUES (?,?,?,?,?,?)',
+            [uid, TARGET_GUILD_ID, bet, mineCount, JSON.stringify(minesArr), '[]']
+        );
+
+        // Log transaction
+        await logTx(conn, uid, 'mines_bet', -bet, balBefore, balAfter, { mineCount });
+
+        await conn.commit();
+        conn.release();
+
+        console.log(`[Mines] User ${uid} started game: bet=${bet}, mines=${mineCount}`);
+        res.json({ success: true, bet, mineCount, totalCells: 25, newBalance: balAfter });
+    } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
+        console.error('Mines Start Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
 // Reveal a cell
 app.post('/api/mines/reveal', requireAuth, minesLimiter, async (req, res) => {
     const uid = req.cookies.user_id;
     const { cell } = req.body;
 
-    const game = activeMinesGames.get(uid);
-    if (!game) {
-        return res.status(400).json({ error: 'Không có ván đang chơi!' });
-    }
-
     if (cell === undefined || !Number.isInteger(cell) || cell < 0 || cell > 24) {
         return res.status(400).json({ error: 'Ô không hợp lệ!' });
     }
 
-    if (game.revealed.includes(cell)) {
-        return res.status(400).json({ error: 'Ô này đã mở!' });
+    const conn = await dbPool.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        const game = await getMinesGame(conn, uid);
+        if (!game) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Không có ván đang chơi!' });
+        }
+
+        if (game.revealed.includes(cell)) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Ô này đã mở!' });
+        }
+
+        const isMine = game.mines.includes(cell);
+
+        if (isMine) {
+            // BOOM - game over, delete game state
+            await conn.execute('DELETE FROM mines_games WHERE user_id=? AND guild_id=?', [uid, TARGET_GUILD_ID]);
+
+            // Log loss transaction
+            const [walletRows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+            const bal = walletRows.length ? Number(walletRows[0].balance) : 0;
+            await logTx(conn, uid, 'mines_lose', 0, bal, bal, { bet: game.bet, mineCount: game.mineCount, revealed: game.revealed.length, hitCell: cell });
+
+            await conn.commit();
+            conn.release();
+
+            console.log(`[Mines] User ${uid} HIT MINE at cell ${cell}! Lost ${game.bet}`);
+            return res.json({ result: 'mine', cell, mines: game.mines, bet: game.bet, newBalance: bal });
+        }
+
+        // Safe cell
+        game.revealed.push(cell);
+        const multiplier = calcMinesMultiplier(game.mineCount, game.revealed.length);
+        const currentWin = Math.floor(game.bet * multiplier);
+        const safeCells = 25 - game.mineCount;
+
+        // Check if all safe cells revealed (auto cashout)
+        if (game.revealed.length >= safeCells) {
+            await conn.execute('DELETE FROM mines_games WHERE user_id=? AND guild_id=?', [uid, TARGET_GUILD_ID]);
+
+            const [walletRows] = await conn.execute(
+                'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+                [TARGET_GUILD_ID, uid]
+            );
+            const balBefore = walletRows.length ? Number(walletRows[0].balance) : 0;
+            await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [currentWin, TARGET_GUILD_ID, uid]);
+            const balAfter = balBefore + currentWin;
+
+            await logTx(conn, uid, 'mines_win', currentWin, balBefore, balAfter, { bet: game.bet, mineCount: game.mineCount, multiplier, revealed: game.revealed.length, cleared: true });
+            await conn.commit();
+            conn.release();
+
+            console.log(`[Mines] User ${uid} CLEARED ALL! Won ${currentWin}`);
+            return res.json({ result: 'cleared', cell, multiplier, currentWin, mines: game.mines, newBalance: balAfter });
+        }
+
+        // Update revealed cells in DB
+        await conn.execute(
+            'UPDATE mines_games SET revealed=? WHERE user_id=? AND guild_id=?',
+            [JSON.stringify(game.revealed), uid, TARGET_GUILD_ID]
+        );
+
+        await conn.commit();
+        conn.release();
+
+        const nextMultiplier = calcMinesMultiplier(game.mineCount, game.revealed.length + 1);
+        res.json({ result: 'safe', cell, multiplier, currentWin, nextMultiplier, revealedCount: game.revealed.length, safeCells });
+    } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
+        console.error('Mines Reveal Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
     }
-
-    const isMine = game.mines.includes(cell);
-
-    if (isMine) {
-        // BOOM - game over, player loses bet (already deducted)
-        activeMinesGames.delete(uid);
-
-        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
-
-        console.log(`[Mines] User ${uid} HIT MINE at cell ${cell}! Lost ${game.bet}`);
-
-        return res.json({
-            result: 'mine',
-            cell,
-            mines: game.mines,
-            bet: game.bet,
-            newBalance
-        });
-    }
-
-    // Safe cell
-    game.revealed.push(cell);
-    const multiplier = calcMinesMultiplier(game.mineCount, game.revealed.length);
-    const currentWin = Math.floor(game.bet * multiplier);
-    const safeCells = 25 - game.mineCount;
-
-    // Check if all safe cells revealed (auto cashout)
-    if (game.revealed.length >= safeCells) {
-        activeMinesGames.delete(uid);
-        const winAmount = currentWin;
-        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, uid]);
-
-        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
-
-        console.log(`[Mines] User ${uid} CLEARED ALL! Won ${winAmount}`);
-
-        return res.json({
-            result: 'cleared',
-            cell,
-            multiplier,
-            currentWin: winAmount,
-            mines: game.mines,
-            newBalance
-        });
-    }
-
-    // Calculate next multiplier preview
-    const nextMultiplier = calcMinesMultiplier(game.mineCount, game.revealed.length + 1);
-
-    res.json({
-        result: 'safe',
-        cell,
-        multiplier,
-        currentWin,
-        nextMultiplier,
-        revealedCount: game.revealed.length,
-        safeCells
-    });
 });
 
 // Cash out current game
 app.post('/api/mines/cashout', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
-
-    const game = activeMinesGames.get(uid);
-    if (!game) {
-        return res.status(400).json({ error: 'Không có ván đang chơi!' });
-    }
-
-    if (game.revealed.length === 0) {
-        return res.status(400).json({ error: 'Phải mở ít nhất 1 ô!' });
-    }
-
-    const multiplier = calcMinesMultiplier(game.mineCount, game.revealed.length);
-    const winAmount = Math.floor(game.bet * multiplier);
-
-    activeMinesGames.delete(uid);
+    const conn = await dbPool.getConnection();
 
     try {
-        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, uid]);
+        await conn.beginTransaction();
 
-        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+        const game = await getMinesGame(conn, uid);
+        if (!game) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Không có ván đang chơi!' });
+        }
 
+        if (game.revealed.length === 0) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Phải mở ít nhất 1 ô!' });
+        }
+
+        const multiplier = calcMinesMultiplier(game.mineCount, game.revealed.length);
+        const winAmount = Math.floor(game.bet * multiplier);
         const profit = winAmount - game.bet;
-        console.log(`[Mines] User ${uid} CASHED OUT! Bet=${game.bet}, Win=${winAmount}, Profit=${profit > 0 ? '+' : ''}${profit}`);
 
-        res.json({
-            success: true,
-            multiplier,
-            winAmount,
-            profit,
-            bet: game.bet,
-            mines: game.mines,
-            newBalance
-        });
+        // Delete game & credit wallet atomically
+        await conn.execute('DELETE FROM mines_games WHERE user_id=? AND guild_id=?', [uid, TARGET_GUILD_ID]);
+
+        const [walletRows] = await conn.execute(
+            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, uid]
+        );
+        const balBefore = walletRows.length ? Number(walletRows[0].balance) : 0;
+        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, uid]);
+        const balAfter = balBefore + winAmount;
+
+        await logTx(conn, uid, 'mines_win', winAmount, balBefore, balAfter, { bet: game.bet, mineCount: game.mineCount, multiplier, revealed: game.revealed.length, profit });
+
+        await conn.commit();
+        conn.release();
+
+        console.log(`[Mines] User ${uid} CASHED OUT! Bet=${game.bet}, Win=${winAmount}, Profit=${profit > 0 ? '+' : ''}${profit}`);
+        res.json({ success: true, multiplier, winAmount, profit, bet: game.bet, mines: game.mines, newBalance: balAfter });
     } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
         console.error('Mines Cashout Error:', e);
         res.status(500).json({ error: 'Lỗi Database' });
     }
 });
 
-// Check if user has active game
+// Check if user has active game (read from DB)
 app.get('/api/mines/status', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
-    const game = activeMinesGames.get(uid);
-    if (!game) {
-        return res.json({ active: false });
+    try {
+        const [rows] = await dbPool.execute(
+            'SELECT bet, mine_count, mines, revealed FROM mines_games WHERE user_id=? AND guild_id=?',
+            [uid, TARGET_GUILD_ID]
+        );
+        if (!rows.length) return res.json({ active: false });
+
+        const game = {
+            bet: Number(rows[0].bet),
+            mineCount: rows[0].mine_count,
+            revealed: JSON.parse(rows[0].revealed)
+        };
+        const multiplier = game.revealed.length > 0 ? calcMinesMultiplier(game.mineCount, game.revealed.length) : 1;
+        const currentWin = Math.floor(game.bet * multiplier);
+        res.json({ active: true, bet: game.bet, mineCount: game.mineCount, revealed: game.revealed, multiplier, currentWin });
+    } catch (e) {
+        console.error('Mines Status Error:', e);
+        res.json({ active: false });
     }
-    const multiplier = game.revealed.length > 0 ? calcMinesMultiplier(game.mineCount, game.revealed.length) : 1;
-    const currentWin = Math.floor(game.bet * multiplier);
-    res.json({
-        active: true,
-        bet: game.bet,
-        mineCount: game.mineCount,
-        revealed: game.revealed,
-        multiplier,
-        currentWin
-    });
 });
 
 // ============================================================
@@ -734,8 +884,11 @@ app.get('/api/daily/status', requireAuth, async (req, res) => {
 
 app.post('/api/daily/claim', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
+    const conn = await dbPool.getConnection();
     try {
-        const [rows] = await dbPool.execute(
+        await conn.beginTransaction();
+
+        const [rows] = await conn.execute(
             'SELECT last_claim, streak FROM daily_rewards WHERE user_id=? AND guild_id=?',
             [uid, TARGET_GUILD_ID]
         );
@@ -749,6 +902,7 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
             const lastDate = lastClaim.toISOString().split('T')[0];
 
             if (lastDate === todayDate) {
+                await conn.rollback(); conn.release();
                 return res.status(400).json({ error: 'Bạn đã nhận thưởng hôm nay rồi!' });
             }
 
@@ -771,27 +925,33 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
         const streakBonus = STREAK_BONUS[Math.min(streak, 7)] || 0;
         const totalReward = segment.value + streakBonus;
 
-        // Update DB
+        // Update daily_rewards
         if (rows.length > 0) {
-            await dbPool.execute(
+            await conn.execute(
                 'UPDATE daily_rewards SET last_claim=NOW(), streak=? WHERE user_id=? AND guild_id=?',
                 [streak, uid, TARGET_GUILD_ID]
             );
         } else {
-            await dbPool.execute(
+            await conn.execute(
                 'INSERT INTO daily_rewards (user_id, guild_id, last_claim, streak) VALUES (?, ?, NOW(), ?)',
                 [uid, TARGET_GUILD_ID, streak]
             );
         }
 
-        // Add to wallet
-        await dbPool.execute(
-            'UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?',
-            [totalReward, TARGET_GUILD_ID, uid]
+        // Lock wallet + credit
+        const [walletRows] = await conn.execute(
+            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, uid]
         );
+        const balBefore = walletRows.length ? Number(walletRows[0].balance) : 0;
+        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [totalReward, TARGET_GUILD_ID, uid]);
+        const balAfter = balBefore + totalReward;
 
-        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
-        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+        // Log transaction
+        await logTx(conn, uid, 'daily_claim', totalReward, balBefore, balAfter, { streak, wheelValue: segment.value, streakBonus });
+
+        await conn.commit();
+        conn.release();
 
         console.log(`[Daily] User ${uid} claimed daily reward: ${totalReward} (wheel: ${segment.value}, streak bonus: ${streakBonus}, streak: ${streak})`);
 
@@ -803,9 +963,11 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
             streak,
             segment_index: segIndex,
             emoji: segment.emoji,
-            newBalance
+            newBalance: balAfter
         });
     } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
         console.error('Daily Claim Error:', e);
         res.status(500).json({ error: 'Lỗi Database' });
     }
@@ -892,6 +1054,60 @@ app.get('/api/sync-users', requireAuth, async (req, res) => {
 });
 
 // ============================================================
+// ADMIN: TRANSACTION LOG API
+// ============================================================
+app.get('/api/admin/transactions', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { type, limit: rawLimit, offset: rawOffset, user } = req.query;
+
+    // Admin check: only ADMIN_USER_IDS (comma-separated in env) can view other users' transactions
+    const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+    const isAdmin = adminIds.includes(uid);
+
+    try {
+        let query = 'SELECT * FROM transactions WHERE guild_id=?';
+        const params = [TARGET_GUILD_ID];
+
+        // Admin can filter by any user; normal users can only see their own
+        if (user && isAdmin) {
+            query += ' AND user_id=?';
+            params.push(user);
+        } else {
+            query += ' AND user_id=?';
+            params.push(uid);
+        }
+
+        if (type) {
+            query += ' AND type=?';
+            params.push(type);
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const limit = Math.min(Math.max(parseInt(rawLimit) || 50, 1), 200);
+        const offset = Math.max(parseInt(rawOffset) || 0, 0);
+        query += ' LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const [rows] = await dbPool.execute(query, params);
+
+        // Parse JSON details field
+        const txs = rows.map(r => ({
+            ...r,
+            amount: Number(r.amount),
+            balance_before: Number(r.balance_before),
+            balance_after: Number(r.balance_after),
+            details: r.details ? (typeof r.details === 'string' ? JSON.parse(r.details) : r.details) : null
+        }));
+
+        res.json({ transactions: txs, count: txs.length, offset, limit });
+    } catch (e) {
+        console.error('Transactions API Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// ============================================================
 // MANAGER GAME
 // ============================================================
 
@@ -952,10 +1168,12 @@ app.get('/poker', (req, res) => {
 });
 
 // Serve Mines game page
-app.get('/slot', (req, res) => {
+app.get('/mines', (req, res) => {
     if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
-    res.sendFile(path.join(__dirname, 'public', 'slot.html'));
+    res.sendFile(path.join(__dirname, 'public', 'mines.html'));
 });
+// Legacy redirect
+app.get('/slot', (req, res) => res.redirect('/mines'));
 
 // Serve Daily Reward page
 app.get('/daily', (req, res) => {

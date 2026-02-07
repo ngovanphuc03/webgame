@@ -24,6 +24,16 @@ class TaiXiuGame {
         this.startGameLoop();
     }
 
+    // Transaction logging helper
+    async logTx(uid, type, amount, balBefore, balAfter, details) {
+        try {
+            await this.db.execute(
+                'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+                [uid, this.guildId, type, amount, balBefore, balAfter, details ? JSON.stringify(details) : null]
+            );
+        } catch (e) { console.error('[TX LOG]', e.message); }
+    }
+
     async startGameLoop() {
         while (true) {
             try {
@@ -161,14 +171,26 @@ class TaiXiuGame {
 
         for (const [userId, amount] of Object.entries(winners)) {
             const profit = amount * 2; // Tỉ lệ 1:1 (x2 vốn)
+            const conn = await this.db.getConnection();
             try {
-                await this.db.execute(
-                    'UPDATE wallet SET balance = balance + ? WHERE guild_id = ? AND user_id = ?',
-                    [profit, this.guildId, userId]
+                await conn.beginTransaction();
+                const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [this.guildId, userId]);
+                const balBefore = rows.length ? Number(rows[0].balance) : 0;
+                await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id = ? AND user_id = ?', [profit, this.guildId, userId]);
+                const balAfter = balBefore + profit;
+                await conn.execute(
+                    'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+                    [userId, this.guildId, 'taixiu_win', profit, balBefore, balAfter, JSON.stringify({ side: winnerSide, betAmount: amount, session: this.sessionId })]
                 );
+                await conn.commit();
+                conn.release();
                 this.io.to(`user_${userId}`).emit('tx_win_notify', { amount: profit });
                 this.updateBalance(userId);
-            } catch (err) { console.error('[Payout Error]', err); }
+            } catch (err) {
+                await conn.rollback().catch(() => { });
+                conn.release();
+                console.error('[Payout Error]', err);
+            }
         }
     }
 
@@ -195,9 +217,17 @@ class TaiXiuGame {
             }
 
             // 2. Trừ tiền
+            const balBefore = Number(rows[0].balance);
             await conn.execute(
                 'UPDATE wallet SET balance = balance - ? WHERE user_id = ? AND guild_id = ?',
                 [amount, userId, this.guildId]
+            );
+            const balAfter = balBefore - amount;
+
+            // Log transaction
+            await conn.execute(
+                'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+                [userId, this.guildId, 'taixiu_bet', -amount, balBefore, balAfter, JSON.stringify({ side, session: this.sessionId })]
             );
 
             await conn.commit(); // ✅ MỞ KHÓA

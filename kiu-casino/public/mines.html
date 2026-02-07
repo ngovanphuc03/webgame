@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="theme-color" content="#0a0015">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💣</text></svg>">
+    <title>💣 MINES - Pixel PlayZone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #0a0015;
+            --surface: rgba(16, 4, 36, .96);
+            --surface2: rgba(24, 6, 50, .9);
+            --border: rgba(138, 43, 226, .3);
+            --accent: #bc13fe;
+            --accent2: #ff0096;
+            --gold: #FFD700;
+            --green: #00ff9d;
+            --red: #ff4757;
+            --text: #fff;
+            --muted: rgba(255, 255, 255, .55);
+            --radius: 14px;
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            min-height: 100dvh;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ══ BG ══ */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image:
+                linear-gradient(rgba(138, 43, 226, .04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138, 43, 226, .04) 1px, transparent 1px);
+            background-size: 44px 44px;
+            animation: gridDrift 25s linear infinite;
+        }
+
+        @keyframes gridDrift {
+            to {
+                background-position: 44px 44px
+            }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            pointer-events: none;
+            z-index: -1
+        }
+
+        .orb1 {
+            width: 380px;
+            height: 380px;
+            background: rgba(188, 19, 254, .1);
+            top: -10%;
+            left: -10%;
+            animation: orbF 14s ease-in-out infinite alternate
+        }
+
+        .orb2 {
+            width: 320px;
+            height: 320px;
+            background: rgba(255, 0, 150, .07);
+            bottom: -8%;
+            right: -10%;
+            animation: orbF 14s ease-in-out 6s infinite alternate
+        }
+
+        @keyframes orbF {
+            0% {
+                transform: translate(0, 0) scale(1)
+            }
+
+            100% {
+                transform: translate(30px, -25px) scale(1.15)
+            }
+        }
+
+        /* ══ TOP BAR ══ */
+        .topbar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, .55);
+            backdrop-filter: blur(18px);
+            border-bottom: 2px solid rgba(138, 43, 226, .2);
+            z-index: 50;
+        }
+
+        .back {
+            background: rgba(255, 255, 255, .07);
+            border: 1.5px solid rgba(255, 255, 255, .18);
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 13px;
+            transition: .25s;
+            letter-spacing: .3px;
+        }
+
+        .back:hover {
+            background: rgba(255, 255, 255, .14);
+            border-color: rgba(255, 255, 255, .32)
+        }
+
+        .bal {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: 2px solid #ffe55c;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 900;
+            color: #000;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, .3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bal::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent);
+            animation: shimmer 3.5s ease infinite;
+        }
+
+        .bal.bump {
+            animation: balBump .5s ease;
+        }
+
+        @keyframes balBump {
+            0% {
+                transform: scale(1)
+            }
+
+            30% {
+                transform: scale(1.12)
+            }
+
+            100% {
+                transform: scale(1)
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%
+            }
+
+            100% {
+                left: 200%
+            }
+        }
+
+        /* ══ MAIN WRAP ══ */
+        .wrap {
+            margin: 16px auto;
+            width: min(95vw, 500px)
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 22px;
+            padding: 22px 18px;
+            border: 2px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .05);
+        }
+
+        /* ══ TITLE ══ */
+        .title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, var(--gold), #FFA500, var(--gold));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShift 3s ease infinite;
+        }
+
+        @keyframes titleShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            font-size: 11.5px;
+            margin-bottom: 16px;
+            letter-spacing: .8px
+        }
+
+        /* ══ SETUP ══ */
+        .setup {
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .srow {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .slbl {
+            font-weight: 800;
+            font-size: 12px;
+            color: var(--muted);
+            min-width: 65px;
+            text-transform: uppercase;
+            letter-spacing: .8px
+        }
+
+        .sctrl {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1
+        }
+
+        .cbtn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: rgba(138, 43, 226, .12);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: .2s;
+        }
+
+        .cbtn:hover {
+            background: rgba(138, 43, 226, .28);
+            border-color: var(--accent)
+        }
+
+        .cbtn:active {
+            transform: scale(.92)
+        }
+
+        .sval {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--gold);
+            padding: 7px;
+            background: rgba(0, 0, 0, .35);
+            border-radius: 10px;
+            border: 1.5px solid rgba(255, 215, 0, .2);
+        }
+
+        /* Presets */
+        .presets {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center
+        }
+
+        .preset {
+            padding: 7px 13px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: rgba(138, 43, 226, .08);
+            color: #ccc;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .preset:hover {
+            background: rgba(138, 43, 226, .22);
+            color: #fff
+        }
+
+        .preset.on {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-color: var(--accent);
+            box-shadow: 0 3px 12px rgba(188, 19, 254, .45);
+            color: #fff;
+        }
+
+        /* ══ MULT TABLE ══ */
+        .mtable {
+            margin-top: 6px;
+            padding: 12px;
+            background: rgba(0, 0, 0, .2);
+            border-radius: 12px;
+            border: 1.5px solid rgba(255, 255, 255, .04)
+        }
+
+        .mt-title {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px
+        }
+
+        .mt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 8px;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .mt-row .mv {
+            color: var(--gold);
+            font-weight: 800
+        }
+
+        /* ══ BUTTONS ══ */
+        .abtn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 12px;
+            border: none;
+            border-radius: var(--radius);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 1.5px;
+            transition: .25s;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .abtn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .18), transparent);
+            animation: shimmer 2.8s ease infinite;
+        }
+
+        .abtn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none !important
+        }
+
+        .btn-go {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            box-shadow: 0 5px 22px rgba(188, 19, 254, .4)
+        }
+
+        .btn-go:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(188, 19, 254, .55)
+        }
+
+        .btn-cash {
+            background: linear-gradient(135deg, #00b894, #00ff9d);
+            color: #000;
+            box-shadow: 0 5px 22px rgba(0, 255, 157, .3)
+        }
+
+        .btn-cash:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 255, 157, .5)
+        }
+
+        .btn-cash .sub {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: .75;
+            margin-top: 2px
+        }
+
+        /* ══ GRID ══ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 7px;
+            margin: 16px 0
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border-radius: 11px;
+            border: 2.5px solid var(--border);
+            background: linear-gradient(145deg, rgba(28, 8, 52, .92), rgba(16, 4, 32, .96));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s cubic-bezier(.175, .885, .32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Shimmer sweep on unrevealed cells */
+        .cell::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .07) 50%, transparent 65%);
+            background-size: 300% 100%;
+            animation: cellShimmer 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes cellShimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .cell::after {
+            content: '?';
+            position: absolute;
+            font-size: 18px;
+            font-weight: 900;
+            color: rgba(138, 43, 226, .22);
+            transition: all .3s ease;
+            z-index: 1;
+        }
+
+        .cell:hover:not(.open):not(.off) {
+            border-color: var(--accent);
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 28px rgba(138, 43, 226, .45), inset 0 0 20px rgba(138, 43, 226, .08);
+            background: linear-gradient(145deg, rgba(45, 14, 75, .9), rgba(28, 8, 52, .95));
+        }
+
+        .cell:hover:not(.open):not(.off)::after {
+            color: rgba(255, 255, 255, .5);
+            text-shadow: 0 0 14px rgba(138, 43, 226, .9);
+            transform: scale(1.3);
+        }
+
+        .cell:active:not(.open):not(.off) {
+            transform: scale(.9);
+            transition: .08s;
+        }
+
+        .cell.off {
+            cursor: default;
+            pointer-events: none
+        }
+
+        .cell.open {
+            cursor: default
+        }
+
+        .cell.open::after {
+            content: none
+        }
+
+        .cell.open::before {
+            display: none
+        }
+
+        .cell .ico {
+            font-size: 26px;
+            z-index: 2;
+            line-height: 1;
+            opacity: 0
+        }
+
+        .cell.open .ico {
+            opacity: 1
+        }
+
+        /* Heartbeat pulse on unrevealed cells during tension */
+        .t-med .cell:not(.open):not(.off) {
+            animation: heartbeat 2.2s ease-in-out infinite;
+        }
+
+        .t-high .cell:not(.open):not(.off) {
+            animation: heartbeat 1.4s ease-in-out infinite;
+            border-color: rgba(255, 140, 0, .25);
+        }
+
+        .t-max .cell:not(.open):not(.off) {
+            animation: heartbeat 0.85s ease-in-out infinite;
+            border-color: rgba(255, 71, 87, .35);
+            box-shadow: 0 0 10px rgba(255, 71, 87, .12);
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1)
+            }
+
+            15% {
+                transform: scale(1.05)
+            }
+
+            30% {
+                transform: scale(1)
+            }
+
+            45% {
+                transform: scale(1.03)
+            }
+
+            60% {
+                transform: scale(1)
+            }
+        }
+
+        /* Gem */
+        .cell.gem {
+            border-color: rgba(0, 255, 157, .55);
+            background: radial-gradient(circle, rgba(0, 110, 60, .45), rgba(0, 45, 25, .55));
+            box-shadow: 0 0 18px rgba(0, 255, 157, .12), inset 0 0 18px rgba(0, 255, 157, .06);
+            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275), gemGlow 1.8s ease-in-out infinite;
+        }
+
+        /* Gem ring burst on reveal */
+        .cell.gem::before {
+            display: block !important;
+            content: '' !important;
+            position: absolute;
+            inset: -4px;
+            border-radius: 14px;
+            border: 2px solid rgba(0, 255, 157, .6);
+            animation: ringBurst .7s ease-out forwards;
+            background: none;
+            pointer-events: none;
+        }
+
+        @keyframes ringBurst {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+                border-width: 3px
+            }
+
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+                border-width: 0.5px
+            }
+        }
+
+        @keyframes gemGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 18px rgba(0, 255, 157, .12), inset 0 0 18px rgba(0, 255, 157, .06)
+            }
+
+            50% {
+                box-shadow: 0 0 28px rgba(0, 255, 157, .3), inset 0 0 22px rgba(0, 255, 157, .12)
+            }
+        }
+
+        .cell.gem .ico {
+            animation: gemBob 2.2s ease-in-out infinite
+        }
+
+        @keyframes gemBob {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-3px)
+            }
+        }
+
+        /* Mine hit */
+        .cell.boom {
+            border-color: rgba(255, 71, 87, .85);
+            background: radial-gradient(circle, rgba(170, 0, 0, .55), rgba(70, 0, 0, .65));
+            box-shadow: 0 0 35px rgba(255, 71, 87, .55), inset 0 0 25px rgba(255, 71, 87, .2);
+            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275), shake .5s ease, boomPulse .4s ease-out;
+        }
+
+        /* Explosion ripple wave */
+        .cell.boom::before {
+            display: block !important;
+            content: '' !important;
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 71, 87, .7);
+            animation: explosionRipple .8s ease-out forwards;
+            background: none;
+            pointer-events: none;
+        }
+
+        @keyframes explosionRipple {
+            0% {
+                transform: scale(0.3);
+                opacity: 1;
+                border-width: 4px
+            }
+
+            50% {
+                opacity: .6
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+                border-width: 0.5px
+            }
+        }
+
+        @keyframes boomPulse {
+            0% {
+                filter: brightness(3)
+            }
+
+            100% {
+                filter: brightness(1)
+            }
+        }
+
+        /* Mine revealed after game-over */
+        .cell.show {
+            border-color: rgba(255, 71, 87, .3);
+            background: rgba(55, 0, 0, .35)
+        }
+
+        .cell.show .ico {
+            opacity: .55
+        }
+
+        /* Unrevealed safe after game-over */
+        .cell.dim {
+            border-color: rgba(0, 255, 157, .15);
+            background: rgba(0, 30, 15, .25)
+        }
+
+        .cell.dim .ico {
+            opacity: .25
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0) rotateY(180deg)
+            }
+
+            60% {
+                transform: scale(1.1) rotateY(0)
+            }
+
+            100% {
+                transform: scale(1) rotateY(0)
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            20% {
+                transform: translateX(-6px)
+            }
+
+            40% {
+                transform: translateX(6px)
+            }
+
+            60% {
+                transform: translateX(-4px)
+            }
+
+            80% {
+                transform: translateX(4px)
+            }
+        }
+
+        @keyframes gemPulse {
+            0% {
+                box-shadow: 0 0 0 rgba(0, 255, 157, 0)
+            }
+
+            50% {
+                box-shadow: 0 0 22px rgba(0, 255, 157, .45)
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(0, 255, 157, 0)
+            }
+        }
+
+        /* ══ INFO BAR ══ */
+        .info {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px
+        }
+
+        .icard {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            background: rgba(0, 0, 0, .28);
+            border-radius: 10px;
+            border: 1.5px solid rgba(255, 255, 255, .05);
+        }
+
+        .ilbl {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 1px
+        }
+
+        .ival {
+            font-size: 15px;
+            font-weight: 900
+        }
+
+        .ival.c-gold {
+            color: var(--gold);
+            transition: all .3s ease;
+        }
+
+        .ival.c-gold.glow {
+            text-shadow: 0 0 12px rgba(255, 215, 0, .6);
+            transform: scale(1.15);
+        }
+
+        .ival.c-green {
+            color: var(--green);
+            transition: all .3s ease;
+        }
+
+        .ival.c-green.glow {
+            text-shadow: 0 0 12px rgba(0, 255, 157, .6);
+            transform: scale(1.15);
+        }
+
+        .ival.c-red {
+            color: var(--red)
+        }
+
+        /* ══ RESULT ══ */
+        .rmsg {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 900;
+            font-size: 15px;
+            min-height: 24px;
+            animation: fadeUp .25s ease
+        }
+
+        @keyframes fadeUp {
+            0% {
+                transform: translateY(6px);
+                opacity: 0
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .rmsg.win {
+            color: var(--green);
+            text-shadow: 0 0 12px rgba(0, 255, 157, .35)
+        }
+
+        .rmsg.lose {
+            color: var(--red);
+            text-shadow: 0 0 12px rgba(255, 71, 87, .25)
+        }
+
+        /* ══ TENSION ══ */
+        .card.t-med {
+            animation: tPulse 2s ease-in-out infinite;
+        }
+
+        .card.t-high {
+            animation: tPulse 1.2s ease-in-out infinite;
+            border-color: rgba(255, 140, 0, .45);
+        }
+
+        .card.t-max {
+            animation: tPulse .8s ease-in-out infinite, tShake .5s ease-in-out infinite;
+            border-color: rgba(255, 71, 87, .5);
+            box-shadow: 0 0 35px rgba(255, 71, 87, .15);
+        }
+
+        @keyframes tPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 20px 60px rgba(0, 0, 0, .5)
+            }
+
+            50% {
+                box-shadow: 0 20px 60px rgba(0, 0, 0, .5), 0 0 25px rgba(255, 71, 87, .12)
+            }
+        }
+
+        @keyframes tShake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            25% {
+                transform: translateX(-1px)
+            }
+
+            75% {
+                transform: translateX(1px)
+            }
+        }
+
+        /* ══ VIGNETTE OVERLAY ══ */
+        .vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity .8s ease;
+        }
+
+        .vignette.v-med {
+            opacity: 1;
+            background: radial-gradient(ellipse at center, transparent 55%, rgba(255, 140, 0, .08) 100%);
+        }
+
+        .vignette.v-high {
+            opacity: 1;
+            background: radial-gradient(ellipse at center, transparent 45%, rgba(255, 71, 87, .12) 100%);
+        }
+
+        .vignette.v-max {
+            opacity: 1;
+            background: radial-gradient(ellipse at center, transparent 35%, rgba(255, 0, 0, .18) 100%);
+            animation: vigPulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes vigPulse {
+
+            0%,
+            100% {
+                opacity: .7
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        /* ══ STREAK COUNTER ══ */
+        .streak-counter {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 60;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            animation: streakIn .4s cubic-bezier(.175, .885, .32, 1.275);
+        }
+
+        .streak-counter.on {
+            display: flex
+        }
+
+        .streak-num {
+            font-size: 38px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-shadow: none;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, .4));
+        }
+
+        .streak-lbl {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--gold);
+            font-weight: 800;
+            opacity: .7;
+        }
+
+        @keyframes streakIn {
+            0% {
+                transform: scale(0) rotate(-20deg);
+                opacity: 0
+            }
+
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1
+            }
+        }
+
+        .streak-counter.bump {
+            animation: streakBump .35s ease;
+        }
+
+        @keyframes streakBump {
+            0% {
+                transform: scale(1)
+            }
+
+            50% {
+                transform: scale(1.35)
+            }
+
+            100% {
+                transform: scale(1)
+            }
+        }
+
+        /* ══ FLOATING PARTICLES ══ */
+        .particle-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 55;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes particleRise {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1)
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(var(--dx), -120px) scale(0)
+            }
+        }
+
+        /* ══ CASHOUT PULSE ══ */
+        .btn-cash.pulse {
+            animation: cashPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes cashPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 5px 22px rgba(0, 255, 157, .3);
+            }
+
+            50% {
+                box-shadow: 0 5px 35px rgba(0, 255, 157, .6), 0 0 50px rgba(0, 255, 157, .15);
+                transform: translateY(-1px);
+            }
+        }
+
+        /* Multiplier pop text */
+        .mult-pop {
+            position: fixed;
+            z-index: 200;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 15px rgba(255, 215, 0, .5);
+            pointer-events: none;
+            animation: multPop 1.2s ease-out forwards;
+        }
+
+        @keyframes multPop {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0
+            }
+
+            20% {
+                transform: translateY(-10px) scale(1.2);
+                opacity: 1
+            }
+
+            100% {
+                transform: translateY(-60px) scale(0.8);
+                opacity: 0
+            }
+        }
+
+        /* ══ FLASH ══ */
+        @keyframes flashOut {
+            0% {
+                opacity: 1
+            }
+
+            100% {
+                opacity: 0
+            }
+        }
+
+        /* ══ HISTORY ══ */
+        .hist {
+            margin: 18px auto 30px;
+            width: min(95vw, 500px);
+            background: var(--surface);
+            border-radius: 18px;
+            padding: 16px;
+            border: 2px solid var(--border);
+        }
+
+        .hist-t {
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 1.5px;
+            text-transform: uppercase
+        }
+
+        .hist-empty {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 10px
+        }
+
+        .hi {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 10px;
+            font-size: 12.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, .03);
+            border-radius: 5px;
+            transition: .15s;
+            animation: fadeUp .25s ease;
+        }
+
+        .hi:hover {
+            background: rgba(255, 255, 255, .03)
+        }
+
+        .hi:last-child {
+            border: none
+        }
+
+        .hi-l {
+            display: flex;
+            align-items: center;
+            gap: 7px
+        }
+
+        .hi-meta {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .hi-mult {
+            font-size: 11.5px;
+            color: var(--gold);
+            font-weight: 700
+        }
+
+        .hi-win {
+            color: var(--green);
+            font-weight: 900
+        }
+
+        .hi-lose {
+            color: var(--red);
+            font-weight: 700
+        }
+
+        /* ══ OVERLAY ══ */
+        .ov {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .82);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .ov.on {
+            display: flex
+        }
+
+        .ov-box {
+            background: linear-gradient(135deg, #1a0033, #2a0a4e);
+            border: 3px solid var(--gold);
+            border-radius: 22px;
+            padding: 36px;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(255, 215, 0, .25), inset 0 0 40px rgba(255, 215, 0, .05);
+            max-width: 360px;
+            width: 90vw;
+            animation: ovPop .5s cubic-bezier(.175, .885, .32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gold shimmer sweep on overlay */
+        .ov-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255, 215, 0, .1), transparent, rgba(255, 215, 0, .05), transparent);
+            animation: ovSpin 4s linear infinite;
+        }
+
+        @keyframes ovSpin {
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        @keyframes ovPop {
+            0% {
+                transform: scale(0) rotate(-5deg);
+                opacity: 0
+            }
+
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1
+            }
+        }
+
+        .ov-box h2 {
+            font-size: 32px;
+            color: var(--gold);
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 20px rgba(255, 215, 0, .4);
+        }
+
+        .ov-amt {
+            font-size: 42px;
+            color: var(--green);
+            font-weight: 900;
+            text-shadow: 0 0 25px rgba(0, 255, 157, .45);
+            position: relative;
+            z-index: 1;
+            animation: amtPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes amtPulse {
+
+            0%,
+            100% {
+                text-shadow: 0 0 25px rgba(0, 255, 157, .45)
+            }
+
+            50% {
+                text-shadow: 0 0 40px rgba(0, 255, 157, .7), 0 0 60px rgba(0, 255, 157, .2)
+            }
+        }
+
+        .ov-det {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 10px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ov-btn {
+            margin-top: 14px;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--gold), #FFA500);
+            color: #000;
+            font-weight: 900;
+            font-size: 15px;
+            cursor: pointer;
+            transition: .25s;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 18px rgba(255, 215, 0, .3);
+        }
+
+        .ov-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 25px rgba(255, 215, 0, .55)
+        }
+
+        .ov-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* ══ CONFETTI ══ */
+        .confetti {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 200
+        }
+
+        .cf {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            top: -12px;
+            animation: cfDrop linear forwards
+        }
+
+        @keyframes cfDrop {
+            0% {
+                transform: translateY(0) rotate(0);
+                opacity: 1
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0
+            }
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @media(max-width:500px) {
+            .card {
+                padding: 16px 12px
+            }
+
+            .cell {
+                border-radius: 9px;
+                border-width: 2px
+            }
+
+            .cell::after {
+                font-size: 15px
+            }
+
+            .cell .ico {
+                font-size: 22px
+            }
+
+            .grid {
+                gap: 5px
+            }
+
+            .title {
+                font-size: 22px
+            }
+
+            .abtn {
+                font-size: 15px;
+                padding: 13px
+            }
+
+            .ival {
+                font-size: 13px
+            }
+        }
+
+        @media(max-width:370px) {
+            .grid {
+                gap: 4px
+            }
+
+            .cell {
+                border-radius: 7px
+            }
+
+            .cell::after {
+                font-size: 13px
+            }
+
+            .cell .ico {
+                font-size: 19px
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(138, 43, 226, .25);
+            border-radius: 3px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <a href="/" class="back">← LOBBY</a>
+        <div class="bal">💰 <span id="bal">0</span> $</div>
+    </div>
+
+    <div class="wrap">
+        <div class="card" id="gameCard">
+
+            <div class="title">💣 MINES</div>
+            <div class="subtitle">Mở ô · Tránh bom · Rút tiền bất cứ lúc nào</div>
+
+            <!-- ═══ SETUP ═══ -->
+            <div id="setup" class="setup">
+
+                <div class="srow">
+                    <span class="slbl">Cược:</span>
+                    <div class="sctrl">
+                        <button class="cbtn" id="betDown">−</button>
+                        <div class="sval" id="betVal">1,000</div>
+                        <button class="cbtn" id="betUp">+</button>
+                    </div>
+                </div>
+                <div class="presets" id="betPresets">
+                    <button class="preset" data-v="500">500</button>
+                    <button class="preset on" data-v="1000">1K</button>
+                    <button class="preset" data-v="5000">5K</button>
+                    <button class="preset" data-v="10000">10K</button>
+                    <button class="preset" data-v="50000">50K</button>
+                </div>
+
+                <div class="srow">
+                    <span class="slbl">Số mìn:</span>
+                    <div class="presets" id="minePresets">
+                        <button class="preset" data-v="1">1</button>
+                        <button class="preset" data-v="3">3</button>
+                        <button class="preset on" data-v="5">5</button>
+                        <button class="preset" data-v="10">10</button>
+                        <button class="preset" data-v="15">15</button>
+                        <button class="preset" data-v="20">20</button>
+                        <button class="preset" data-v="24">24</button>
+                    </div>
+                </div>
+
+                <div class="mtable">
+                    <div class="mt-title" id="mtTitle">Hệ số nhân (5 mìn)</div>
+                    <div id="mtRows"></div>
+                </div>
+
+                <button class="abtn btn-go" id="startBtn">💣 BẮT ĐẦU</button>
+            </div>
+
+            <!-- ═══ GAME ═══ -->
+            <div id="game" style="display:none">
+
+                <div class="grid" id="grid"></div>
+
+                <div class="info">
+                    <div class="icard">
+                        <div class="ilbl">💣 Mìn</div>
+                        <div class="ival c-red" id="iMines">5</div>
+                    </div>
+                    <div class="icard">
+                        <div class="ilbl">📊 Hệ số</div>
+                        <div class="ival c-gold" id="iMult">1.00x</div>
+                    </div>
+                    <div class="icard">
+                        <div class="ilbl">💰 Thắng</div>
+                        <div class="ival c-green" id="iWin">0 $</div>
+                    </div>
+                    <div class="icard">
+                        <div class="ilbl">⏭ Tiếp</div>
+                        <div class="ival c-gold" id="iNext">—</div>
+                    </div>
+                </div>
+
+                <button class="abtn btn-cash" id="cashBtn" style="display:none">
+                    💰 RÚT TIỀN <span class="sub" id="cashSub"></span>
+                </button>
+
+                <div class="rmsg" id="rmsg"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="hist">
+        <div class="hist-t">📜 Lịch Sử</div>
+        <div id="histList">
+            <div class="hist-empty">Chưa có lượt chơi nào</div>
+        </div>
+    </div>
+
+    <!-- WIN OVERLAY -->
+    <div class="ov" id="winOv">
+        <div class="ov-box">
+            <h2>🎉 THẮNG LỚN!</h2>
+            <div class="ov-amt" id="ovAmt"></div>
+            <div class="ov-det" id="ovDet"></div>
+            <button class="ov-btn" id="ovClose">Chơi Tiếp</button>
+        </div>
+    </div>
+    <div class="confetti" id="confetti"></div>
+    <div class="vignette" id="vignette"></div>
+    <div class="streak-counter" id="streakCounter">
+        <div class="streak-num" id="streakNum">0</div>
+        <div class="streak-lbl">STREAK 🔥</div>
+    </div>
+    <div class="particle-container" id="particles"></div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            /* ═══════════════════════════════════════════════
+               STATE
+               ═══════════════════════════════════════════════ */
+            let balance = 0;
+            let bet = 1000;
+            let mines = 5;
+            let active = false;
+            let revealed = 0;
+            let mult = 1;
+            let win = 0;
+            let streak = 0;
+            let busy = false; // prevent double-clicks
+
+            /* ═══════════════════════════════════════════════
+               DOM REFS
+               ═══════════════════════════════════════════════ */
+            const $ = id => document.getElementById(id);
+            const balEl = $('bal');
+            const setupEl = $('setup');
+            const gameEl = $('game');
+            const gridEl = $('grid');
+            const startBtn = $('startBtn');
+            const cashBtn = $('cashBtn');
+            const cashSub = $('cashSub');
+            const rmsgEl = $('rmsg');
+            const iMines = $('iMines');
+            const iMult = $('iMult');
+            const iWin = $('iWin');
+            const iNext = $('iNext');
+            const betVal = $('betVal');
+            const mtTitle = $('mtTitle');
+            const mtRows = $('mtRows');
+            const histList = $('histList');
+            const winOv = $('winOv');
+            const ovAmt = $('ovAmt');
+            const ovDet = $('ovDet');
+            const gameCard = $('gameCard');
+            const confettiEl = $('confetti');
+            const vignetteEl = $('vignette');
+            const streakCounterEl = $('streakCounter');
+            const streakNumEl = $('streakNum');
+            const particlesEl = $('particles');
+
+            /* ═══════════════════════════════════════════════
+               AUDIO
+               ═══════════════════════════════════════════════ */
+            const sfx = {};
+            const sfxFiles = {
+                click: '/sounds/click.mp3',
+                tileClick: '/sounds/mines/tile_click.mp3',
+                tileClick2: '/sounds/mines/tile_click2.mp3',
+                flip: '/sounds/mines/flip.mp3',
+                chip: '/sounds/mines/chip.mp3',
+                gem: '/sounds/mines/gem_reveal.mp3',
+                gem2: '/sounds/mines/gem_reveal2.mp3',
+                boom: '/sounds/mines/boom.mp3',
+                cashout: '/sounds/mines/cashout.mp3',
+            };
+            const sfxVol = { click: .4, tileClick: .3, tileClick2: .3, flip: .5, chip: .5, gem: .5, gem2: .5, boom: .7, cashout: .8 };
+
+            // Pre-load all audio
+            for (const [k, v] of Object.entries(sfxFiles)) {
+                const a = new Audio(v);
+                a.preload = 'auto';
+                a.volume = sfxVol[k] || .5;
+                sfx[k] = a;
+            }
+
+            function play(name) {
+                const s = sfx[name];
+                if (!s) return;
+                try { s.currentTime = 0; s.play().catch(() => { }); } catch (e) { }
+            }
+
+            // Web Audio for pitch-shifted streak gems
+            let actx = null;
+            let gemBuffer = null;
+
+            function initAudioCtx() {
+                if (actx) return;
+                try {
+                    actx = new (window.AudioContext || window.webkitAudioContext)();
+                    fetch('/sounds/mines/gem_reveal.mp3')
+                        .then(r => r.arrayBuffer())
+                        .then(b => actx.decodeAudioData(b))
+                        .then(d => { gemBuffer = d; })
+                        .catch(() => { });
+                } catch (e) { }
+            }
+            document.addEventListener('click', initAudioCtx, { once: true });
+            document.addEventListener('touchstart', initAudioCtx, { once: true });
+
+            function playGemStreak(n) {
+                if (!actx || !gemBuffer) { play(n % 2 ? 'gem' : 'gem2'); return; }
+                try {
+                    const src = actx.createBufferSource();
+                    const gain = actx.createGain();
+                    src.buffer = gemBuffer;
+                    src.playbackRate.value = 1 + Math.min(n, 18) * 0.028;
+                    gain.gain.value = .5 + Math.min(n, 10) * .025;
+                    src.connect(gain);
+                    gain.connect(actx.destination);
+                    src.start(0);
+                } catch (e) { play('gem'); }
+            }
+
+            function vib(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } }
+
+            /* ═══════════════════════════════════════════════
+               PARTICLE EFFECTS
+               ═══════════════════════════════════════════════ */
+            function spawnParticles(cell, color, count) {
+                const rect = cell.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    const size = 3 + Math.random() * 5;
+                    const angle = (Math.PI * 2 * i) / count + (Math.random() - .5) * .5;
+                    const dist = 30 + Math.random() * 50;
+                    const dx = Math.cos(angle) * dist;
+                    p.style.cssText = `left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;background:${color};box-shadow:0 0 6px ${color};--dx:${dx}px;animation:particleRise ${.5 + Math.random() * .5}s ease-out forwards;animation-delay:${Math.random() * .1}s`;
+                    particlesEl.appendChild(p);
+                }
+                setTimeout(() => { while (particlesEl.children.length > 80) particlesEl.removeChild(particlesEl.firstChild); }, 1200);
+            }
+
+            function showMultPop(cell, text) {
+                const rect = cell.getBoundingClientRect();
+                const pop = document.createElement('div');
+                pop.className = 'mult-pop';
+                pop.textContent = text;
+                pop.style.left = rect.left + rect.width / 2 - 30 + 'px';
+                pop.style.top = rect.top - 10 + 'px';
+                document.body.appendChild(pop);
+                setTimeout(() => pop.remove(), 1300);
+            }
+
+            function updateStreakUI(n) {
+                if (n >= 2) {
+                    streakNumEl.textContent = n;
+                    streakCounterEl.classList.add('on');
+                    // trigger bump animation
+                    streakCounterEl.classList.remove('bump');
+                    void streakCounterEl.offsetWidth; // force reflow
+                    streakCounterEl.classList.add('bump');
+                } else if (n <= 0) {
+                    streakCounterEl.classList.remove('on');
+                }
+            }
+
+            function updateVignette(remain, total) {
+                vignetteEl.classList.remove('v-med', 'v-high', 'v-max');
+                const r = remain / total;
+                if (r <= .15) vignetteEl.classList.add('v-max');
+                else if (r <= .3) vignetteEl.classList.add('v-high');
+                else if (r <= .5) vignetteEl.classList.add('v-med');
+            }
+
+            function clearVignette() {
+                vignetteEl.classList.remove('v-med', 'v-high', 'v-max');
+            }
+
+            /* ═══════════════════════════════════════════════
+               API HELPERS
+               ═══════════════════════════════════════════════ */
+            async function api(path, body) {
+                const opt = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+                if (body) opt.body = JSON.stringify(body);
+                const r = await fetch(path, opt);
+                return r.json();
+            }
+
+            /* ═══════════════════════════════════════════════
+               BALANCE
+               ═══════════════════════════════════════════════ */
+            async function loadBalance() {
+                try {
+                    const r = await fetch('/api/me');
+                    if (!r.ok) { window.location.href = '/'; return; }
+                    const d = await r.json();
+                    balance = Number(d.balance);
+                    animBal(balance);
+                } catch (e) { console.error(e); }
+            }
+
+            function animBal(target) {
+                const old = parseInt(balEl.textContent.replace(/,/g, '')) || 0;
+                const diff = target - old;
+                if (!diff) { balEl.textContent = target.toLocaleString(); return; }
+                // bump balance pill on change
+                const pill = balEl.closest('.bal');
+                if (pill) {
+                    pill.classList.remove('bump');
+                    void pill.offsetWidth;
+                    pill.classList.add('bump');
+                    setTimeout(() => pill.classList.remove('bump'), 550);
+                }
+                const dur = 400, t0 = performance.now();
+                (function tick(now) {
+                    const p = Math.min((now - t0) / dur, 1);
+                    const ease = 1 - Math.pow(1 - p, 3);
+                    balEl.textContent = Math.round(old + diff * ease).toLocaleString();
+                    if (p < 1) requestAnimationFrame(tick);
+                })(t0);
+            }
+
+            /* ═══════════════════════════════════════════════
+               BET / MINE CONTROLS
+               ═══════════════════════════════════════════════ */
+            $('betDown').onclick = () => { play('click'); vib(10); bet = Math.max(500, bet - 500); updBet(); };
+            $('betUp').onclick = () => { play('click'); vib(10); bet = Math.min(100000, bet + 500); updBet(); };
+
+            $('betPresets').onclick = e => {
+                const b = e.target.closest('.preset'); if (!b) return;
+                play('click'); vib(10); bet = +b.dataset.v; updBet();
+            };
+            $('minePresets').onclick = e => {
+                const b = e.target.closest('.preset'); if (!b) return;
+                play('click'); vib(10); mines = +b.dataset.v; updMines();
+            };
+
+            function updBet() {
+                betVal.textContent = bet.toLocaleString();
+                $('betPresets').querySelectorAll('.preset').forEach(b => b.classList.toggle('on', +b.dataset.v === bet));
+            }
+            function updMines() {
+                $('minePresets').querySelectorAll('.preset').forEach(b => b.classList.toggle('on', +b.dataset.v === mines));
+                updMultTable();
+            }
+
+            /* ═══════════════════════════════════════════════
+               MULTIPLIER PREVIEW TABLE
+               ═══════════════════════════════════════════════ */
+            const MCAP = { 1: 25, 2: 80, 3: 250, 4: 500, 5: 1000, 6: 1500, 7: 2000, 8: 2500, 9: 3000, 10: 5000, 11: 5000, 12: 6000, 13: 7000, 14: 8000, 15: 10000, 16: 12000, 17: 14000, 18: 16000, 19: 18000, 20: 25000, 21: 30000, 22: 40000, 23: 50000, 24: 25 };
+            function calcMult(m, r) {
+                const s = 25 - m; let v = .97;
+                for (let i = 0; i < r; i++) v *= (25 - i) / (s - i);
+                v = Math.round(v * 100) / 100;
+                return Math.min(v, MCAP[m] || 5000);
+            }
+
+            function updMultTable() {
+                const safe = 25 - mines;
+                mtTitle.textContent = `Hệ số nhân (${mines} mìn)`;
+                mtRows.innerHTML = '';
+                const steps = [1, 2, 3, 5, Math.min(8, safe), Math.min(12, safe), Math.min(15, safe), safe];
+                const uniq = [...new Set(steps.filter(s => s > 0 && s <= safe))];
+                uniq.forEach(s => {
+                    const v = calcMult(mines, s);
+                    const d = document.createElement('div'); d.className = 'mt-row';
+                    d.innerHTML = `<span>${s} ô 💎</span><span class="mv">${v.toFixed(2)}x</span>`;
+                    mtRows.appendChild(d);
+                });
+            }
+
+            /* ═══════════════════════════════════════════════
+               BUILD GRID
+               ═══════════════════════════════════════════════ */
+            function buildGrid() {
+                gridEl.innerHTML = '';
+                for (let i = 0; i < 25; i++) {
+                    const c = document.createElement('div');
+                    c.className = 'cell';
+                    c.dataset.i = i;
+                    c.innerHTML = '<span class="ico"></span>';
+                    c.addEventListener('click', () => revealCell(i));
+                    gridEl.appendChild(c);
+                }
+            }
+
+            function getCell(i) { return gridEl.querySelector(`.cell[data-i="${i}"]`); }
+
+            /* ═══════════════════════════════════════════════
+               START GAME
+               ═══════════════════════════════════════════════ */
+            startBtn.onclick = startGame;
+
+            async function startGame() {
+                if (active || busy) return;
+                if (balance < bet) {
+                    msg('❌ Không đủ tiền!', 'lose');
+                    vib([50, 50, 50]); return;
+                }
+                busy = true;
+                startBtn.disabled = true;
+                startBtn.textContent = '⏳ Đang tạo...';
+
+                try {
+                    const d = await api('/api/mines/start', { bet, mineCount: mines });
+
+                    if (d.error) {
+                        msg('❌ ' + d.error, 'lose');
+                        startBtn.disabled = false; startBtn.textContent = '💣 BẮT ĐẦU'; busy = false; return;
+                    }
+
+                    balance = d.newBalance; animBal(balance);
+                    active = true; revealed = 0; mult = 1; win = 0; streak = 0;
+
+                    buildGrid();
+                    play('flip'); vib(50);
+
+                    setupEl.style.display = 'none';
+                    gameEl.style.display = 'block';
+                    cashBtn.style.display = 'none';
+                    rmsgEl.textContent = '';
+                    rmsgEl.className = 'rmsg';
+
+                    iMines.textContent = mines;
+                    iMult.textContent = '1.00x';
+                    iWin.textContent = '0 $';
+                    iNext.textContent = calcMult(mines, 1).toFixed(2) + 'x';
+
+                    // remove old tension & effects
+                    gameCard.className = 'card';
+                    clearVignette();
+                    updateStreakUI(0);
+
+                } catch (e) {
+                    msg('❌ Lỗi kết nối!', 'lose');
+                }
+                startBtn.disabled = false; startBtn.textContent = '💣 BẮT ĐẦU'; busy = false;
+            }
+
+            /* ═══════════════════════════════════════════════
+               REVEAL CELL
+               ═══════════════════════════════════════════════ */
+            async function revealCell(idx) {
+                if (!active || busy) return;
+                const cell = getCell(idx);
+                if (!cell || cell.classList.contains('open')) return;
+
+                busy = true;
+                play(Math.random() > .5 ? 'tileClick' : 'tileClick2');
+
+                // disable all unrevealed
+                gridEl.querySelectorAll('.cell:not(.open)').forEach(c => c.classList.add('off'));
+
+                try {
+                    const d = await api('/api/mines/reveal', { cell: idx });
+
+                    if (d.error) {
+                        msg('❌ ' + d.error, 'lose');
+                        enableCells(); busy = false; return;
+                    }
+
+                    /* ── MINE HIT ── */
+                    if (d.result === 'mine') {
+                        active = false; streak = 0;
+
+                        cell.classList.add('open', 'boom');
+                        cell.querySelector('.ico').textContent = '💣';
+                        setTimeout(() => play('boom'), 120);
+                        vib([100, 50, 100, 50, 200]);
+
+                        // spawn red explosion particles
+                        spawnParticles(cell, '#ff4757', 16);
+                        spawnParticles(cell, '#ff6348', 10);
+                        setTimeout(() => spawnParticles(cell, '#ff3838', 8), 150);
+
+                        // screen shake
+                        gameCard.style.animation = 'shake .55s ease';
+                        setTimeout(() => gameCard.style.animation = '', 550);
+
+                        // red flash
+                        flash('rgba(255,0,0,.3)');
+
+                        // hide streak counter
+                        updateStreakUI(0);
+                        clearVignette();
+
+                        // staggered reveal of other mines
+                        setTimeout(() => {
+                            let delay = 0;
+                            d.mines.forEach(m => {
+                                if (m === idx) return;
+                                setTimeout(() => {
+                                    const mc = getCell(m);
+                                    if (mc && !mc.classList.contains('open')) {
+                                        mc.classList.add('open', 'show');
+                                        mc.querySelector('.ico').textContent = '💣';
+                                    }
+                                }, delay);
+                                delay += 55;
+                            });
+                            // dim remaining safe
+                            setTimeout(() => {
+                                gridEl.querySelectorAll('.cell:not(.open)').forEach(c => {
+                                    c.classList.add('open', 'dim');
+                                    c.querySelector('.ico').textContent = '💎';
+                                });
+                            }, delay);
+                        }, 380);
+
+                        balance = d.newBalance; animBal(balance);
+                        msg(`💥 BOOM! Mất ${bet.toLocaleString()} $`, 'lose');
+                        addHist(false, bet, mines, 0, revealed);
+                        setTimeout(toSetup, 3000);
+                        busy = false;
+                        return;
+                    }
+
+                    /* ── SAFE / CLEARED ── */
+                    streak++;
+                    cell.classList.add('open', 'gem');
+                    cell.querySelector('.ico').textContent = '💎';
+                    setTimeout(() => playGemStreak(streak), 70);
+                    vib(30 + Math.min(streak * 5, 50));
+
+                    // sparkle particles (more with higher streak)
+                    const pCount = 6 + Math.min(streak * 2, 16);
+                    spawnParticles(cell, '#00ff9d', pCount);
+                    if (streak >= 3) spawnParticles(cell, '#00f3ff', 5);
+                    if (streak >= 6) spawnParticles(cell, '#FFD700', 4);
+
+                    // pulse on high streak
+                    if (streak >= 5) {
+                        cell.style.animation = 'pop .4s cubic-bezier(.175,.885,.32,1.275), gemPulse .35s ease';
+                        setTimeout(() => cell.style.animation = '', 400);
+                    }
+
+                    revealed = d.revealedCount || (revealed + 1);
+                    mult = d.multiplier;
+                    win = d.currentWin;
+
+                    // floating multiplier pop text
+                    showMultPop(cell, mult.toFixed(2) + 'x');
+
+                    // update streak counter
+                    updateStreakUI(streak);
+
+                    iMult.textContent = mult.toFixed(2) + 'x';
+                    iWin.textContent = win.toLocaleString() + ' $';
+                    iNext.textContent = d.nextMultiplier ? d.nextMultiplier.toFixed(2) + 'x' : '🏆 MAX';
+
+                    // glow the info values briefly
+                    iMult.classList.add('glow');
+                    iWin.classList.add('glow');
+                    setTimeout(() => { iMult.classList.remove('glow'); iWin.classList.remove('glow'); }, 400);
+
+                    // tension + vignette
+                    const safeCells = 25 - mines;
+                    const remain = safeCells - revealed;
+                    updateTension(remain, safeCells);
+                    updateVignette(remain, safeCells);
+
+                    // show cashout with pulse
+                    cashBtn.style.display = 'block';
+                    cashBtn.classList.add('pulse');
+                    cashSub.textContent = `${mult.toFixed(2)}x = ${win.toLocaleString()} $`;
+
+                    if (d.result === 'cleared') {
+                        active = false;
+                        balance = d.newBalance; animBal(balance);
+
+                        d.mines.forEach(m => {
+                            const mc = getCell(m);
+                            if (mc) { mc.classList.add('open', 'show'); mc.querySelector('.ico').textContent = '💣'; }
+                        });
+
+                        play('cashout');
+                        setTimeout(() => play('chip'), 200);
+                        bigWin(win, mult);
+                        addHist(true, bet, mines, mult, revealed);
+                        setTimeout(toSetup, 3200);
+                        busy = false;
+                        return;
+                    }
+
+                    enableCells();
+                    busy = false;
+
+                } catch (e) {
+                    msg('❌ Lỗi kết nối!', 'lose');
+                    enableCells(); busy = false;
+                }
+            }
+
+            function enableCells() {
+                gridEl.querySelectorAll('.cell:not(.open)').forEach(c => c.classList.remove('off'));
+            }
+
+            /* ═══════════════════════════════════════════════
+               TENSION
+               ═══════════════════════════════════════════════ */
+            function updateTension(remain, total) {
+                const r = remain / total;
+                gameCard.classList.remove('t-med', 't-high', 't-max');
+                if (r <= .15) gameCard.classList.add('t-max');
+                else if (r <= .3) gameCard.classList.add('t-high');
+                else if (r <= .5) gameCard.classList.add('t-med');
+            }
+
+            /* ═══════════════════════════════════════════════
+               CASHOUT
+               ═══════════════════════════════════════════════ */
+            cashBtn.onclick = doCashout;
+
+            async function doCashout() {
+                if (!active || revealed === 0 || busy) return;
+                busy = true;
+                cashBtn.disabled = true;
+                cashBtn.innerHTML = '⏳ Đang rút...';
+
+                try {
+                    const d = await api('/api/mines/cashout');
+
+                    if (d.error) {
+                        msg('❌ ' + d.error, 'lose');
+                        cashBtn.disabled = false;
+                        cashBtn.innerHTML = '💰 RÚT TIỀN<span class="sub" id="cashSub"></span>';
+                        busy = false; return;
+                    }
+
+                    active = false; streak = 0;
+                    balance = d.newBalance; animBal(balance);
+
+                    play('cashout');
+                    if (d.multiplier >= 2) { setTimeout(() => play('chip'), 180); setTimeout(() => play('chip'), 360); }
+                    vib([50, 30, 50, 30, 100, 50, 150]);
+
+                    // green flash
+                    flash('rgba(0,255,157,.18)');
+
+                    // clear tension effects
+                    updateStreakUI(0);
+                    clearVignette();
+                    cashBtn.classList.remove('pulse');
+
+                    // staggered reveal mines
+                    let delay = 0;
+                    d.mines.forEach(m => {
+                        setTimeout(() => {
+                            const mc = getCell(m);
+                            if (mc && !mc.classList.contains('open')) {
+                                mc.classList.add('open', 'show');
+                                mc.querySelector('.ico').textContent = '💣';
+                            }
+                        }, delay);
+                        delay += 70;
+                    });
+                    setTimeout(() => {
+                        gridEl.querySelectorAll('.cell:not(.open)').forEach(c => {
+                            c.classList.add('open', 'dim');
+                            c.querySelector('.ico').textContent = '💎';
+                        });
+                    }, delay);
+
+                    gameCard.classList.remove('t-med', 't-high', 't-max');
+
+                    if (d.multiplier >= 2.5) {
+                        bigWin(d.winAmount, d.multiplier);
+                    } else {
+                        msg(`💰 Rút +${d.winAmount.toLocaleString()} $ (x${d.multiplier.toFixed(2)})`, 'win');
+                    }
+
+                    addHist(true, d.bet, mines, d.multiplier, revealed);
+                    setTimeout(toSetup, 2500);
+                    busy = false;
+
+                } catch (e) {
+                    msg('❌ Lỗi kết nối!', 'lose');
+                    cashBtn.disabled = false; busy = false;
+                }
+            }
+
+            /* ═══════════════════════════════════════════════
+               UI HELPERS
+               ═══════════════════════════════════════════════ */
+            function toSetup() {
+                setupEl.style.display = 'flex';
+                gameEl.style.display = 'none';
+                cashBtn.style.display = 'none';
+                cashBtn.disabled = false;
+                cashBtn.classList.remove('pulse');
+                cashBtn.innerHTML = '💰 RÚT TIỀN <span class="sub" id="cashSub"></span>';
+                gameCard.className = 'card';
+                clearVignette();
+                updateStreakUI(0);
+                particlesEl.innerHTML = '';
+            }
+
+            function msg(text, type) {
+                rmsgEl.textContent = text;
+                rmsgEl.className = 'rmsg ' + (type || '');
+            }
+
+            function flash(color) {
+                const d = document.createElement('div');
+                d.style.cssText = `position:fixed;inset:0;background:${color};z-index:999;pointer-events:none;animation:flashOut .45s ease forwards`;
+                document.body.appendChild(d);
+                setTimeout(() => d.remove(), 500);
+            }
+
+            function addHist(isWin, betAmt, mc, m, rev) {
+                // clear empty message
+                const empty = histList.querySelector('.hist-empty');
+                if (empty) empty.remove();
+
+                const el = document.createElement('div');
+                el.className = 'hi';
+                const winAmt = isWin ? Math.floor(betAmt * m) : 0;
+                el.innerHTML = `
+    <div class="hi-l">
+      <span>${isWin ? '💎' : '💣'}</span>
+      <span class="hi-meta">${mc} mìn · ${rev} ô</span>
+      ${isWin ? `<span class="hi-mult">x${m.toFixed(2)}</span>` : ''}
+    </div>
+    <span class="${isWin ? 'hi-win' : 'hi-lose'}">${isWin ? '+' + winAmt.toLocaleString() : '-' + betAmt.toLocaleString()} $</span>
+  `;
+                histList.insertBefore(el, histList.firstChild);
+                if (histList.children.length > 20) histList.removeChild(histList.lastChild);
+            }
+
+            function bigWin(amount, m) {
+                ovAmt.textContent = '+' + amount.toLocaleString() + ' $';
+                ovDet.textContent = `Hệ số x${m.toFixed(2)} · Cược ${bet.toLocaleString()} $`;
+                winOv.classList.add('on');
+                spawnConfetti();
+            }
+
+            $('ovClose').onclick = () => winOv.classList.remove('on');
+
+            function spawnConfetti() {
+                const colors = ['#FFD700', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff', '#ff0096', '#FFA500', '#fff'];
+                for (let i = 0; i < 90; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'cf';
+                    el.style.left = Math.random() * 100 + '%';
+                    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    el.style.animationDelay = Math.random() * 2.5 + 's';
+                    el.style.animationDuration = (1.5 + Math.random() * 2.5) + 's';
+                    el.style.width = (4 + Math.random() * 12) + 'px';
+                    el.style.height = (4 + Math.random() * 12) + 'px';
+                    el.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+                    el.style.boxShadow = `0 0 6px ${el.style.background}`;
+                    confettiEl.appendChild(el);
+                }
+                setTimeout(() => confettiEl.innerHTML = '', 5000);
+            }
+
+            /* ═══════════════════════════════════════════════
+               KEYBOARD SHORTCUT
+               ═══════════════════════════════════════════════ */
+            document.addEventListener('keydown', e => {
+                if (e.code === 'Space' && active && revealed > 0 && !busy) { e.preventDefault(); doCashout(); }
+            });
+
+            /* ═══════════════════════════════════════════════
+               RESTORE ACTIVE GAME
+               ═══════════════════════════════════════════════ */
+            async function restoreGame() {
+                try {
+                    const r = await fetch('/api/mines/status');
+                    const d = await r.json();
+                    if (!d.active) return;
+
+                    active = true;
+                    bet = d.bet;
+                    mines = d.mineCount;
+                    revealed = d.revealed.length;
+                    mult = d.multiplier;
+                    win = d.currentWin;
+                    streak = revealed;
+
+                    buildGrid();
+
+                    d.revealed.forEach(idx => {
+                        const c = getCell(idx);
+                        if (c) { c.classList.add('open', 'gem'); c.querySelector('.ico').textContent = '💎'; }
+                    });
+
+                    setupEl.style.display = 'none';
+                    gameEl.style.display = 'block';
+                    iMines.textContent = mines;
+                    iMult.textContent = mult.toFixed(2) + 'x';
+                    iWin.textContent = win.toLocaleString() + ' $';
+                    iNext.textContent = '—';
+
+                    if (revealed > 0) {
+                        cashBtn.style.display = 'block';
+                        cashBtn.classList.add('pulse');
+                        cashSub.textContent = `${mult.toFixed(2)}x = ${win.toLocaleString()} $`;
+                        // calc next
+                        const nm = calcMult(mines, revealed + 1);
+                        const safeCells = 25 - mines;
+                        iNext.textContent = revealed >= safeCells - 1 ? '🏆 MAX' : nm.toFixed(2) + 'x';
+                        updateTension(safeCells - revealed, safeCells);
+                        updateVignette(safeCells - revealed, safeCells);
+                        updateStreakUI(streak);
+                    }
+                } catch (e) { }
+            }
+
+            /* ═══════════════════════════════════════════════
+               INIT
+               ═══════════════════════════════════════════════ */
+            buildGrid();
+            updMultTable();
+            loadBalance();
+            restoreGame();
+
+        })();
+    </script>
+</body>
+
+</html>

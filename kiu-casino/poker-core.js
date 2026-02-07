@@ -9,7 +9,7 @@ class PokerManager {
         this.io = io;
         this.db = dbPool;
         this.tables = {};
-        this.TARGET_GUILD_ID = '949162034954633236';
+        this.TARGET_GUILD_ID = process.env.GUILD_ID || '949162034954633236';
 
         this.createTable({
             id: 'vip_table',
@@ -137,6 +137,17 @@ class PokerTable {
     getInHandPlayers() { return this.players.filter(p => p && ['PLAYING', 'ALLIN'].includes(p.status)); }
     getReadyPlayers() { return this.players.filter(p => p && p.chips > 0 && p.status !== 'SITTING_OUT'); }
 
+    // Transaction logging helper
+    async logTx(uid, type, amount, balBefore, balAfter, details) {
+        if (!this.db) return;
+        try {
+            await this.db.execute(
+                'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+                [uid, this.guildId, type, amount, balBefore, balAfter, details ? JSON.stringify(details) : null]
+            );
+        } catch (e) { console.error('[Poker TX LOG]', e.message); }
+    }
+
     async addPlayer(user, chips, socketId) {
         const existing = this.players.findIndex(p => p && p.id === user.id);
         if (existing !== -1) {
@@ -148,20 +159,32 @@ class PokerTable {
         const seat = this.players.findIndex(p => p === null);
         if (seat === -1) return { success: false, error: 'Table full' };
 
-        // --- SỬA ĐOẠN NÀY: CHO PHÉP GUEST CHƠI FREE ĐỂ TEST ---
+        // Deduct buy-in with FOR UPDATE to prevent race conditions
         if (this.db && !user.id.toString().startsWith('guest_')) {
-            // Chỉ check DB nếu KHÔNG PHẢI là Guest
+            const conn = await this.db.getConnection();
             try {
-                const [rows] = await this.db.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [this.guildId, user.id]);
+                await conn.beginTransaction();
+                const [rows] = await conn.execute(
+                    'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+                    [this.guildId, user.id]
+                );
                 const balance = rows.length ? Number(rows[0].balance) : 0;
-                if (balance < chips) return { success: false, error: `Not enough money ($${balance})` };
-                await this.db.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [chips, this.guildId, user.id]);
+                if (balance < chips) {
+                    await conn.rollback(); conn.release();
+                    return { success: false, error: `Not enough money ($${balance})` };
+                }
+                await conn.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [chips, this.guildId, user.id]);
+                await conn.commit();
+                conn.release();
+                // Log buy-in transaction
+                await this.logTx(user.id, 'poker_buyin', -chips, balance, balance - chips, { table: this.id });
             } catch (e) {
+                await conn.rollback().catch(() => { });
+                conn.release();
                 console.error('DB Error:', e);
                 return { success: false, error: 'Database error' };
             }
         }
-        // -----------------------------------------------------
 
         this.players[seat] = {
             id: user.id, name: user.username, avatar: user.avatar,
@@ -181,10 +204,28 @@ class PokerTable {
         if (idx === -1) return;
         const p = this.players[idx];
 
-        // Fire-and-forget DB update to prevent blocking
+        // Return chips to wallet with transaction logging
         if (p.chips > 0 && this.db) {
-            this.db.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [p.chips, this.guildId, uid])
-                .catch(e => console.error('[DB] removePlayer error:', e));
+            (async () => {
+                const conn = await this.db.getConnection();
+                try {
+                    await conn.beginTransaction();
+                    const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [this.guildId, uid]);
+                    const balBefore = rows.length ? Number(rows[0].balance) : 0;
+                    await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [p.chips, this.guildId, uid]);
+                    const balAfter = balBefore + p.chips;
+                    await conn.execute(
+                        'INSERT INTO transactions (user_id, guild_id, type, amount, balance_before, balance_after, details) VALUES (?,?,?,?,?,?,?)',
+                        [uid, this.guildId, 'poker_cashout', p.chips, balBefore, balAfter, JSON.stringify({ table: this.id })]
+                    );
+                    await conn.commit();
+                    conn.release();
+                } catch (e) {
+                    await conn.rollback().catch(() => { });
+                    conn.release();
+                    console.error('[DB] removePlayer error:', e);
+                }
+            })();
         }
 
         // LƯU LẠI VỊ TRÍ NGƯỜI VỪA THOÁT
@@ -272,8 +313,22 @@ class PokerTable {
             this.handleWin(remaining[0].id);
         } else if (remaining.length === 0) {
             // EDGE CASE: ALL players disconnected mid-hand
-            // Reset pot and state cleanly - no one wins the pot (returned to house/void)
-            console.log('[Poker] All players disconnected - resetting table');
+            // Refund pot proportionally to all players based on their totalBet
+            console.log('[Poker] All players disconnected - refunding pot');
+            const totalPot = this.pots.reduce((s, p) => s + p.amount, 0);
+            const currentBets = this.players.reduce((s, p) => s + (p ? p.bet : 0), 0);
+            const grandTotal = totalPot + currentBets;
+
+            if (grandTotal > 0 && this.db) {
+                // Refund each player their totalBet
+                for (const p of this.players) {
+                    if (p && p.totalBet > 0) {
+                        p.chips += p.totalBet;
+                        console.log(`[Poker] Refunded ${p.totalBet} to ${p.name}`);
+                    }
+                }
+            }
+
             this.pots = [];
             this.communityCards = [];
             this.deck = [];
