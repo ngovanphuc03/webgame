@@ -527,12 +527,13 @@ async function getMinesGame(conn, uid) {
         [uid, TARGET_GUILD_ID]
     );
     if (!rows.length) return null;
+    const r = rows[0];
     return {
-        bet: Number(rows[0].bet),
-        mineCount: rows[0].mine_count,
-        mines: JSON.parse(rows[0].mines),
-        revealed: JSON.parse(rows[0].revealed),
-        startTime: new Date(rows[0].started_at).getTime()
+        bet: Number(r.bet),
+        mineCount: r.mine_count,
+        mines: typeof r.mines === 'string' ? JSON.parse(r.mines) : r.mines,
+        revealed: typeof r.revealed === 'string' ? JSON.parse(r.revealed) : r.revealed,
+        startTime: new Date(r.started_at).getTime()
     };
 }
 
@@ -785,10 +786,11 @@ app.get('/api/mines/status', requireAuth, async (req, res) => {
         );
         if (!rows.length) return res.json({ active: false });
 
+        const r = rows[0];
         const game = {
-            bet: Number(rows[0].bet),
-            mineCount: rows[0].mine_count,
-            revealed: JSON.parse(rows[0].revealed)
+            bet: Number(r.bet),
+            mineCount: r.mine_count,
+            revealed: typeof r.revealed === 'string' ? JSON.parse(r.revealed) : r.revealed
         };
         const multiplier = game.revealed.length > 0 ? calcMinesMultiplier(game.mineCount, game.revealed.length) : 1;
         const currentWin = Math.floor(game.bet * multiplier);
