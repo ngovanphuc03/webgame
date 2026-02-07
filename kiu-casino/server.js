@@ -175,7 +175,7 @@ const dbPool = mysql.createPool({
                 bet BIGINT NOT NULL,
                 mine_count INT NOT NULL,
                 mines JSON NOT NULL,
-                revealed JSON NOT NULL DEFAULT '[]',
+                revealed JSON NOT NULL,
                 started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, guild_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
