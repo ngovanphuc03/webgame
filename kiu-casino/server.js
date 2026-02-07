@@ -496,14 +496,17 @@ app.post('/api/mines/start', requireAuth, minesLimiter, async (req, res) => {
 });
 
 // Calculate multiplier for mines game
+// Uses fair probability with 3% house edge + reasonable max caps
+const MINES_MAX_MULT = { 1: 25, 2: 80, 3: 250, 4: 500, 5: 1000, 6: 1500, 7: 2000, 8: 2500, 9: 3000, 10: 5000, 11: 5000, 12: 6000, 13: 7000, 14: 8000, 15: 10000, 16: 12000, 17: 14000, 18: 16000, 19: 18000, 20: 25000, 21: 30000, 22: 40000, 23: 50000, 24: 25 };
 function calcMinesMultiplier(mineCount, revealedCount) {
-    // House edge ~3%
     const safeCells = 25 - mineCount;
-    let multiplier = 0.97; // start with house edge
+    let multiplier = 0.97; // 3% house edge
     for (let i = 0; i < revealedCount; i++) {
         multiplier *= (25 - i) / (safeCells - i);
     }
-    return Math.round(multiplier * 100) / 100;
+    multiplier = Math.round(multiplier * 100) / 100;
+    const cap = MINES_MAX_MULT[mineCount] || 5000;
+    return Math.min(multiplier, cap);
 }
 
 // Reveal a cell
