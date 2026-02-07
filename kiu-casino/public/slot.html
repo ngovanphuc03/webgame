@@ -576,6 +576,79 @@
             }
         }
 
+        /* ═══ TENSION EFFECTS ═══ */
+        .game-box.tension-med {
+            animation: tensionPulse 2s ease-in-out infinite;
+        }
+
+        .game-box.tension-high {
+            animation: tensionPulse 1.2s ease-in-out infinite;
+            border-color: rgba(255, 150, 0, 0.5);
+        }
+
+        .game-box.tension-extreme {
+            animation: tensionPulse 0.8s ease-in-out infinite, tensionShake 0.5s ease-in-out infinite;
+            border-color: rgba(255, 71, 87, 0.6);
+            box-shadow: 0 0 40px rgba(255, 71, 87, 0.2);
+        }
+
+        @keyframes tensionPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 71, 87, 0.15);
+            }
+        }
+
+        @keyframes tensionShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-1px);
+            }
+
+            75% {
+                transform: translateX(1px);
+            }
+        }
+
+        /* ═══ GEM PULSE FOR STREAK ═══ */
+        @keyframes gemPulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 rgba(0, 255, 157, 0);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 25px rgba(0, 255, 157, 0.5);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 rgba(0, 255, 157, 0);
+            }
+        }
+
+        /* ═══ FLASH OUT ANIMATION ═══ */
+        @keyframes flashOut {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
         /* ═══ INFO BAR ═══ */
         .info-bar {
             display: flex;
@@ -1041,17 +1114,79 @@
         // ═══ STATE ═══
         let balance = 0, betAmount = 1000, mineCount = 5;
         let gameActive = false, revealedCount = 0, currentMultiplier = 1, currentWin = 0;
+        let streakCount = 0; // Track consecutive gems for streak sounds
 
-        // ═══ SFX ═══
+        // ═══ PREMIUM SFX SYSTEM ═══
         const SFX = {
+            // UI sounds
             click: new Audio('/sounds/click.mp3'),
-            reveal: new Audio('/sounds/win.mp3'),
-            boom: new Audio('/sounds/lose.mp3'),
-            cashout: new Audio('/sounds/slot_win.mp3'),
+            tileClick: new Audio('/sounds/mines/tile_click.mp3'),
+            tileClick2: new Audio('/sounds/mines/tile_click2.mp3'),
+            flip: new Audio('/sounds/mines/flip.mp3'),
+            chip: new Audio('/sounds/mines/chip.mp3'),
+            // Game sounds
+            gemReveal: new Audio('/sounds/mines/gem_reveal.mp3'),
+            gemReveal2: new Audio('/sounds/mines/gem_reveal2.mp3'),
+            boom: new Audio('/sounds/mines/boom.mp3'),
+            cashout: new Audio('/sounds/mines/cashout.mp3'),
+            // Streak sounds (pitch shifted gems)
+            streak: [],
         };
-        Object.values(SFX).forEach(a => { a.volume = 0.5; a.preload = 'auto'; });
-        SFX.cashout.volume = 0.7;
-        function playSound(n) { try { SFX[n].currentTime = 0; SFX[n].play().catch(() => { }); } catch (e) { } }
+
+        // Pre-create streak sounds with increasing pitch using Web Audio API
+        let audioCtx = null;
+        const streakBuffers = [];
+
+        // Initialize audio context on first user interaction
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Preload gem sound for pitch shifting
+            fetch('/sounds/mines/gem_reveal.mp3')
+                .then(r => r.arrayBuffer())
+                .then(buf => audioCtx.decodeAudioData(buf))
+                .then(decoded => {
+                    for (let i = 0; i < 20; i++) streakBuffers[i] = decoded;
+                }).catch(() => { });
+        }
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+
+        // Set volumes
+        Object.values(SFX).forEach(a => { if (a instanceof Audio) { a.volume = 0.5; a.preload = 'auto'; } });
+        SFX.boom.volume = 0.7;
+        SFX.cashout.volume = 0.8;
+        SFX.tileClick.volume = 0.3;
+        SFX.tileClick2.volume = 0.3;
+
+        function playSound(n) {
+            try {
+                const s = SFX[n];
+                if (s) { s.currentTime = 0; s.play().catch(() => { }); }
+            } catch (e) { }
+        }
+
+        // Play gem sound with pitch based on streak (higher streak = higher pitch)
+        function playStreakGem(streak) {
+            if (!audioCtx || !streakBuffers[0]) {
+                playSound(streak % 2 === 0 ? 'gemReveal' : 'gemReveal2');
+                return;
+            }
+            try {
+                const source = audioCtx.createBufferSource();
+                const gainNode = audioCtx.createGain();
+                source.buffer = streakBuffers[0];
+                // Pitch increases with streak: 1.0 → 1.5 over 20 gems
+                source.playbackRate.value = 1 + (Math.min(streak, 19) * 0.03);
+                gainNode.gain.value = 0.5 + (Math.min(streak, 10) * 0.03);
+                source.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                source.start(0);
+            } catch (e) {
+                playSound('gemReveal');
+            }
+        }
+
         function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
 
         // ═══ BALANCE ═══
@@ -1157,8 +1292,10 @@
                 revealedCount = 0;
                 currentMultiplier = 1;
                 currentWin = 0;
+                streakCount = 0;
 
                 buildGrid();
+                playSound('flip'); // Card flip sound for game start
 
                 document.getElementById('setupPanel').style.display = 'none';
                 document.getElementById('gameArea').style.display = 'block';
@@ -1185,6 +1322,9 @@
             const cell = document.querySelector(`.mine-cell[data-index="${idx}"]`);
             if (!cell || cell.classList.contains('revealed')) return;
 
+            // Play tile click sound immediately
+            playSound(Math.random() > 0.5 ? 'tileClick' : 'tileClick2');
+
             // Disable all cells
             document.querySelectorAll('.mine-cell:not(.revealed)').forEach(c => c.classList.add('disabled'));
 
@@ -1201,47 +1341,72 @@
                 }
 
                 if (data.result === 'mine') {
-                    // 💥 BOOM
+                    // 💥 BOOM - GAME OVER
                     gameActive = false;
+                    streakCount = 0;
                     cell.classList.add('revealed', 'mine-hit');
                     cell.innerHTML = '<span class="cell-icon">💣</span>';
-                    playSound('boom');
+
+                    // Delayed boom for dramatic effect
+                    setTimeout(() => playSound('boom'), 150);
                     vibrate([100, 50, 100, 50, 200]);
 
-                    // Screen shake
-                    document.querySelector('.game-box').style.animation = 'mineShake .5s ease';
-                    setTimeout(() => document.querySelector('.game-box').style.animation = '', 500);
+                    // Intense screen shake
+                    const gameBox = document.querySelector('.game-box');
+                    gameBox.style.animation = 'mineShake .6s ease';
+                    setTimeout(() => gameBox.style.animation = '', 600);
 
-                    // Reveal all mines + safe cells
+                    // Flash red overlay
+                    const flash = document.createElement('div');
+                    flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,0.3);z-index:999;pointer-events:none;animation:flashOut .5s ease forwards';
+                    document.body.appendChild(flash);
+                    setTimeout(() => flash.remove(), 500);
+
+                    // Reveal all mines + safe cells with staggered animation
                     setTimeout(() => {
+                        let delay = 0;
                         data.mines.forEach(m => {
                             if (m !== idx) {
-                                const mc = document.querySelector(`.mine-cell[data-index="${m}"]`);
-                                if (mc && !mc.classList.contains('revealed')) {
-                                    mc.classList.add('revealed', 'mine-show');
-                                    mc.innerHTML = '<span class="cell-icon">💣</span>';
-                                }
+                                setTimeout(() => {
+                                    const mc = document.querySelector(`.mine-cell[data-index="${m}"]`);
+                                    if (mc && !mc.classList.contains('revealed')) {
+                                        mc.classList.add('revealed', 'mine-show');
+                                        mc.innerHTML = '<span class="cell-icon">💣</span>';
+                                    }
+                                }, delay);
+                                delay += 50;
                             }
                         });
-                        document.querySelectorAll('.mine-cell:not(.revealed)').forEach(c => {
-                            c.classList.add('revealed', 'safe');
-                            c.innerHTML = '<span class="cell-icon" style="opacity:0.3">💎</span>';
-                        });
-                    }, 350);
+                        setTimeout(() => {
+                            document.querySelectorAll('.mine-cell:not(.revealed)').forEach(c => {
+                                c.classList.add('revealed', 'safe');
+                                c.innerHTML = '<span class="cell-icon" style="opacity:0.3">💎</span>';
+                            });
+                        }, delay);
+                    }, 400);
 
                     balance = data.newBalance;
                     animBal(balance);
                     showMsg(`💥 BOOM! Mất ${betAmount.toLocaleString()} $`, 'lose');
                     addHistory(false, betAmount, mineCount, 0, revealedCount);
 
-                    setTimeout(resetToSetup, 2800);
+                    setTimeout(resetToSetup, 3000);
 
                 } else if (data.result === 'safe' || data.result === 'cleared') {
-                    // 💎 Safe!
+                    // 💎 Safe! Streak continues!
+                    streakCount++;
                     cell.classList.add('revealed', 'safe');
                     cell.innerHTML = '<span class="cell-icon">💎</span>';
-                    playSound('reveal');
-                    vibrate(30);
+
+                    // Play streak gem sound (pitch increases with streak)
+                    setTimeout(() => playStreakGem(streakCount), 80);
+                    vibrate(30 + Math.min(streakCount * 5, 50));
+
+                    // Pulse effect on high streak
+                    if (streakCount >= 5) {
+                        cell.style.animation = 'gemPulse 0.3s ease';
+                        setTimeout(() => cell.style.animation = '', 300);
+                    }
 
                     revealedCount = data.revealedCount || (revealedCount + 1);
                     currentMultiplier = data.multiplier;
@@ -1251,6 +1416,11 @@
                     document.getElementById('infoWin').textContent = currentWin.toLocaleString() + ' $';
                     document.getElementById('infoNext').textContent = data.nextMultiplier
                         ? data.nextMultiplier.toFixed(2) + 'x' : '🏆 MAX';
+
+                    // Update tension - remaining safe cells
+                    const safeCells = 25 - mineCount;
+                    const remaining = safeCells - revealedCount;
+                    updateTension(remaining, safeCells);
 
                     // Show cashout
                     const cashBtn = document.getElementById('cashoutBtn');
@@ -1285,46 +1455,100 @@
             document.querySelectorAll('.mine-cell:not(.revealed)').forEach(c => c.classList.remove('disabled'));
         }
 
+        // ═══ TENSION SYSTEM ═══
+        function updateTension(remaining, total) {
+            const ratio = remaining / total;
+            const gameBox = document.querySelector('.game-box');
+
+            // Remove old tension classes
+            gameBox.classList.remove('tension-low', 'tension-med', 'tension-high', 'tension-extreme');
+
+            if (ratio <= 0.15) {
+                gameBox.classList.add('tension-extreme');
+            } else if (ratio <= 0.3) {
+                gameBox.classList.add('tension-high');
+            } else if (ratio <= 0.5) {
+                gameBox.classList.add('tension-med');
+            }
+        }
+
         // ═══ CASHOUT ═══
         async function cashout() {
             if (!gameActive || revealedCount === 0) return;
+
+            // Disable button immediately
+            const cashBtn = document.getElementById('cashoutBtn');
+            cashBtn.disabled = true;
+            cashBtn.innerHTML = '⏳ Đang rút...';
 
             try {
                 const res = await fetch('/api/mines/cashout', { method: 'POST' });
                 const data = await res.json();
 
-                if (data.error) { showMsg('❌ ' + data.error, 'lose'); return; }
+                if (data.error) {
+                    showMsg('❌ ' + data.error, 'lose');
+                    cashBtn.disabled = false;
+                    cashBtn.innerHTML = '💰 Rút Tiền<span class="cashout-amount" id="cashoutAmount"></span>';
+                    return;
+                }
 
                 gameActive = false;
+                streakCount = 0;
                 balance = data.newBalance;
                 animBal(balance);
+
+                // Play multiple chip sounds for big wins
                 playSound('cashout');
-                vibrate([50, 30, 50, 30, 100]);
+                if (data.multiplier >= 2) {
+                    setTimeout(() => playSound('chip'), 200);
+                    setTimeout(() => playSound('chip'), 400);
+                }
+                vibrate([50, 30, 50, 30, 100, 50, 150]);
 
-                // Reveal all mines
+                // Reveal all mines with stagger
+                let delay = 0;
                 data.mines.forEach(m => {
-                    const mc = document.querySelector(`.mine-cell[data-index="${m}"]`);
-                    if (mc && !mc.classList.contains('revealed')) {
-                        mc.classList.add('revealed', 'mine-show');
-                        mc.innerHTML = '<span class="cell-icon">💣</span>';
-                    }
-                });
-                // Dim unrevealed
-                document.querySelectorAll('.mine-cell:not(.revealed)').forEach(c => {
-                    c.classList.add('revealed', 'safe');
-                    c.innerHTML = '<span class="cell-icon" style="opacity:0.3">💎</span>';
+                    setTimeout(() => {
+                        const mc = document.querySelector(`.mine-cell[data-index="${m}"]`);
+                        if (mc && !mc.classList.contains('revealed')) {
+                            mc.classList.add('revealed', 'mine-show');
+                            mc.innerHTML = '<span class="cell-icon">💣</span>';
+                        }
+                    }, delay);
+                    delay += 80;
                 });
 
-                if (data.multiplier >= 3) {
+                // Dim unrevealed after mines shown
+                setTimeout(() => {
+                    document.querySelectorAll('.mine-cell:not(.revealed)').forEach(c => {
+                        c.classList.add('revealed', 'safe');
+                        c.innerHTML = '<span class="cell-icon" style="opacity:0.3">💎</span>';
+                    });
+                }, delay);
+
+                // Green flash for win
+                const flash = document.createElement('div');
+                flash.style.cssText = 'position:fixed;inset:0;background:rgba(0,255,157,0.15);z-index:999;pointer-events:none;animation:flashOut .5s ease forwards';
+                document.body.appendChild(flash);
+                setTimeout(() => flash.remove(), 500);
+
+                if (data.multiplier >= 2.5) {
                     showBigWin(data.winAmount, data.multiplier);
                 } else {
                     showMsg(`💰 Rút +${data.winAmount.toLocaleString()} $ (x${data.multiplier.toFixed(2)})`, 'win');
                 }
 
                 addHistory(true, data.bet, mineCount, data.multiplier, revealedCount);
-                setTimeout(resetToSetup, 2200);
 
-            } catch (e) { showMsg('❌ Lỗi kết nối!', 'lose'); }
+                // Reset tension
+                document.querySelector('.game-box').classList.remove('tension-low', 'tension-med', 'tension-high', 'tension-extreme');
+
+                setTimeout(resetToSetup, 2500);
+
+            } catch (e) {
+                showMsg('❌ Lỗi kết nối!', 'lose');
+                cashBtn.disabled = false;
+            }
         }
 
         // ═══ UI HELPERS ═══
