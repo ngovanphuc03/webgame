@@ -415,79 +415,235 @@ app.post('/api/flappy/reward', requireAuth, flappyRewardLimiter, async (req, res
 
 
 // ============================================================
-// SLOT MACHINE API
+// MINES GAME API
 // ============================================================
-const slotLimiter = rateLimit({
-    windowMs: 5 * 1000,
-    max: 3,
-    message: { error: 'Quay quá nhanh! Đợi vài giây.' }
+const minesLimiter = rateLimit({
+    windowMs: 3 * 1000,
+    max: 10,
+    message: { error: 'Quá nhanh! Đợi vài giây.' }
 });
 
-const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '⭐', '7️⃣', '💎'];
-const SLOT_WEIGHTS = [25, 22, 20, 18, 10, 5];
-const SLOT_PAYOUTS = { '💎': 50, '7️⃣': 30, '⭐': 20, '🍒': 10, '🍋': 5, '🍊': 3 };
+// Active mines games stored in memory (userId -> gameState)
+const activeMinesGames = new Map();
 
-function getSlotSymbol() {
-    const total = SLOT_WEIGHTS.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total;
-    for (let i = 0; i < SLOT_SYMBOLS.length; i++) {
-        r -= SLOT_WEIGHTS[i];
-        if (r <= 0) return SLOT_SYMBOLS[i];
-    }
-    return SLOT_SYMBOLS[0];
-}
-
-app.post('/api/slot/spin', requireAuth, slotLimiter, async (req, res) => {
+// Start a new mines game
+app.post('/api/mines/start', requireAuth, minesLimiter, async (req, res) => {
     const uid = req.cookies.user_id;
-    const { bet } = req.body;
+    const { bet, mineCount } = req.body;
 
     if (!bet || !Number.isInteger(bet) || bet < 500 || bet > 100000) {
         return res.status(400).json({ error: 'Cược không hợp lệ (500 - 100,000)' });
     }
+    if (!mineCount || !Number.isInteger(mineCount) || mineCount < 1 || mineCount > 24) {
+        return res.status(400).json({ error: 'Số mìn không hợp lệ (1 - 24)' });
+    }
+
+    // If player already has active game, reject
+    if (activeMinesGames.has(uid)) {
+        return res.status(400).json({ error: 'Bạn đang có ván chưa kết thúc!' });
+    }
 
     try {
-        // Check balance
         const [rows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
         if (!rows.length || Number(rows[0].balance) < bet) {
             return res.status(400).json({ error: 'Không đủ tiền!' });
         }
 
-        // Generate 3 symbols
-        const symbols = [getSlotSymbol(), getSlotSymbol(), getSlotSymbol()];
+        // Deduct bet immediately
+        await dbPool.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [bet, TARGET_GUILD_ID, uid]);
 
-        // Calculate win
-        let multiplier = 0;
-        if (symbols[0] === symbols[1] && symbols[1] === symbols[2]) {
-            // 3 of a kind
-            multiplier = SLOT_PAYOUTS[symbols[0]] || 3;
-        } else if (symbols[0] === symbols[1] || symbols[1] === symbols[2] || symbols[0] === symbols[2]) {
-            // 2 of a kind
-            multiplier = 1.5;
+        // Generate mine positions (25 cells, 0-24)
+        const mines = new Set();
+        while (mines.size < mineCount) {
+            mines.add(Math.floor(Math.random() * 25));
         }
 
-        const winAmount = Math.floor(bet * multiplier);
-        const netChange = winAmount - bet;
+        const gameState = {
+            bet,
+            mineCount,
+            mines: [...mines],
+            revealed: [],
+            cashedOut: false,
+            startTime: Date.now()
+        };
 
-        // Update balance
-        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [netChange, TARGET_GUILD_ID, uid]);
+        activeMinesGames.set(uid, gameState);
+
+        // Auto-expire after 10 minutes
+        setTimeout(() => {
+            if (activeMinesGames.has(uid) && activeMinesGames.get(uid).startTime === gameState.startTime) {
+                activeMinesGames.delete(uid);
+                console.log(`[Mines] Game expired for user ${uid}`);
+            }
+        }, 10 * 60 * 1000);
 
         const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
         const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
 
-        console.log(`[Slot] User ${uid} bet ${bet} -> ${symbols.join(' ')} -> ${winAmount > 0 ? '+' + winAmount : netChange}`);
+        console.log(`[Mines] User ${uid} started game: bet=${bet}, mines=${mineCount}`);
 
         res.json({
-            symbols,
-            multiplier,
-            win: winAmount,
+            success: true,
             bet,
-            netChange,
+            mineCount,
+            totalCells: 25,
             newBalance
         });
     } catch (e) {
-        console.error('Slot Error:', e);
+        console.error('Mines Start Error:', e);
         res.status(500).json({ error: 'Lỗi Database' });
     }
+});
+
+// Calculate multiplier for mines game
+function calcMinesMultiplier(mineCount, revealedCount) {
+    // House edge ~3%
+    const safeCells = 25 - mineCount;
+    let multiplier = 0.97; // start with house edge
+    for (let i = 0; i < revealedCount; i++) {
+        multiplier *= (25 - i) / (safeCells - i);
+    }
+    return Math.round(multiplier * 100) / 100;
+}
+
+// Reveal a cell
+app.post('/api/mines/reveal', requireAuth, minesLimiter, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { cell } = req.body;
+
+    const game = activeMinesGames.get(uid);
+    if (!game) {
+        return res.status(400).json({ error: 'Không có ván đang chơi!' });
+    }
+
+    if (cell === undefined || !Number.isInteger(cell) || cell < 0 || cell > 24) {
+        return res.status(400).json({ error: 'Ô không hợp lệ!' });
+    }
+
+    if (game.revealed.includes(cell)) {
+        return res.status(400).json({ error: 'Ô này đã mở!' });
+    }
+
+    const isMine = game.mines.includes(cell);
+
+    if (isMine) {
+        // BOOM - game over, player loses bet (already deducted)
+        activeMinesGames.delete(uid);
+
+        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+
+        console.log(`[Mines] User ${uid} HIT MINE at cell ${cell}! Lost ${game.bet}`);
+
+        return res.json({
+            result: 'mine',
+            cell,
+            mines: game.mines,
+            bet: game.bet,
+            newBalance
+        });
+    }
+
+    // Safe cell
+    game.revealed.push(cell);
+    const multiplier = calcMinesMultiplier(game.mineCount, game.revealed.length);
+    const currentWin = Math.floor(game.bet * multiplier);
+    const safeCells = 25 - game.mineCount;
+
+    // Check if all safe cells revealed (auto cashout)
+    if (game.revealed.length >= safeCells) {
+        activeMinesGames.delete(uid);
+        const winAmount = currentWin;
+        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, uid]);
+
+        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+
+        console.log(`[Mines] User ${uid} CLEARED ALL! Won ${winAmount}`);
+
+        return res.json({
+            result: 'cleared',
+            cell,
+            multiplier,
+            currentWin: winAmount,
+            mines: game.mines,
+            newBalance
+        });
+    }
+
+    // Calculate next multiplier preview
+    const nextMultiplier = calcMinesMultiplier(game.mineCount, game.revealed.length + 1);
+
+    res.json({
+        result: 'safe',
+        cell,
+        multiplier,
+        currentWin,
+        nextMultiplier,
+        revealedCount: game.revealed.length,
+        safeCells
+    });
+});
+
+// Cash out current game
+app.post('/api/mines/cashout', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+
+    const game = activeMinesGames.get(uid);
+    if (!game) {
+        return res.status(400).json({ error: 'Không có ván đang chơi!' });
+    }
+
+    if (game.revealed.length === 0) {
+        return res.status(400).json({ error: 'Phải mở ít nhất 1 ô!' });
+    }
+
+    const multiplier = calcMinesMultiplier(game.mineCount, game.revealed.length);
+    const winAmount = Math.floor(game.bet * multiplier);
+
+    activeMinesGames.delete(uid);
+
+    try {
+        await dbPool.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, uid]);
+
+        const [newRows] = await dbPool.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+        const newBalance = newRows.length ? Number(newRows[0].balance) : 0;
+
+        const profit = winAmount - game.bet;
+        console.log(`[Mines] User ${uid} CASHED OUT! Bet=${game.bet}, Win=${winAmount}, Profit=${profit > 0 ? '+' : ''}${profit}`);
+
+        res.json({
+            success: true,
+            multiplier,
+            winAmount,
+            profit,
+            bet: game.bet,
+            mines: game.mines,
+            newBalance
+        });
+    } catch (e) {
+        console.error('Mines Cashout Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// Check if user has active game
+app.get('/api/mines/status', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const game = activeMinesGames.get(uid);
+    if (!game) {
+        return res.json({ active: false });
+    }
+    const multiplier = game.revealed.length > 0 ? calcMinesMultiplier(game.mineCount, game.revealed.length) : 1;
+    const currentWin = Math.floor(game.bet * multiplier);
+    res.json({
+        active: true,
+        bet: game.bet,
+        mineCount: game.mineCount,
+        revealed: game.revealed,
+        multiplier,
+        currentWin
+    });
 });
 
 // ============================================================
@@ -792,7 +948,7 @@ app.get('/poker', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'poker.html'));
 });
 
-// Serve Slot Machine page
+// Serve Mines game page
 app.get('/slot', (req, res) => {
     if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'slot.html'));
