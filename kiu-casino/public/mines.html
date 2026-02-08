@@ -532,6 +532,35 @@
             display: none
         }
 
+        /* Instant pending state while waiting for server */
+        .cell.pending {
+            border-color: rgba(255, 255, 255, .3);
+            background: rgba(40, 15, 70, .9);
+            animation: pendingFlip .25s ease-out;
+        }
+
+        .cell.pending .ico {
+            opacity: .6;
+            font-size: 18px;
+            animation: pendingSpin .6s linear infinite;
+        }
+
+        @keyframes pendingFlip {
+            0% {
+                transform: scale(.85) rotateY(90deg) translateZ(0)
+            }
+
+            100% {
+                transform: scale(1) rotateY(0) translateZ(0)
+            }
+        }
+
+        @keyframes pendingSpin {
+            to {
+                transform: rotate(360deg) translateZ(0)
+            }
+        }
+
         .cell .ico {
             font-size: 26px;
             z-index: 2;
@@ -579,7 +608,7 @@
             border-color: rgba(0, 255, 157, .55);
             background: radial-gradient(circle, rgba(0, 110, 60, .45), rgba(0, 45, 25, .55));
             box-shadow: 0 0 14px rgba(0, 255, 157, .12);
-            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275);
+            animation: pop .22s cubic-bezier(.175, .885, .32, 1.275);
         }
 
         /* Gem ring burst on reveal */
@@ -590,7 +619,7 @@
             inset: -4px;
             border-radius: 14px;
             border: 2px solid rgba(0, 255, 157, .6);
-            animation: ringBurst .7s ease-out forwards;
+            animation: ringBurst .4s ease-out forwards;
             background: none;
             pointer-events: none;
         }
@@ -641,7 +670,7 @@
             inset: -8px;
             border-radius: 50%;
             border: 3px solid rgba(255, 71, 87, .7);
-            animation: explosionRipple .8s ease-out forwards;
+            animation: explosionRipple .5s ease-out forwards;
             background: none;
             pointer-events: none;
         }
@@ -680,11 +709,11 @@
 
         @keyframes pop {
             0% {
-                transform: scale(0) rotateY(180deg) translateZ(0)
+                transform: scale(0) rotateY(90deg) translateZ(0)
             }
 
-            60% {
-                transform: scale(1.1) rotateY(0) translateZ(0)
+            50% {
+                transform: scale(1.08) rotateY(0) translateZ(0)
             }
 
             100% {
@@ -1856,93 +1885,89 @@
                 if (!cell || cell.classList.contains('open')) return;
 
                 busy = true;
-                play(Math.random() > .5 ? 'tileClick' : 'tileClick2');
 
-                // disable all unrevealed
-                gridEl.querySelectorAll('.cell:not(.open)').forEach(c => c.classList.add('off'));
+                // ── INSTANT feedback: flip cell immediately ──
+                cell.classList.add('open', 'pending');
+                cell.querySelector('.ico').textContent = '⏳';
+                play(Math.random() > .5 ? 'tileClick' : 'tileClick2');
 
                 try {
                     const d = await api('/api/mines/reveal', { cell: idx });
 
                     if (d.error) {
+                        // revert cell
+                        cell.classList.remove('open', 'pending');
+                        cell.querySelector('.ico').textContent = '';
                         msg('❌ ' + d.error, 'lose');
-                        enableCells(); busy = false; return;
+                        busy = false; return;
                     }
+
+                    // Remove pending state
+                    cell.classList.remove('pending');
 
                     /* ── MINE HIT ── */
                     if (d.result === 'mine') {
                         active = false; streak = 0;
 
-                        cell.classList.add('open', 'boom');
+                        cell.classList.add('boom');
                         cell.querySelector('.ico').textContent = '💣';
-                        setTimeout(() => play('boom'), 120);
+                        play('boom');
                         vib([100, 50, 100, 50, 200]);
 
-                        // spawn red explosion particles (reduced)
+                        // spawn red explosion particles
                         spawnParticles(cell, '#ff4757', 12);
 
-                        // screen shake via transform
+                        // screen shake
                         gameCard.style.animation = 'none';
                         requestAnimationFrame(() => {
-                            gameCard.style.animation = 'shake .55s ease';
-                            setTimeout(() => gameCard.style.animation = '', 560);
+                            gameCard.style.animation = 'shake .45s ease';
+                            setTimeout(() => gameCard.style.animation = '', 460);
                         });
 
-                        // red flash
                         flash('rgba(255,0,0,.3)');
-
-                        // hide streak counter
                         updateStreakUI(0);
                         clearVignette();
 
-                        // staggered reveal of other mines
-                        setTimeout(() => {
-                            let delay = 0;
-                            d.mines.forEach(m => {
-                                if (m === idx) return;
-                                setTimeout(() => {
-                                    const mc = getCell(m);
-                                    if (mc && !mc.classList.contains('open')) {
-                                        mc.classList.add('open', 'show');
-                                        mc.querySelector('.ico').textContent = '💣';
-                                    }
-                                }, delay);
-                                delay += 55;
-                            });
-                            // dim remaining safe
+                        // fast staggered reveal of other mines
+                        let delay = 0;
+                        d.mines.forEach(m => {
+                            if (m === idx) return;
                             setTimeout(() => {
-                                gridEl.querySelectorAll('.cell:not(.open)').forEach(c => {
-                                    c.classList.add('open', 'dim');
-                                    c.querySelector('.ico').textContent = '💎';
-                                });
+                                const mc = getCell(m);
+                                if (mc && !mc.classList.contains('open')) {
+                                    mc.classList.add('open', 'show');
+                                    mc.querySelector('.ico').textContent = '💣';
+                                }
                             }, delay);
-                        }, 380);
+                            delay += 35;
+                        });
+                        // dim remaining safe
+                        setTimeout(() => {
+                            gridEl.querySelectorAll('.cell:not(.open)').forEach(c => {
+                                c.classList.add('open', 'dim');
+                                c.querySelector('.ico').textContent = '💎';
+                            });
+                        }, delay);
 
                         balance = d.newBalance; animBal(balance);
                         msg(`💥 BOOM! Mất ${bet.toLocaleString()} $`, 'lose');
                         addHist(false, bet, mines, 0, revealed);
-                        setTimeout(toSetup, 3000);
+                        setTimeout(toSetup, 2200);
                         busy = false;
                         return;
                     }
 
                     /* ── SAFE / CLEARED ── */
                     streak++;
-                    cell.classList.add('open', 'gem');
+                    cell.classList.add('gem');
                     cell.querySelector('.ico').textContent = '💎';
-                    setTimeout(() => playGemStreak(streak), 70);
+                    playGemStreak(streak);
                     vib(30 + Math.min(streak * 5, 50));
 
-                    // sparkle particles (reduced for performance)
+                    // sparkle particles
                     const pCount = 5 + Math.min(streak, 8);
                     spawnParticles(cell, '#00ff9d', pCount);
                     if (streak >= 5) spawnParticles(cell, '#FFD700', 3);
-
-                    // pulse on high streak
-                    if (streak >= 5) {
-                        cell.style.animation = 'pop .4s cubic-bezier(.175,.885,.32,1.275), gemPulse .35s ease';
-                        setTimeout(() => cell.style.animation = '', 400);
-                    }
 
                     revealed = d.revealedCount || (revealed + 1);
                     mult = d.multiplier;
@@ -1950,8 +1975,6 @@
 
                     // floating multiplier pop text
                     showMultPop(cell, mult.toFixed(2) + 'x');
-
-                    // update streak counter
                     updateStreakUI(streak);
 
                     iMult.textContent = mult.toFixed(2) + 'x';
@@ -1961,7 +1984,7 @@
                     // glow the info values briefly
                     iMult.classList.add('glow');
                     iWin.classList.add('glow');
-                    setTimeout(() => { iMult.classList.remove('glow'); iWin.classList.remove('glow'); }, 400);
+                    setTimeout(() => { iMult.classList.remove('glow'); iWin.classList.remove('glow'); }, 300);
 
                     // tension + vignette
                     const safeCells = 25 - mines;
@@ -1987,22 +2010,20 @@
                         setTimeout(() => play('chip'), 200);
                         bigWin(win, mult);
                         addHist(true, bet, mines, mult, revealed);
-                        setTimeout(toSetup, 3200);
+                        setTimeout(toSetup, 2200);
                         busy = false;
                         return;
                     }
 
-                    enableCells();
                     busy = false;
 
                 } catch (e) {
+                    // revert cell on network error
+                    cell.classList.remove('open', 'pending');
+                    cell.querySelector('.ico').textContent = '';
                     msg('❌ Lỗi kết nối!', 'lose');
-                    enableCells(); busy = false;
+                    busy = false;
                 }
-            }
-
-            function enableCells() {
-                gridEl.querySelectorAll('.cell:not(.open)').forEach(c => c.classList.remove('off'));
             }
 
             /* ═══════════════════════════════════════════════
@@ -2062,7 +2083,7 @@
                                 mc.querySelector('.ico').textContent = '💣';
                             }
                         }, delay);
-                        delay += 70;
+                        delay += 40;
                     });
                     setTimeout(() => {
                         gridEl.querySelectorAll('.cell:not(.open)').forEach(c => {
@@ -2080,7 +2101,7 @@
                     }
 
                     addHist(true, d.bet, mines, d.multiplier, revealed);
-                    setTimeout(toSetup, 2500);
+                    setTimeout(toSetup, 1800);
                     busy = false;
 
                 } catch (e) {

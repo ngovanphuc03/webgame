@@ -848,6 +848,11 @@
             --c2: #ec4899
         }
 
+        .c-crash {
+            --c1: #06b6d4;
+            --c2: #7c3aed
+        }
+
         .c-daily {
             --c1: #ff3366;
             --c2: #ff8c00
@@ -873,6 +878,10 @@
 
         .c-slot:hover {
             box-shadow: 0 10px 60px rgba(139, 92, 246, 0.2), 0 0 100px rgba(139, 92, 246, 0.05)
+        }
+
+        .c-crash:hover {
+            box-shadow: 0 10px 60px rgba(6, 182, 212, 0.2), 0 0 100px rgba(124, 58, 237, 0.08)
         }
 
         .c-daily:hover {
@@ -919,6 +928,23 @@
         .banner-slot {
             background: linear-gradient(135deg, #0a0020, #2a0a4e 40%, #1a0033);
             overflow: hidden
+        }
+
+        .banner-crash {
+            background: linear-gradient(135deg, #0a0a2e, #0d2847 30%, #1a0a3a 70%, #12082e);
+            overflow: hidden;
+            position: relative
+        }
+
+        .banner-crash::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            width: 60%;
+            height: 40%;
+            background: radial-gradient(ellipse at bottom, rgba(6, 182, 212, 0.15), transparent 70%);
+            pointer-events: none
         }
 
         .banner-daily {
@@ -1098,6 +1124,11 @@
         .btn-purple {
             background: linear-gradient(135deg, #8b5cf6, #ec4899);
             box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25)
+        }
+
+        .btn-crash {
+            background: linear-gradient(135deg, #06b6d4, #7c3aed);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3)
         }
 
         .btn-red {
@@ -1471,6 +1502,20 @@
                     <div class="meta-item"><i>💣</i> x24 Mìn</div>
                 </div>
                 <button class="btn-play btn-purple">CHƠI NGAY ▸</button>
+            </div>
+        </div>
+
+        <div class="game-card c-crash" onclick="enterGame('/crash')">
+            <div class="card-status status-hot">🔥 NEW</div>
+            <div class="card-banner banner-crash"><span class="card-icon">🚀</span></div>
+            <div class="card-content">
+                <div class="card-title">CRASH</div>
+                <div class="card-desc">Tên lửa bay lên, hệ số tăng liên tục! Rút tiền trước khi nổ 💥!</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>🚀</i> Realtime</div>
+                    <div class="meta-item"><i>💰</i> Lên tới 100x</div>
+                </div>
+                <button class="btn-play btn-crash">CHƠI NGAY ▸</button>
             </div>
         </div>
     </div>
