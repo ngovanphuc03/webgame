@@ -582,8 +582,8 @@ app.post('/api/crash/start', requireAuth, async (req, res) => {
         return res.status(400).json({ error: 'Không có cược đang đợi!' });
     }
 
-    // Ensure at least 3 seconds have passed since bet (anti-cheat: must wait)
-    if (Date.now() - entry.ts < 3000) {
+    // Ensure at least 2 seconds have passed since bet (anti-cheat: must wait)
+    if (Date.now() - entry.ts < 2000) {
         return res.status(400).json({ error: 'Đợi hết countdown!' });
     }
 
@@ -710,7 +710,8 @@ app.post('/api/crash/bust', requireAuth, async (req, res) => {
     }
 
     const crashPoint = entry.crashPoint || 1.00;
-    await logTx(null, uid, 'crash_bust', 0, 0, 0,
+    // Use logTxSimple (no conn required) for non-transactional logging
+    await logTxSimple(uid, 'crash_bust', -entry.bet, 0, 0,
         { bet: entry.bet, crashPoint }).catch(() => { });
 
     console.log(`[Crash] User ${uid} BUSTED at ${crashPoint}x, lost ${entry.bet}`);
@@ -725,8 +726,9 @@ setInterval(async () => {
         if (now - entry.ts > 120000) {
             // If still pending (never started), refund the player
             if (entry.status === 'pending') {
+                let conn;
                 try {
-                    const conn = await dbPool.getConnection();
+                    conn = await dbPool.getConnection();
                     await conn.beginTransaction();
                     const [rows] = await conn.execute(
                         'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
@@ -737,10 +739,12 @@ setInterval(async () => {
                     await logTx(conn, uid, 'crash_stale_refund', entry.bet, balBefore, balBefore + entry.bet,
                         { reason: 'stale_pending' });
                     await conn.commit();
-                    conn.release();
                     console.log(`[Crash] Refunded stale pending bet for ${uid}: ${entry.bet}`);
                 } catch (e) {
+                    if (conn) await conn.rollback().catch(() => { });
                     console.error('[Crash] Stale refund error:', e);
+                } finally {
+                    if (conn) conn.release();
                 }
             } else {
                 console.log(`[Crash] Cleaned up stale bet for ${uid} (status: ${entry.status})`);

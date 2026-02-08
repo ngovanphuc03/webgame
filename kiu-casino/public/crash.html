@@ -1004,7 +1004,7 @@
 
             <!-- ACTION -->
             <div class="action-row" id="actionRow">
-                <button class="abtn btn-bet" id="btnBet">🚀 ĐẶT CƯỢC</button>
+                <button class="abtn btn-bet" id="btnBet" onclick="window._placeBet()">🚀 ĐẶT CƯỢC</button>
             </div>
 
             <!-- INFO -->
@@ -1200,8 +1200,9 @@
 
                 if (pts.length < 2) return;
 
-                // Calculate scale
-                const maxM = Math.max(mult, 2);
+                // Calculate scale — prevent division by zero
+                const maxM = Math.max(mult, 1.5);
+                const scaleRange = maxM - 1 || 1;
                 const padB = 40, padT = 20, padL = 10, padR = 10;
                 const chartW = w - padL - padR, chartH = h - padT - padB;
 
@@ -1218,7 +1219,7 @@
                 ctx.moveTo(padL, h - padB);
                 pts.forEach((p, i) => {
                     const x = padL + (i / (pts.length - 1 || 1)) * chartW;
-                    const y = h - padB - ((p - 1) / (maxM - 1)) * chartH;
+                    const y = h - padB - ((p - 1) / scaleRange) * chartH;
                     if (i === 0) ctx.lineTo(x, y); else ctx.lineTo(x, y);
                 });
                 ctx.lineTo(padL + chartW, h - padB);
@@ -1230,7 +1231,7 @@
                 ctx.beginPath();
                 pts.forEach((p, i) => {
                     const x = padL + (i / (pts.length - 1 || 1)) * chartW;
-                    const y = h - padB - ((p - 1) / (maxM - 1)) * chartH;
+                    const y = h - padB - ((p - 1) / scaleRange) * chartH;
                     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 });
                 if (crashed) {
@@ -1254,7 +1255,7 @@
                 if (pts.length > 1 && !crashed) {
                     const lastI = pts.length - 1;
                     const x = padL + (lastI / (pts.length - 1 || 1)) * chartW;
-                    const y = h - padB - ((pts[lastI] - 1) / (maxM - 1)) * chartH;
+                    const y = h - padB - ((pts[lastI] - 1) / scaleRange) * chartH;
                     ctx.font = '20px serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -1265,7 +1266,7 @@
                 if (crashed && pts.length > 1) {
                     const lastI = pts.length - 1;
                     const x = padL + (lastI / (pts.length - 1 || 1)) * chartW;
-                    const y = h - padB - ((pts[lastI] - 1) / (maxM - 1)) * chartH;
+                    const y = h - padB - ((pts[lastI] - 1) / scaleRange) * chartH;
                     ctx.font = '28px serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -1277,8 +1278,8 @@
                 ctx.font = '600 10px Rajdhani,sans-serif';
                 ctx.textAlign = 'left';
                 for (let i = 0; i <= 4; i++) {
-                    const v = (1 + (maxM - 1) * (i / 4)).toFixed(1);
-                    const y = h - padB - ((v - 1) / (maxM - 1)) * chartH;
+                    const v = (1 + scaleRange * (i / 4)).toFixed(1);
+                    const y = h - padB - ((v - 1) / scaleRange) * chartH;
                     ctx.fillText(v + 'x', 2, y + 3);
                 }
             }
@@ -1367,6 +1368,21 @@
             }
 
             /* ═══════════════════════════════════════
+               UI STATE HELPERS
+               ═══════════════════════════════════════ */
+            function setBetControlsEnabled(enabled) {
+                betInput.disabled = !enabled;
+                autoInput.disabled = !enabled;
+                $('betHalf').disabled = !enabled;
+                $('betDouble').disabled = !enabled;
+                const presetBtns = document.querySelectorAll('.preset');
+                presetBtns.forEach(b => b.disabled = !enabled);
+                // Visual dimming
+                const panels = document.querySelectorAll('.bet-section');
+                panels.forEach(p => p.style.opacity = enabled ? '1' : '0.5');
+            }
+
+            /* ═══════════════════════════════════════
                GAME LOOP
                ═══════════════════════════════════════ */
             function startWaitingPhase() {
@@ -1377,6 +1393,8 @@
                 cashoutMult = 0;
                 playerBet = 0;
                 elapsed = 0;
+                _betLock = false;
+                _cashLock = false;
 
                 multEl.textContent = '1.00x';
                 multEl.className = 'chart-mult';
@@ -1384,6 +1402,9 @@
                 statusEl.className = 'chart-status waiting';
                 rmsgEl.textContent = ''; rmsgEl.className = 'rmsg';
                 infoBet.textContent = '—'; infoMult.textContent = '—'; infoWin.textContent = '—';
+
+                // Enable bet controls
+                setBetControlsEnabled(true);
 
                 // Show bet button
                 actionRow.innerHTML = '<button class="abtn btn-bet" id="btnBet" onclick="window._placeBet()">🚀 ĐẶT CƯỢC</button>';
@@ -1411,24 +1432,39 @@
             function startFlyingPhase() {
                 phase = 'flying';
                 cdEl.style.display = 'none';
+                _betLock = false; // reset in case it was stuck
+
+                // Disable bet controls during flight
+                setBetControlsEnabled(false);
 
                 // If player has a bet, fetch crash point from SERVER
                 if (playerBet > 0) {
-                    api('/api/crash/start').then(d => {
-                        if (d.error || !d.crashPoint) {
-                            // Fallback: generate locally (shouldn't happen normally)
+                    let retries = 0;
+                    const tryStart = () => {
+                        api('/api/crash/start').then(d => {
+                            if (d.error && retries < 3) {
+                                // Server says "wait" — retry after short delay
+                                retries++;
+                                console.warn('[Crash] Start retry', retries, d.error);
+                                setTimeout(tryStart, 500);
+                                return;
+                            }
+                            if (d.error || !d.crashPoint) {
+                                // Genuine error — use local fallback
+                                crashPoint = 1 + Math.random() * 5;
+                                console.warn('[Crash] Failed to get server crashPoint, using fallback');
+                            } else {
+                                crashPoint = d.crashPoint;
+                            }
+                            console.log('[Crash] CrashPoint:', crashPoint);
+                            beginFlying();
+                        }).catch(() => {
                             crashPoint = 1 + Math.random() * 5;
-                            console.warn('[Crash] Failed to get server crashPoint, using fallback');
-                        } else {
-                            crashPoint = d.crashPoint;
-                        }
-                        console.log('[Crash] Server crashPoint:', crashPoint);
-                        beginFlying();
-                    }).catch(() => {
-                        crashPoint = 1 + Math.random() * 5;
-                        console.warn('[Crash] Network error, using fallback crashPoint');
-                        beginFlying();
-                    });
+                            console.warn('[Crash] Network error, using fallback crashPoint');
+                            beginFlying();
+                        });
+                    };
+                    tryStart();
                 } else {
                     // No bet — generate locally for spectating animation
                     const r = Math.random();
@@ -1479,9 +1515,10 @@
                         return;
                     }
 
-                    // Auto cashout
-                    if (playerBet > 0 && !cashedOut && autoCashout > 1 && currentMult >= autoCashout) {
+                    // Auto cashout — guard against race with doCrash
+                    if (playerBet > 0 && !cashedOut && !_cashLock && autoCashout > 1 && currentMult >= autoCashout) {
                         doCashout();
+                        return; // stop this tick, doCashout handles the rest
                     }
 
                     // Update UI
@@ -1511,6 +1548,7 @@
             }
 
             function doCrash() {
+                if (phase === 'crashed') return; // prevent double-fire
                 clearInterval(roundTimer);
                 phase = 'crashed';
 
@@ -1579,6 +1617,9 @@
                     infoMult.textContent = '1.00x';
                     infoWin.textContent = bet.toLocaleString() + ' $';
 
+                    // Disable bet controls after placing bet
+                    setBetControlsEnabled(false);
+
                     actionRow.innerHTML = `<button class="abtn btn-cancel" onclick="window._cancelBet()">✕ Hủy cược</button>`;
                     msg('✅ Đã đặt ' + bet.toLocaleString() + ' $ — Đợi tên lửa!', '');
                 } catch (e) {
@@ -1600,6 +1641,8 @@
                     playerBet = 0;
                     infoBet.textContent = '—'; infoMult.textContent = '—'; infoWin.textContent = '—';
                     msg('↩ Đã hủy cược', '');
+                    // Re-enable bet controls
+                    setBetControlsEnabled(true);
                     actionRow.innerHTML = '<button class="abtn btn-bet" onclick="window._placeBet()">🚀 ĐẶT CƯỢC</button>';
                 } catch (e) { msg('❌ Lỗi!', 'lose'); }
             };
@@ -1709,6 +1752,11 @@
             updatePresets();
             drawChart([1], 1, false);
             startWaitingPhase();
+
+            // Periodic balance resync every 30s to prevent stale balance
+            setInterval(() => {
+                if (phase === 'waiting' && playerBet === 0) loadBalance();
+            }, 30000);
 
         })();
     </script>
