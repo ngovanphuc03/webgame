@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
     <meta name="theme-color" content="#0a0015">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💣</text></svg>">
@@ -47,6 +48,8 @@
             align-items: center;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeSpeed;
         }
 
         /* ══ BG ══ */
@@ -58,48 +61,54 @@
                 linear-gradient(rgba(138, 43, 226, .04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(138, 43, 226, .04) 1px, transparent 1px);
             background-size: 44px 44px;
+            will-change: transform;
             animation: gridDrift 25s linear infinite;
+            contain: strict;
         }
 
         @keyframes gridDrift {
             to {
-                background-position: 44px 44px
+                transform: translate(44px, 44px)
             }
         }
 
         .orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(130px);
             pointer-events: none;
-            z-index: -1
+            z-index: -1;
+            contain: strict;
+            /* Use opacity-based soft glow instead of expensive blur filter */
+            background: radial-gradient(circle, var(--orb-color) 0%, transparent 70%);
         }
 
         .orb1 {
+            --orb-color: rgba(188, 19, 254, .08);
             width: 380px;
             height: 380px;
-            background: rgba(188, 19, 254, .1);
             top: -10%;
             left: -10%;
+            will-change: transform;
             animation: orbF 14s ease-in-out infinite alternate
         }
 
         .orb2 {
+            --orb-color: rgba(255, 0, 150, .06);
             width: 320px;
             height: 320px;
-            background: rgba(255, 0, 150, .07);
             bottom: -8%;
             right: -10%;
+            will-change: transform;
             animation: orbF 14s ease-in-out 6s infinite alternate
         }
 
         @keyframes orbF {
             0% {
-                transform: translate(0, 0) scale(1)
+                transform: translate3d(0, 0, 0) scale(1)
             }
 
             100% {
-                transform: translate(30px, -25px) scale(1.15)
+                transform: translate3d(30px, -25px, 0) scale(1.15)
             }
         }
 
@@ -110,10 +119,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 18px;
-            background: rgba(0, 0, 0, .55);
-            backdrop-filter: blur(18px);
+            background: rgba(5, 0, 12, .92);
             border-bottom: 2px solid rgba(138, 43, 226, .2);
             z-index: 50;
+            contain: layout style;
         }
 
         .back {
@@ -152,10 +161,11 @@
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
+            left: 0;
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent);
+            will-change: transform;
             animation: shimmer 3.5s ease infinite;
         }
 
@@ -179,11 +189,11 @@
 
         @keyframes shimmer {
             0% {
-                left: -100%
+                transform: translateX(-200%)
             }
 
             100% {
-                left: 200%
+                transform: translateX(200%)
             }
         }
 
@@ -198,6 +208,7 @@
             border-radius: 22px;
             padding: 22px 18px;
             border: 2px solid var(--border);
+            contain: layout style;
             box-shadow: 0 20px 60px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .05);
         }
 
@@ -447,19 +458,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all .2s cubic-bezier(.175, .885, .32, 1.275);
+            transition: transform .2s cubic-bezier(.175, .885, .32, 1.275), border-color .2s ease, box-shadow .2s ease;
             position: relative;
             overflow: hidden;
+            contain: layout style;
+            transform: translateZ(0);
         }
 
-        /* Shimmer sweep on unrevealed cells */
+        /* Shimmer sweep on unrevealed cells - optimized with transform */
         .cell::before {
             content: '';
             position: absolute;
             inset: 0;
             border-radius: 8px;
             background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .07) 50%, transparent 65%);
-            background-size: 300% 100%;
+            will-change: transform;
             animation: cellShimmer 4s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
@@ -467,11 +480,11 @@
 
         @keyframes cellShimmer {
             0% {
-                background-position: 200% 0
+                transform: translateX(-100%)
             }
 
             100% {
-                background-position: -200% 0
+                transform: translateX(100%)
             }
         }
 
@@ -487,20 +500,19 @@
 
         .cell:hover:not(.open):not(.off) {
             border-color: var(--accent);
-            transform: translateY(-3px) scale(1.06);
-            box-shadow: 0 8px 28px rgba(138, 43, 226, .45), inset 0 0 20px rgba(138, 43, 226, .08);
+            transform: translateY(-3px) scale(1.06) translateZ(0);
+            box-shadow: 0 8px 20px rgba(138, 43, 226, .35);
             background: linear-gradient(145deg, rgba(45, 14, 75, .9), rgba(28, 8, 52, .95));
         }
 
         .cell:hover:not(.open):not(.off)::after {
             color: rgba(255, 255, 255, .5);
-            text-shadow: 0 0 14px rgba(138, 43, 226, .9);
             transform: scale(1.3);
         }
 
         .cell:active:not(.open):not(.off) {
-            transform: scale(.9);
-            transition: .08s;
+            transform: scale(.9) translateZ(0);
+            transition: transform .08s;
         }
 
         .cell.off {
@@ -531,7 +543,7 @@
             opacity: 1
         }
 
-        /* Heartbeat pulse on unrevealed cells during tension */
+        /* Heartbeat pulse on unrevealed cells during tension - optimized */
         .t-med .cell:not(.open):not(.off) {
             animation: heartbeat 2.2s ease-in-out infinite;
         }
@@ -544,30 +556,21 @@
         .t-max .cell:not(.open):not(.off) {
             animation: heartbeat 0.85s ease-in-out infinite;
             border-color: rgba(255, 71, 87, .35);
-            box-shadow: 0 0 10px rgba(255, 71, 87, .12);
         }
 
         @keyframes heartbeat {
 
             0%,
             100% {
-                transform: scale(1)
-            }
-
-            15% {
-                transform: scale(1.05)
+                transform: scale(1) translateZ(0)
             }
 
             30% {
-                transform: scale(1)
-            }
-
-            45% {
-                transform: scale(1.03)
+                transform: scale(1.04) translateZ(0)
             }
 
             60% {
-                transform: scale(1)
+                transform: scale(1) translateZ(0)
             }
         }
 
@@ -575,8 +578,8 @@
         .cell.gem {
             border-color: rgba(0, 255, 157, .55);
             background: radial-gradient(circle, rgba(0, 110, 60, .45), rgba(0, 45, 25, .55));
-            box-shadow: 0 0 18px rgba(0, 255, 157, .12), inset 0 0 18px rgba(0, 255, 157, .06);
-            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275), gemGlow 1.8s ease-in-out infinite;
+            box-shadow: 0 0 14px rgba(0, 255, 157, .12);
+            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275);
         }
 
         /* Gem ring burst on reveal */
@@ -606,18 +609,6 @@
             }
         }
 
-        @keyframes gemGlow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 18px rgba(0, 255, 157, .12), inset 0 0 18px rgba(0, 255, 157, .06)
-            }
-
-            50% {
-                box-shadow: 0 0 28px rgba(0, 255, 157, .3), inset 0 0 22px rgba(0, 255, 157, .12)
-            }
-        }
-
         .cell.gem .ico {
             animation: gemBob 2.2s ease-in-out infinite
         }
@@ -626,11 +617,11 @@
 
             0%,
             100% {
-                transform: translateY(0)
+                transform: translateY(0) translateZ(0)
             }
 
             50% {
-                transform: translateY(-3px)
+                transform: translateY(-3px) translateZ(0)
             }
         }
 
@@ -638,8 +629,8 @@
         .cell.boom {
             border-color: rgba(255, 71, 87, .85);
             background: radial-gradient(circle, rgba(170, 0, 0, .55), rgba(70, 0, 0, .65));
-            box-shadow: 0 0 35px rgba(255, 71, 87, .55), inset 0 0 25px rgba(255, 71, 87, .2);
-            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275), shake .5s ease, boomPulse .4s ease-out;
+            box-shadow: 0 0 20px rgba(255, 71, 87, .4);
+            animation: pop .4s cubic-bezier(.175, .885, .32, 1.275);
         }
 
         /* Explosion ripple wave */
@@ -657,29 +648,13 @@
 
         @keyframes explosionRipple {
             0% {
-                transform: scale(0.3);
-                opacity: 1;
-                border-width: 4px
-            }
-
-            50% {
-                opacity: .6
+                transform: scale(0.3) translateZ(0);
+                opacity: 1
             }
 
             100% {
-                transform: scale(3);
-                opacity: 0;
-                border-width: 0.5px
-            }
-        }
-
-        @keyframes boomPulse {
-            0% {
-                filter: brightness(3)
-            }
-
-            100% {
-                filter: brightness(1)
+                transform: scale(2.2) translateZ(0);
+                opacity: 0
             }
         }
 
@@ -705,15 +680,15 @@
 
         @keyframes pop {
             0% {
-                transform: scale(0) rotateY(180deg)
+                transform: scale(0) rotateY(180deg) translateZ(0)
             }
 
             60% {
-                transform: scale(1.1) rotateY(0)
+                transform: scale(1.1) rotateY(0) translateZ(0)
             }
 
             100% {
-                transform: scale(1) rotateY(0)
+                transform: scale(1) rotateY(0) translateZ(0)
             }
         }
 
@@ -843,45 +818,31 @@
 
         /* ══ TENSION ══ */
         .card.t-med {
-            animation: tPulse 2s ease-in-out infinite;
+            border-color: rgba(255, 140, 0, .2);
         }
 
         .card.t-high {
-            animation: tPulse 1.2s ease-in-out infinite;
             border-color: rgba(255, 140, 0, .45);
         }
 
         .card.t-max {
-            animation: tPulse .8s ease-in-out infinite, tShake .5s ease-in-out infinite;
+            animation: tShake .5s ease-in-out infinite;
             border-color: rgba(255, 71, 87, .5);
-            box-shadow: 0 0 35px rgba(255, 71, 87, .15);
-        }
-
-        @keyframes tPulse {
-
-            0%,
-            100% {
-                box-shadow: 0 20px 60px rgba(0, 0, 0, .5)
-            }
-
-            50% {
-                box-shadow: 0 20px 60px rgba(0, 0, 0, .5), 0 0 25px rgba(255, 71, 87, .12)
-            }
         }
 
         @keyframes tShake {
 
             0%,
             100% {
-                transform: translateX(0)
+                transform: translateX(0) translateZ(0)
             }
 
             25% {
-                transform: translateX(-1px)
+                transform: translateX(-1px) translateZ(0)
             }
 
             75% {
-                transform: translateX(1px)
+                transform: translateX(1px) translateZ(0)
             }
         }
 
@@ -893,6 +854,7 @@
             z-index: 50;
             opacity: 0;
             transition: opacity .8s ease;
+            contain: strict;
         }
 
         .vignette.v-med {
@@ -908,19 +870,6 @@
         .vignette.v-max {
             opacity: 1;
             background: radial-gradient(ellipse at center, transparent 35%, rgba(255, 0, 0, .18) 100%);
-            animation: vigPulse 1.2s ease-in-out infinite;
-        }
-
-        @keyframes vigPulse {
-
-            0%,
-            100% {
-                opacity: .7
-            }
-
-            50% {
-                opacity: 1
-            }
         }
 
         /* ══ STREAK COUNTER ══ */
@@ -934,6 +883,8 @@
             align-items: center;
             gap: 2px;
             animation: streakIn .4s cubic-bezier(.175, .885, .32, 1.275);
+            contain: layout style;
+            will-change: transform;
         }
 
         .streak-counter.on {
@@ -998,6 +949,7 @@
             pointer-events: none;
             z-index: 55;
             overflow: hidden;
+            contain: strict;
         }
 
         .particle {
@@ -1009,12 +961,12 @@
         @keyframes particleRise {
             0% {
                 opacity: 1;
-                transform: translate(0, 0) scale(1)
+                transform: translate3d(0, 0, 0) scale(1)
             }
 
             100% {
                 opacity: 0;
-                transform: translate(var(--dx), -120px) scale(0)
+                transform: translate3d(var(--dx), -120px, 0) scale(0)
             }
         }
 
@@ -1155,11 +1107,10 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .82);
+            background: rgba(0, 0, 0, .88);
             z-index: 100;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(12px);
         }
 
         .ov.on {
@@ -1180,7 +1131,7 @@
             overflow: hidden;
         }
 
-        /* Gold shimmer sweep on overlay */
+        /* Gold shimmer sweep on overlay - optimized */
         .ov-box::before {
             content: '';
             position: absolute;
@@ -1188,17 +1139,18 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: conic-gradient(from 0deg, transparent, rgba(255, 215, 0, .1), transparent, rgba(255, 215, 0, .05), transparent);
+            background: conic-gradient(from 0deg, transparent, rgba(255, 215, 0, .08), transparent, rgba(255, 215, 0, .04), transparent);
+            will-change: transform;
             animation: ovSpin 4s linear infinite;
         }
 
         @keyframes ovSpin {
             0% {
-                transform: rotate(0deg)
+                transform: rotate(0deg) translateZ(0)
             }
 
             100% {
-                transform: rotate(360deg)
+                transform: rotate(360deg) translateZ(0)
             }
         }
 
@@ -1285,7 +1237,8 @@
             position: fixed;
             inset: 0;
             pointer-events: none;
-            z-index: 200
+            z-index: 200;
+            contain: strict;
         }
 
         .cf {
@@ -1293,17 +1246,18 @@
             width: 8px;
             height: 8px;
             top: -12px;
+            will-change: transform;
             animation: cfDrop linear forwards
         }
 
         @keyframes cfDrop {
             0% {
-                transform: translateY(0) rotate(0);
+                transform: translateY(0) rotate(0) translateZ(0);
                 opacity: 1
             }
 
             100% {
-                transform: translateY(100vh) rotate(720deg);
+                transform: translateY(100vh) rotate(720deg) translateZ(0);
                 opacity: 0
             }
         }
@@ -1374,6 +1328,30 @@
         ::-webkit-scrollbar-thumb {
             background: rgba(138, 43, 226, .25);
             border-radius: 3px
+        }
+
+        /* ══ HISTORY OPTIMIZATION ══ */
+        .hist {
+            contain: layout style;
+            content-visibility: auto;
+            contain-intrinsic-size: 0 300px;
+        }
+
+        /* ══ REDUCED MOTION ══ */
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .bg-grid,
+            .orb {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -1542,9 +1520,8 @@
             const particlesEl = $('particles');
 
             /* ═══════════════════════════════════════════════
-               AUDIO
+               AUDIO (Optimized pool)
                ═══════════════════════════════════════════════ */
-            const sfx = {};
             const sfxFiles = {
                 click: '/sounds/click.mp3',
                 tileClick: '/sounds/mines/tile_click.mp3',
@@ -1558,18 +1535,26 @@
             };
             const sfxVol = { click: .4, tileClick: .3, tileClick2: .3, flip: .5, chip: .5, gem: .5, gem2: .5, boom: .7, cashout: .8 };
 
-            // Pre-load all audio
+            // Audio pool: keep 3 clones per sound for overlap
+            const audioPool = {};
+            const POOL_SIZE = 3;
             for (const [k, v] of Object.entries(sfxFiles)) {
-                const a = new Audio(v);
-                a.preload = 'auto';
-                a.volume = sfxVol[k] || .5;
-                sfx[k] = a;
+                audioPool[k] = [];
+                for (let i = 0; i < POOL_SIZE; i++) {
+                    const a = new Audio();
+                    a.preload = 'auto';
+                    a.volume = sfxVol[k] || .5;
+                    a.src = v;
+                    audioPool[k].push(a);
+                }
             }
 
             function play(name) {
-                const s = sfx[name];
-                if (!s) return;
-                try { s.currentTime = 0; s.play().catch(() => { }); } catch (e) { }
+                const pool = audioPool[name];
+                if (!pool) return;
+                // find a free audio element (paused or ended)
+                const a = pool.find(s => s.paused || s.ended) || pool[0];
+                try { a.currentTime = 0; a.play().catch(() => { }); } catch (e) { }
             }
 
             // Web Audio for pitch-shifted streak gems
@@ -1607,23 +1592,38 @@
             function vib(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } }
 
             /* ═══════════════════════════════════════════════
-               PARTICLE EFFECTS
+               PARTICLE EFFECTS (Optimized)
                ═══════════════════════════════════════════════ */
+            const MAX_PARTICLES = 50;
+            let particleCleanupTimer = 0;
+
             function spawnParticles(cell, color, count) {
+                // Limit particle count for performance
+                count = Math.min(count, 12);
+                if (particlesEl.children.length > MAX_PARTICLES) {
+                    // Batch remove old particles
+                    const toRemove = particlesEl.children.length - MAX_PARTICLES + count;
+                    for (let i = 0; i < toRemove; i++) particlesEl.removeChild(particlesEl.firstChild);
+                }
                 const rect = cell.getBoundingClientRect();
                 const cx = rect.left + rect.width / 2;
                 const cy = rect.top + rect.height / 2;
+                const frag = document.createDocumentFragment();
                 for (let i = 0; i < count; i++) {
                     const p = document.createElement('div');
                     p.className = 'particle';
-                    const size = 3 + Math.random() * 5;
+                    const size = 3 + Math.random() * 4;
                     const angle = (Math.PI * 2 * i) / count + (Math.random() - .5) * .5;
-                    const dist = 30 + Math.random() * 50;
+                    const dist = 25 + Math.random() * 40;
                     const dx = Math.cos(angle) * dist;
-                    p.style.cssText = `left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;background:${color};box-shadow:0 0 6px ${color};--dx:${dx}px;animation:particleRise ${.5 + Math.random() * .5}s ease-out forwards;animation-delay:${Math.random() * .1}s`;
-                    particlesEl.appendChild(p);
+                    const dur = .4 + Math.random() * .4;
+                    p.style.cssText = `left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;background:${color};--dx:${dx}px;animation:particleRise ${dur}s ease-out forwards`;
+                    frag.appendChild(p);
                 }
-                setTimeout(() => { while (particlesEl.children.length > 80) particlesEl.removeChild(particlesEl.firstChild); }, 1200);
+                particlesEl.appendChild(frag);
+                // Debounced cleanup
+                clearTimeout(particleCleanupTimer);
+                particleCleanupTimer = setTimeout(() => { particlesEl.innerHTML = ''; }, 1200);
             }
 
             function showMultPop(cell, text) {
@@ -1641,10 +1641,13 @@
                 if (n >= 2) {
                     streakNumEl.textContent = n;
                     streakCounterEl.classList.add('on');
-                    // trigger bump animation
+                    // trigger bump animation without force reflow
                     streakCounterEl.classList.remove('bump');
-                    void streakCounterEl.offsetWidth; // force reflow
-                    streakCounterEl.classList.add('bump');
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            streakCounterEl.classList.add('bump');
+                        });
+                    });
                 } else if (n <= 0) {
                     streakCounterEl.classList.remove('on');
                 }
@@ -1685,24 +1688,29 @@
                 } catch (e) { console.error(e); }
             }
 
+            let balAnimId = 0;
             function animBal(target) {
                 const old = parseInt(balEl.textContent.replace(/,/g, '')) || 0;
                 const diff = target - old;
                 if (!diff) { balEl.textContent = target.toLocaleString(); return; }
-                // bump balance pill on change
+                // bump balance pill on change - no force reflow
                 const pill = balEl.closest('.bal');
                 if (pill) {
                     pill.classList.remove('bump');
-                    void pill.offsetWidth;
-                    pill.classList.add('bump');
-                    setTimeout(() => pill.classList.remove('bump'), 550);
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            pill.classList.add('bump');
+                            setTimeout(() => pill.classList.remove('bump'), 550);
+                        });
+                    });
                 }
-                const dur = 400, t0 = performance.now();
+                cancelAnimationFrame(balAnimId);
+                const dur = 350, t0 = performance.now();
                 (function tick(now) {
                     const p = Math.min((now - t0) / dur, 1);
                     const ease = 1 - Math.pow(1 - p, 3);
                     balEl.textContent = Math.round(old + diff * ease).toLocaleString();
-                    if (p < 1) requestAnimationFrame(tick);
+                    if (p < 1) balAnimId = requestAnimationFrame(tick);
                 })(t0);
             }
 
@@ -1744,33 +1752,49 @@
             function updMultTable() {
                 const safe = 25 - mines;
                 mtTitle.textContent = `Hệ số nhân (${mines} mìn)`;
-                mtRows.innerHTML = '';
                 const steps = [1, 2, 3, 5, Math.min(8, safe), Math.min(12, safe), Math.min(15, safe), safe];
                 const uniq = [...new Set(steps.filter(s => s > 0 && s <= safe))];
+                const frag = document.createDocumentFragment();
                 uniq.forEach(s => {
                     const v = calcMult(mines, s);
                     const d = document.createElement('div'); d.className = 'mt-row';
                     d.innerHTML = `<span>${s} ô 💎</span><span class="mv">${v.toFixed(2)}x</span>`;
-                    mtRows.appendChild(d);
+                    frag.appendChild(d);
                 });
+                mtRows.innerHTML = '';
+                mtRows.appendChild(frag);
             }
 
             /* ═══════════════════════════════════════════════
-               BUILD GRID
+               BUILD GRID (Optimized: DocumentFragment + event delegation)
                ═══════════════════════════════════════════════ */
+            // Cache cell references for fast lookup
+            let cellCache = [];
+
             function buildGrid() {
                 gridEl.innerHTML = '';
+                const frag = document.createDocumentFragment();
+                cellCache = [];
                 for (let i = 0; i < 25; i++) {
                     const c = document.createElement('div');
                     c.className = 'cell';
                     c.dataset.i = i;
                     c.innerHTML = '<span class="ico"></span>';
-                    c.addEventListener('click', () => revealCell(i));
-                    gridEl.appendChild(c);
+                    frag.appendChild(c);
+                    cellCache[i] = c;
                 }
+                gridEl.appendChild(frag);
             }
 
-            function getCell(i) { return gridEl.querySelector(`.cell[data-i="${i}"]`); }
+            // Event delegation on grid instead of 25 individual listeners
+            gridEl.addEventListener('click', e => {
+                const cell = e.target.closest('.cell');
+                if (!cell) return;
+                const idx = +cell.dataset.i;
+                revealCell(idx);
+            });
+
+            function getCell(i) { return cellCache[i] || null; }
 
             /* ═══════════════════════════════════════════════
                START GAME
@@ -1854,14 +1878,15 @@
                         setTimeout(() => play('boom'), 120);
                         vib([100, 50, 100, 50, 200]);
 
-                        // spawn red explosion particles
-                        spawnParticles(cell, '#ff4757', 16);
-                        spawnParticles(cell, '#ff6348', 10);
-                        setTimeout(() => spawnParticles(cell, '#ff3838', 8), 150);
+                        // spawn red explosion particles (reduced)
+                        spawnParticles(cell, '#ff4757', 12);
 
-                        // screen shake
-                        gameCard.style.animation = 'shake .55s ease';
-                        setTimeout(() => gameCard.style.animation = '', 550);
+                        // screen shake via transform
+                        gameCard.style.animation = 'none';
+                        requestAnimationFrame(() => {
+                            gameCard.style.animation = 'shake .55s ease';
+                            setTimeout(() => gameCard.style.animation = '', 560);
+                        });
 
                         // red flash
                         flash('rgba(255,0,0,.3)');
@@ -1908,11 +1933,10 @@
                     setTimeout(() => playGemStreak(streak), 70);
                     vib(30 + Math.min(streak * 5, 50));
 
-                    // sparkle particles (more with higher streak)
-                    const pCount = 6 + Math.min(streak * 2, 16);
+                    // sparkle particles (reduced for performance)
+                    const pCount = 5 + Math.min(streak, 8);
                     spawnParticles(cell, '#00ff9d', pCount);
-                    if (streak >= 3) spawnParticles(cell, '#00f3ff', 5);
-                    if (streak >= 6) spawnParticles(cell, '#FFD700', 4);
+                    if (streak >= 5) spawnParticles(cell, '#FFD700', 3);
 
                     // pulse on high streak
                     if (streak >= 5) {
@@ -2124,20 +2148,17 @@
 
             function spawnConfetti() {
                 const colors = ['#FFD700', '#ff6b6b', '#00ff9d', '#bc13fe', '#00f3ff', '#ff0096', '#FFA500', '#fff'];
-                for (let i = 0; i < 90; i++) {
+                const frag = document.createDocumentFragment();
+                const count = 45; // Reduced from 90 for performance
+                for (let i = 0; i < count; i++) {
                     const el = document.createElement('div');
                     el.className = 'cf';
-                    el.style.left = Math.random() * 100 + '%';
-                    el.style.background = colors[Math.floor(Math.random() * colors.length)];
-                    el.style.animationDelay = Math.random() * 2.5 + 's';
-                    el.style.animationDuration = (1.5 + Math.random() * 2.5) + 's';
-                    el.style.width = (4 + Math.random() * 12) + 'px';
-                    el.style.height = (4 + Math.random() * 12) + 'px';
-                    el.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
-                    el.style.boxShadow = `0 0 6px ${el.style.background}`;
-                    confettiEl.appendChild(el);
+                    const color = colors[i & 7]; // bitwise mod instead of Math.floor
+                    el.style.cssText = `left:${Math.random() * 100}%;background:${color};animation-delay:${Math.random() * 2}s;animation-duration:${1.5 + Math.random() * 2}s;width:${4 + Math.random() * 10}px;height:${4 + Math.random() * 10}px;border-radius:${Math.random() > .5 ? '50%' : '2px'}`;
+                    frag.appendChild(el);
                 }
-                setTimeout(() => confettiEl.innerHTML = '', 5000);
+                confettiEl.appendChild(frag);
+                setTimeout(() => confettiEl.innerHTML = '', 4000);
             }
 
             /* ═══════════════════════════════════════════════
@@ -2145,7 +2166,7 @@
                ═══════════════════════════════════════════════ */
             document.addEventListener('keydown', e => {
                 if (e.code === 'Space' && active && revealed > 0 && !busy) { e.preventDefault(); doCashout(); }
-            });
+            }, { passive: false });
 
             /* ═══════════════════════════════════════════════
                RESTORE ACTIVE GAME
