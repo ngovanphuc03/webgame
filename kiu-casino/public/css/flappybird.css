@@ -20,7 +20,7 @@ body {
     height: 100vh;
     background: #000;
     /* Simple black backing if game doesn't load */
-    font-family: 'PixelFont', 'Courier New', monospace;
+    font-family: 'DearPix', 'Courier New', monospace;
     overflow: hidden;
     user-select: none;
     display: flex;
@@ -108,7 +108,7 @@ canvas {
     border: 2px solid #fff;
     pointer-events: auto;
     z-index: 30;
-    font-family: 'PixelFont', sans-serif;
+    font-family: 'DearPix', sans-serif;
     box-shadow: 0 4px 0 #b8860b;
 }
 
@@ -249,7 +249,7 @@ p {
     border: 2px solid #fff;
     color: white;
     padding: 16px 45px;
-    font-family: 'PixelFont', sans-serif;
+    font-family: 'DearPix', sans-serif;
     font-size: 16px;
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
     border-radius: 50px;
@@ -292,7 +292,7 @@ p {
     background: rgba(0, 0, 0, 0.6);
     color: white;
     text-decoration: none;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'DearPix', sans-serif;
     font-weight: 600;
     font-size: 13px;
     border-radius: 30px;

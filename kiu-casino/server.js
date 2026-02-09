@@ -348,7 +348,8 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
             console.error(`Discord Rate Limited! Retry after ${retryAfter}s`);
             return res.send(`
                 <html><head><style>
-                    body { background: #1a1a2e; color: #fff; font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                    @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
+                    body { background: #1a1a2e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
                     .box { text-align: center; padding: 40px; background: #16213e; border-radius: 15px; box-shadow: 0 0 30px rgba(0,200,255,0.3); }
                     h2 { color: #ff6b6b; } a { color: #4ecdc4; }
                 </style></head><body><div class="box">
@@ -362,7 +363,8 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
         const safeMsg = (e.message || 'Unknown error').replace(/[<>"'&]/g, c => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' }[c]));
         res.send(`
             <html><head><style>
-                body { background: #1a1a2e; color: #fff; font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
+                body { background: #1a1a2e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
                 .box { text-align: center; padding: 40px; background: #16213e; border-radius: 15px; box-shadow: 0 0 30px rgba(255,100,100,0.3); max-width: 500px; }
                 h2 { color: #ff6b6b; } a { color: #4ecdc4; }
             </style></head><body><div class="box">
@@ -1486,7 +1488,8 @@ app.use((req, res) => {
     res.status(404).send(`
         <html><head><meta charset="UTF-8"><title>404 - Không tìm thấy</title>
         <style>
-            body { background: #0a0b1e; color: #fff; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+            @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
+            body { background: #0a0b1e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
             .box { text-align: center; }
             h1 { font-size: 120px; margin: 0; background: linear-gradient(135deg, #00f3ff, #bc13fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             p { font-size: 20px; color: #888; margin: 20px 0; }
@@ -1506,7 +1509,8 @@ app.use((err, req, res, next) => {
     res.status(500).send(`
         <html><head><meta charset="UTF-8"><title>500 - Lỗi Server</title>
         <style>
-            body { background: #0a0b1e; color: #fff; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+            @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
+            body { background: #0a0b1e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
             .box { text-align: center; }
             h1 { font-size: 80px; margin: 0; color: #ff6b6b; }
             p { font-size: 18px; color: #888; margin: 20px 0; }
