@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#70c5ce">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="/manifest.json">
     <meta name="description" content="Flappy Bird - Trò chơi giải trí tại Pixel PlayZone">
     <meta property="og:title" content="🐦 Flappy Bird - Pixel PlayZone">
@@ -148,27 +149,16 @@
         </div>
     </div>
 
-    <!-- Audio Elements (Optional - uncomment to enable sounds) -->
-    <!--
-    <audio id="jumpSound" preload="auto">
-        <source src="sounds/jump.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="scoreSound" preload="auto">
-        <source src="sounds/score.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="gameoverSound" preload="auto">
-        <source src="sounds/gameover.mp3" type="audio/mpeg">
-    </audio>
-    -->
 
     <script src="js/flappybird.js"></script>
-    <script defer src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
     <script src="/js/chat-system.js"></script>
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
+    <script>window.addEventListener('load', () => { const l = document.getElementById('loadingScreen'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>
 
 </html>

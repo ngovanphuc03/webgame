@@ -84,7 +84,8 @@ const discordAuthLimiter = rateLimit({
 
 // --- CẤU HÌNH ---
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cookieParser());
+const COOKIE_SECRET = process.env.COOKIE_SECRET || crypto.randomBytes(32).toString('hex');
+app.use(cookieParser(COOKIE_SECRET));
 app.use(express.json());
 
 const TARGET_GUILD_ID = process.env.GUILD_ID || '949162034954633236';
@@ -95,7 +96,8 @@ const COOKIE_OPTS = {
     maxAge: 86400000,
     httpOnly: true,
     secure: IS_PROD,
-    sameSite: 'lax'
+    sameSite: 'lax',
+    signed: true
 };
 const COOKIE_OPTS_CLIENT = { // user_info readable by client for display
     maxAge: 86400000,
@@ -104,11 +106,15 @@ const COOKIE_OPTS_CLIENT = { // user_info readable by client for display
     sameSite: 'lax'
 };
 
-// Auth middleware
+// Auth middleware (supports both signed and unsigned cookies for backward compat)
 function requireAuth(req, res, next) {
-    if (!req.cookies || !req.cookies.user_id) {
+    // Prefer signed cookie, fallback to unsigned for backward compatibility
+    const uid = (req.signedCookies && req.signedCookies.user_id) || (req.cookies && req.cookies.user_id);
+    if (!uid) {
         return res.status(401).json({ error: 'No login' });
     }
+    // Normalize: store resolved uid in req.cookies.user_id for downstream
+    req.cookies.user_id = uid;
     next();
 }
 
@@ -544,9 +550,8 @@ app.post('/api/flappy/reward', requireAuth, flappyRewardLimiter, async (req, res
 // CRASH GAME API
 // ============================================================
 
-// In-memory crash bets per user (single-player per-round)
-// userId -> { bet, status, crashPoint, cashedAt, ts, flyStart }
-const crashBets = new Map();
+// Legacy single-player crash bets removed — using multiplayer Socket.IO system
+// const crashBets = new Map(); // REMOVED
 
 const crashLimiter = rateLimit({
     windowMs: 3 * 1000,
@@ -554,270 +559,16 @@ const crashLimiter = rateLimit({
     message: { error: 'Quá nhanh! Đợi vài giây.' }
 });
 
-// Server-side crash point generator (provably fair)
+// Server-side crash point generator (cryptographically secure)
 function generateCrashPoint() {
     const HOUSE_EDGE = 0.04;
-    const r = Math.random();
+    const r = crypto.randomBytes(4).readUInt32BE(0) / 0xFFFFFFFF;
     if (r < HOUSE_EDGE) return 1.00;
     const raw = 1 / (1 - r);
     return Math.min(Math.round(raw * 100) / 100, 100);
 }
 
-// Place a crash bet (deducts balance, generates crash point server-side)
-app.post('/api/crash/bet', requireAuth, crashLimiter, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const { bet } = req.body;
-
-    if (!bet || !Number.isInteger(bet) || bet < 500 || bet > 100000) {
-        return res.status(400).json({ error: 'Cược không hợp lệ (500 - 100,000)' });
-    }
-
-    // Prevent double bet — only block if bet is still active
-    const existing = crashBets.get(uid);
-    if (existing) {
-        // If old bet is finished (cashedOut, busted), clean it up and allow new bet
-        if (existing.status === 'cashedOut' || existing.status === 'busted') {
-            crashBets.delete(uid);
-        } else {
-            return res.status(400).json({ error: 'Bạn đã đặt cược rồi!' });
-        }
-    }
-
-    const conn = await dbPool.getConnection();
-    try {
-        await conn.beginTransaction();
-
-        const [rows] = await conn.execute(
-            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
-            [TARGET_GUILD_ID, uid]
-        );
-        if (!rows.length || Number(rows[0].balance) < bet) {
-            await conn.rollback(); conn.release();
-            return res.status(400).json({ error: 'Không đủ tiền!' });
-        }
-
-        const balBefore = Number(rows[0].balance);
-        await conn.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?',
-            [bet, TARGET_GUILD_ID, uid]);
-        const balAfter = balBefore - bet;
-
-        await logTx(conn, uid, 'crash_bet', -bet, balBefore, balAfter, { bet });
-        await conn.commit();
-        conn.release();
-
-        // Generate crash point SERVER-SIDE (the source of truth)
-        const crashPoint = generateCrashPoint();
-        crashBets.set(uid, {
-            bet, status: 'pending', crashPoint,
-            cashedAt: 0, ts: Date.now(), flyStart: 0
-        });
-
-        console.log(`[Crash] User ${uid} bet ${bet}, crashPoint=${crashPoint}`);
-        res.json({ success: true, bet, newBalance: balAfter });
-    } catch (e) {
-        await conn.rollback().catch(() => { });
-        conn.release();
-        console.error('Crash Bet Error:', e);
-        res.status(500).json({ error: 'Lỗi Database' });
-    }
-});
-
-// Start the flying phase — reveals crash point (only after waiting period)
-app.post('/api/crash/start', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const entry = crashBets.get(uid);
-
-    if (!entry || entry.status !== 'pending') {
-        return res.status(400).json({ error: 'Không có cược đang đợi!' });
-    }
-
-    // Ensure at least 2 seconds have passed since bet (anti-cheat: must wait)
-    if (Date.now() - entry.ts < 2000) {
-        return res.status(400).json({ error: 'Đợi hết countdown!' });
-    }
-
-    entry.status = 'active';
-    entry.flyStart = Date.now();
-
-    // Return the crash point for client animation
-    res.json({ success: true, crashPoint: entry.crashPoint });
-});
-
-// Cancel a pending crash bet (only before round starts)
-app.post('/api/crash/cancel', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const entry = crashBets.get(uid);
-
-    if (!entry || entry.status !== 'pending') {
-        return res.status(400).json({ error: 'Không có cược để hủy!' });
-    }
-
-    const conn = await dbPool.getConnection();
-    try {
-        await conn.beginTransaction();
-
-        const [rows] = await conn.execute(
-            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
-            [TARGET_GUILD_ID, uid]
-        );
-        const balBefore = rows.length ? Number(rows[0].balance) : 0;
-        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?',
-            [entry.bet, TARGET_GUILD_ID, uid]);
-        const balAfter = balBefore + entry.bet;
-
-        await logTx(conn, uid, 'crash_cancel', entry.bet, balBefore, balAfter, { refund: true });
-        await conn.commit();
-        conn.release();
-
-        crashBets.delete(uid);
-        console.log(`[Crash] User ${uid} cancelled bet ${entry.bet}`);
-        res.json({ success: true, newBalance: balAfter });
-    } catch (e) {
-        await conn.rollback().catch(() => { });
-        conn.release();
-        console.error('Crash Cancel Error:', e);
-        res.status(500).json({ error: 'Lỗi Database' });
-    }
-});
-
-// Cashout from crash — SERVER validates multiplier against crash point
-app.post('/api/crash/cashout', requireAuth, crashLimiter, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const { multiplier } = req.body;
-    const entry = crashBets.get(uid);
-
-    if (!entry || entry.status !== 'active') {
-        return res.status(400).json({ error: 'Không có cược đang chơi!' });
-    }
-
-    if (!multiplier || multiplier < 1 || multiplier > 100) {
-        return res.status(400).json({ error: 'Hệ số không hợp lệ' });
-    }
-
-    // *** CRITICAL VALIDATION: multiplier must not exceed crash point ***
-    if (multiplier > entry.crashPoint) {
-        // Round already crashed — player loses
-        entry.status = 'busted';
-        setTimeout(() => crashBets.delete(uid), 10000);
-        console.log(`[Crash] User ${uid} BUSTED! Tried ${multiplier}x but crash=${entry.crashPoint}x`);
-        return res.status(400).json({
-            error: 'Đã nổ rồi!',
-            crashed: true,
-            crashPoint: entry.crashPoint
-        });
-    }
-
-    // Validate time elapsed (anti-cheat: can't cashout instantly at high mult)
-    const flyElapsed = (Date.now() - entry.flyStart) / 1000;
-    if (flyElapsed < 0.3 && multiplier > 1.5) {
-        return res.status(400).json({ error: 'Quá nhanh! Đợi thêm.' });
-    }
-
-    const mult = Math.round(multiplier * 100) / 100;
-    const winAmount = Math.floor(entry.bet * mult);
-    const profit = winAmount - entry.bet;
-
-    const conn = await dbPool.getConnection();
-    try {
-        await conn.beginTransaction();
-
-        const [rows] = await conn.execute(
-            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
-            [TARGET_GUILD_ID, uid]
-        );
-        const balBefore = rows.length ? Number(rows[0].balance) : 0;
-        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?',
-            [winAmount, TARGET_GUILD_ID, uid]);
-        const balAfter = balBefore + winAmount;
-
-        await logTx(conn, uid, 'crash_win', winAmount, balBefore, balAfter,
-            { bet: entry.bet, multiplier: mult, crashPoint: entry.crashPoint, profit });
-        await conn.commit();
-        conn.release();
-
-        // Clean up immediately — don't leave stale entries
-        crashBets.delete(uid);
-
-        console.log(`[Crash] User ${uid} CASHOUT! Bet=${entry.bet}, Mult=${mult}, CrashPoint=${entry.crashPoint}, Win=${winAmount}`);
-        res.json({ success: true, multiplier: mult, winAmount, profit, newBalance: balAfter });
-    } catch (e) {
-        await conn.rollback().catch(() => { });
-        conn.release();
-        console.error('Crash Cashout Error:', e);
-        res.status(500).json({ error: 'Lỗi Database' });
-    }
-});
-
-// Report round ended (bust) — marks bet as lost
-app.post('/api/crash/bust', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const entry = crashBets.get(uid);
-
-    if (!entry || (entry.status !== 'active' && entry.status !== 'pending')) {
-        // Clean up any stale entry regardless of status
-        crashBets.delete(uid);
-        return res.json({ success: true });
-    }
-
-    const crashPoint = entry.crashPoint || 1.00;
-    // Use logTxSimple (no conn required) for non-transactional logging
-    await logTxSimple(uid, 'crash_bust', -entry.bet, 0, 0,
-        { bet: entry.bet, crashPoint }).catch(() => { });
-
-    console.log(`[Crash] User ${uid} BUSTED at ${crashPoint}x, lost ${entry.bet}`);
-    crashBets.delete(uid);
-    res.json({ success: true, crashPoint });
-});
-
-// Check & cleanup stale crash bet for this user (called at start of each round)
-app.post('/api/crash/cleanup', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
-    const entry = crashBets.get(uid);
-    if (entry) {
-        // If bet is completed or older than 60s, just clean it up
-        if (entry.status === 'cashedOut' || entry.status === 'busted' ||
-            Date.now() - entry.ts > 60000) {
-            crashBets.delete(uid);
-            console.log(`[Crash] Cleanup stale entry for ${uid} (status: ${entry.status})`);
-        }
-    }
-    res.json({ success: true });
-});
-
-// Auto-cleanup stale crash bets — refund if still pending, log loss if active
-setInterval(async () => {
-    const now = Date.now();
-    for (const [uid, entry] of crashBets) {
-        if (now - entry.ts > 120000) {
-            // If still pending (never started), refund the player
-            if (entry.status === 'pending') {
-                let conn;
-                try {
-                    conn = await dbPool.getConnection();
-                    await conn.beginTransaction();
-                    const [rows] = await conn.execute(
-                        'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
-                        [TARGET_GUILD_ID, uid]);
-                    const balBefore = rows.length ? Number(rows[0].balance) : 0;
-                    await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?',
-                        [entry.bet, TARGET_GUILD_ID, uid]);
-                    await logTx(conn, uid, 'crash_stale_refund', entry.bet, balBefore, balBefore + entry.bet,
-                        { reason: 'stale_pending' });
-                    await conn.commit();
-                    console.log(`[Crash] Refunded stale pending bet for ${uid}: ${entry.bet}`);
-                } catch (e) {
-                    if (conn) await conn.rollback().catch(() => { });
-                    console.error('[Crash] Stale refund error:', e);
-                } finally {
-                    if (conn) conn.release();
-                }
-            } else {
-                console.log(`[Crash] Cleaned up stale bet for ${uid} (status: ${entry.status})`);
-            }
-            crashBets.delete(uid);
-        }
-    }
-}, 30000);
+// Old single-player crash HTTP endpoints removed — all crash gameplay is via Socket.IO multiplayer
 
 // ============================================================
 // GLOBAL CHAT: In-memory message history
@@ -1488,8 +1239,8 @@ app.get('/api/profile/stats', requireAuth, async (req, res) => {
         const gameTypes = {
             taixiu: ['taixiu_bet', 'taixiu_win'],
             poker: ['poker_bet', 'poker_win'],
-            mines: ['mines_bet', 'mines_cashout', 'mines_lose'],
-            crash: ['crash_bet', 'crash_cashout', 'crash_bust'],
+            mines: ['mines_bet', 'mines_win', 'mines_lose'],
+            crash: ['crash_bet', 'crash_win', 'crash_bust'],
             flappy: ['flappy_reward']
         };
 
@@ -1582,7 +1333,7 @@ async function checkAndAwardBadges(userId) {
             [userId, TARGET_GUILD_ID]
         );
 
-        const winTypes = ['mines_cashout', 'crash_win', 'poker_win', 'taixiu_win', 'flappy_reward'];
+        const winTypes = ['mines_win', 'crash_win', 'poker_win', 'taixiu_win', 'flappy_reward'];
         const betTypes = ['mines_bet', 'crash_bet', 'poker_bet', 'taixiu_bet'];
 
         const totalWins = txRows.filter(t => winTypes.includes(t.type)).length;
@@ -1604,7 +1355,7 @@ async function checkAndAwardBadges(userId) {
         }
 
         // Check mines details for 15+ reveals
-        const minesCashouts = txRows.filter(t => t.type === 'mines_cashout');
+        const minesCashouts = txRows.filter(t => t.type === 'mines_win');
         let hasMines15 = false;
         for (const mc of minesCashouts) {
             try {
@@ -1688,8 +1439,12 @@ app.get('/api/achievements', requireAuth, async (req, res) => {
     }
 });
 
-// Manual sync endpoint (admin)
+// Manual sync endpoint (admin only)
 app.get('/api/sync-users', requireAuth, async (req, res) => {
+    const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!adminIds.includes(req.cookies.user_id)) {
+        return res.status(403).json({ error: 'Không có quyền' });
+    }
     if (!BOT_TOKEN) {
         return res.status(400).json({ error: 'DISCORD_BOT_TOKEN chưa được cấu hình trong .env' });
     }
@@ -1803,7 +1558,7 @@ app.get('/api/admin/stats', requireAuth, async (req, res) => {
         );
         // Transactions per game (last 7 days)
         const gameGroups = {
-            mines: ['mines_bet', 'mines_cashout', 'mines_lose'],
+            mines: ['mines_bet', 'mines_win', 'mines_lose'],
             crash: ['crash_bet', 'crash_win', 'crash_bust'],
             poker: ['poker_bet', 'poker_win'],
             taixiu: ['taixiu_bet', 'taixiu_win'],
@@ -1847,10 +1602,27 @@ const pokerGame = new PokerManager(io, dbPool);
 // txGame / taixiu-core integration (enabled if module present)
 let txGame; try { txGame = new (require('./taixiu-core'))(io, dbPool, TARGET_GUILD_ID); console.log('taixiu-core loaded'); } catch (e) { console.error('taixiu-core not loaded:', e?.message || e); }
 
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+    const cookieStr = socket.handshake.headers.cookie || '';
+    const getCk = (name) => { const v = `; ${cookieStr}`; const p = v.split(`; ${name}=`); if (p.length === 2) return decodeURIComponent(p.pop().split(';').shift()); };
+    // Try signed cookie first (s:value.signature), fallback to unsigned
+    const raw = getCk('user_id');
+    if (raw && raw.startsWith('s:')) {
+        try {
+            const val = cookieParser.signedCookie(raw, COOKIE_SECRET);
+            if (val !== false) { socket._userId = val; return next(); }
+        } catch (e) { }
+    }
+    // Fallback: unsigned cookie (backward compat)
+    if (raw) { socket._userId = raw; }
+    next();
+});
+
 io.on('connection', (socket) => {
     // Simplified local-friendly user info (no DB/Discord required)
     const getCookie = (name) => { const v = `; ${socket.handshake.headers.cookie || ''}`; const p = v.split(`; ${name}=`); if (p.length === 2) return decodeURIComponent(p.pop().split(';').shift()); }
-    const userId = getCookie('user_id');
+    const userId = socket._userId || getCookie('user_id');
     let userInfo = { id: socket.id, username: "Khách", avatar: "" };
     try {
         const raw = getCookie('user_info');
@@ -2159,3 +1931,10 @@ function gracefulShutdown(signal) {
 }
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('💥 Uncaught Exception:', err);
+    gracefulShutdown('uncaughtException');
+});

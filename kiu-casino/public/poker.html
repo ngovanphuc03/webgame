@@ -11,6 +11,7 @@
     <meta property="og:image" content="/images/icons/icon-512.svg">
     <meta property="og:type" content="website">
     <meta name="theme-color" content="#0f0a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🂡</text></svg>">
@@ -24,7 +25,7 @@
         rel="stylesheet">
 
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script defer src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 
     <style>
         :root {
@@ -1314,7 +1315,7 @@
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
-    <script src="/js/chat-system.js"></script>
+    <!-- Poker has its own table chat (pk_chat), skip global chat-system.js -->
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
     <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>

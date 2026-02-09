@@ -77,7 +77,7 @@
         btn.id = 'ppz-tutorial-btn';
         btn.innerHTML = '❓';
         btn.title = 'Hướng dẫn chơi';
-        btn.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:9989;width:44px;height:44px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5);color:#fff';
+        btn.style.cssText = 'position:fixed;bottom:140px;right:20px;z-index:9989;width:44px;height:44px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5);color:#fff';
         btn.addEventListener('mouseenter', () => { btn.style.borderColor = 'rgba(139,92,246,.6)'; btn.style.transform = 'scale(1.1)'; });
         btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'rgba(139,92,246,.3)'; btn.style.transform = 'scale(1)'; });
         btn.addEventListener('click', () => showTutorial(tut));
