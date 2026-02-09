@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Texas Hold'em Poker VIP - Chơi poker online miễn phí tại Pixel PlayZone!">
     <meta name="theme-color" content="#0f0a1a">
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🂡</text></svg>">
 
@@ -1287,8 +1288,10 @@
     </div>
 
     <script src="poker.js"></script>
-
-
+    <script src="/js/sound-system.js"></script>
+    <script src="/js/notify-system.js"></script>
+    <script src="/js/theme-system.js"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
 </body>
 
 </html>

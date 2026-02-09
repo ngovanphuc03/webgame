@@ -7,6 +7,10 @@
     <meta name="description"
         content="PIXEL PLAYZONE - Thế giới game giải trí: Tài Xỉu, Poker, Flappy Bird, Mines. Chơi miễn phí!">
     <meta name="theme-color" content="#0a0b1e">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192.svg">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <title>PIXEL PLAYZONE - Thế giới game giải trí</title>
@@ -1555,6 +1559,21 @@
                 <button class="btn-play btn-cyan">XEM NGAY ▸</button>
             </div>
         </div>
+
+        <div class="game-card c-profile" onclick="enterGame('/profile')">
+            <div class="card-status status-new">✦ NEW</div>
+            <div class="card-banner" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)"><span
+                    class="card-icon">👤</span></div>
+            <div class="card-content">
+                <div class="card-title">HỒ SƠ CÁ NHÂN</div>
+                <div class="card-desc">Xem thành tích, thống kê game và bộ sưu tập danh hiệu của bạn.</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>📊</i> Thống kê</div>
+                    <div class="meta-item"><i>🏅</i> Thành tích</div>
+                </div>
+                <button class="btn-play" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)">XEM HỒ SƠ ▸</button>
+            </div>
+        </div>
     </div>
 
     <footer class="footer">
@@ -1727,6 +1746,15 @@
             setTimeout(() => t.style.display = 'none', 3000);
         }
         checkAuth();
+    </script>
+    <script src="/js/sound-system.js"></script>
+    <script src="/js/notify-system.js"></script>
+    <script src="/js/theme-system.js"></script>
+    <script>
+        // PWA Service Worker registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => { });
+        }
     </script>
 </body>
 

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="theme-color" content="#030014">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+    <title>👤 Profile - Pixel PlayZone</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="css/fonts.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #030014;
+            --surface: rgba(12, 6, 30, .95);
+            --surface2: rgba(20, 10, 45, .88);
+            --border: rgba(139, 92, 246, .15);
+            --accent: #8b5cf6;
+            --accent2: #00f0ff;
+            --neon-green: #00ff9d;
+            --neon-red: #ff3355;
+            --neon-gold: #ffd700;
+            --text: #fff;
+            --muted: rgba(255, 255, 255, .5);
+            --radius: 16px;
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'DearPix', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══ AMBIENT ═══ */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, .08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 240, 255, .06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 0, 170, .04) 0%, transparent 60%);
+        }
+
+        /* ═══ NAVBAR ═══ */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            background: rgba(3, 0, 20, .85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .nav-back {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            transition: .3s
+        }
+
+        .nav-back:hover {
+            background: rgba(139, 92, 246, .15);
+            border-color: rgba(139, 92, 246, .3)
+        }
+
+        .nav-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent2)
+        }
+
+        /* ═══ PROFILE HEADER ═══ */
+        .profile-header {
+            text-align: center;
+            padding: 40px 20px 30px;
+            position: relative
+        }
+
+        .avatar-wrap {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 16px
+        }
+
+        .avatar-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            padding: 4px;
+            background: conic-gradient(var(--accent), var(--accent2), var(--neon-green), var(--accent));
+            animation: ringRotate 4s linear infinite
+        }
+
+        @keyframes ringRotate {
+            to {
+                filter: hue-rotate(360deg)
+            }
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--bg)
+        }
+
+        .level-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 2px solid var(--bg);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, .4)
+        }
+
+        .profile-name {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .profile-id {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 16px
+        }
+
+        .profile-balance {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--neon-gold)
+        }
+
+        /* ═══ STATS GRID ═══ */
+        .stats-section {
+            padding: 0 20px;
+            max-width: 800px;
+            margin: 0 auto
+        }
+
+        .section-title {
+            font-size: 15px;
+            color: var(--accent2);
+            margin: 28px 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 4px
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: center;
+            transition: .3s
+        }
+
+        .stat-card:hover {
+            border-color: rgba(139, 92, 246, .3);
+            transform: translateY(-2px)
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .stat-value.green {
+            color: var(--neon-green)
+        }
+
+        .stat-value.red {
+            color: var(--neon-red)
+        }
+
+        .stat-value.gold {
+            color: var(--neon-gold)
+        }
+
+        .stat-value.cyan {
+            color: var(--accent2)
+        }
+
+        /* ═══ GAME BREAKDOWN ═══ */
+        .game-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .game-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: .3s
+        }
+
+        .game-row:hover {
+            border-color: rgba(139, 92, 246, .3)
+        }
+
+        .game-icon {
+            font-size: 28px;
+            flex-shrink: 0
+        }
+
+        .game-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .game-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .game-detail {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .game-profit {
+            font-size: 16px;
+            font-weight: 700;
+            text-align: right;
+            flex-shrink: 0
+        }
+
+        .game-profit.pos {
+            color: var(--neon-green)
+        }
+
+        .game-profit.neg {
+            color: var(--neon-red)
+        }
+
+        /* ═══ RECENT ACTIVITY ═══ */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px
+        }
+
+        .activity-icon {
+            font-size: 20px;
+            flex-shrink: 0
+        }
+
+        .activity-text {
+            flex: 1;
+            color: rgba(255, 255, 255, .75)
+        }
+
+        .activity-amount {
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        .activity-amount.pos {
+            color: var(--neon-green)
+        }
+
+        .activity-amount.neg {
+            color: var(--neon-red)
+        }
+
+        .activity-time {
+            font-size: 10px;
+            color: var(--muted);
+            flex-shrink: 0
+        }
+
+        /* ═══ ACHIEVEMENTS ═══ */
+        .ach-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px
+        }
+
+        .ach-card {
+            text-align: center;
+            padding: 16px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: .3s
+        }
+
+        .ach-card.unlocked {
+            border-color: rgba(255, 215, 0, .3);
+            background: rgba(255, 215, 0, .04)
+        }
+
+        .ach-card.locked {
+            opacity: .4;
+            filter: grayscale(1)
+        }
+
+        .ach-icon {
+            font-size: 32px;
+            margin-bottom: 6px
+        }
+
+        .ach-name {
+            font-size: 11px;
+            font-weight: 600
+        }
+
+        .ach-desc {
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 3px
+        }
+
+        /* ═══ LOADING ═══ */
+        .loading-profile {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+            font-size: 14px
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(139, 92, 246, .2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto 16px
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* ═══ FOOTER ═══ */
+        .profile-footer {
+            text-align: center;
+            padding: 30px 20px 40px;
+            color: var(--muted);
+            font-size: 11px
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media(max-width:480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px
+            }
+
+            .stat-card {
+                padding: 14px
+            }
+
+            .ach-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px
+            }
+
+            .profile-name {
+                font-size: 22px
+            }
+
+            .profile-balance {
+                font-size: 18px;
+                padding: 10px 22px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+
+    <nav class="nav">
+        <a href="/" class="nav-back">← Lobby</a>
+        <span class="nav-title">👤 Profile</span>
+    </nav>
+
+    <div id="content">
+        <div class="loading-profile">
+            <div class="spinner"></div>
+            Đang tải thông tin...
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const TX_ICONS = {
+                mines_bet: '💣', mines_win: '💎', mines_lose: '💥',
+                crash_bet: '🚀', crash_win: '💰', crash_bust: '💥', crash_cashout: '✅',
+                poker_win: '🃏', poker_lose: '🃏', poker_bet: '🃏',
+                taixiu_bet: '🎲', taixiu_win: '🎲', taixiu_lose: '🎲',
+                flappy_reward: '🐦', daily_reward: '🎁',
+                daily_spin: '🎁', crash_cancel: '↩️'
+            };
+
+            function formatNum(n) {
+                return Number(n).toLocaleString('vi-VN');
+            }
+            function timeAgo(ts) {
+                const d = Date.now() - new Date(ts).getTime();
+                if (d < 60000) return 'Vừa xong';
+                if (d < 3600000) return Math.floor(d / 60000) + 'p trước';
+                if (d < 86400000) return Math.floor(d / 3600000) + 'h trước';
+                return Math.floor(d / 86400000) + ' ngày trước';
+            }
+
+            function calcLevel(totalBet) {
+                // Levels: mỗi 50,000 bet = 1 level, max 99
+                return Math.min(99, Math.floor(totalBet / 50000) + 1);
+            }
+
+            async function loadProfile() {
+                try {
+                    const [meRes, txRes] = await Promise.all([
+                        fetch('/api/me'),
+                        fetch('/api/profile/stats')
+                    ]);
+
+                    if (!meRes.ok) { location.href = '/'; return; }
+                    const me = await meRes.json();
+                    const stats = txRes.ok ? await txRes.json() : null;
+
+                    render(me, stats);
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('content').innerHTML =
+                        '<div class="loading-profile">❌ Không thể tải profile. <a href="/" style="color:#00f0ff">Về lobby</a></div>';
+                }
+            }
+
+            function render(me, stats) {
+                const s = stats || {};
+                const totalBet = s.totalBet || 0;
+                const totalWin = s.totalWin || 0;
+                const profit = s.profit || 0;
+                const totalGames = s.totalGames || 0;
+                const winRate = s.winRate || 0;
+                const level = calcLevel(totalBet);
+                const games = s.breakdown || {};
+                const recent = s.recent || [];
+
+                // Achievements
+                const achievements = [
+                    { icon: '🌟', name: 'Tân Binh', desc: 'Chơi game đầu tiên', unlocked: totalGames >= 1 },
+                    { icon: '🔥', name: 'Nhiệt Huyết', desc: 'Chơi 50 ván', unlocked: totalGames >= 50 },
+                    { icon: '💰', name: 'Triệu Phú', desc: 'Sở hữu 1M $', unlocked: me.balance >= 1000000 },
+                    { icon: '🎯', name: 'Xạ Thủ', desc: 'Win rate 60%+', unlocked: winRate >= 60 },
+                    { icon: '🚀', name: 'Phi Hành Gia', desc: 'Cashout x10 Crash', unlocked: (games.crash?.maxMult || 0) >= 10 },
+                    { icon: '💎', name: 'Thợ Mỏ', desc: 'Thắng 100 ván Mines', unlocked: (games.mines?.wins || 0) >= 100 },
+                    { icon: '👑', name: 'Vua Casino', desc: 'Tổng bet 10M', unlocked: totalBet >= 10000000 },
+                    { icon: '🐦', name: 'Chim Sẻ', desc: 'Đạt 50 điểm Flappy', unlocked: (games.flappy?.maxScore || 0) >= 50 },
+                    { icon: '⭐', name: 'Huyền Thoại', desc: 'Đạt Level 50', unlocked: level >= 50 }
+                ];
+
+                document.getElementById('content').innerHTML = `
+                <div class="profile-header">
+                    <div class="avatar-wrap">
+                        <div class="avatar-ring">
+                            <img class="avatar-img" src="${me.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}"
+                                alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                        </div>
+                        <span class="level-badge">Lv.${level}</span>
+                    </div>
+                    <div class="profile-name">${escHtml(me.username)}</div>
+                    <div class="profile-balance">💰 ${formatNum(me.balance)} $</div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="section-title">📊 Tổng Quan</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🎮</div>
+                            <div class="stat-value cyan">${formatNum(totalGames)}</div>
+                            <div class="stat-label">Tổng Ván</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-value gold">${winRate.toFixed ? winRate.toFixed(1) : winRate}%</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-value ${profit >= 0 ? 'green' : 'red'}">${profit >= 0 ? '+' : ''}${formatNum(profit)} $</div>
+                            <div class="stat-label">Lợi Nhuận</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💵</div>
+                            <div class="stat-value gold">${formatNum(totalBet)} $</div>
+                            <div class="stat-label">Tổng Cược</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">🎮 Theo Game</div>
+                    <div class="game-stats">
+                        ${renderGameRow('🎲', 'Tài Xỉu', games.taixiu)}
+                        ${renderGameRow('🃏', 'Poker', games.poker)}
+                        ${renderGameRow('💣', 'Mines', games.mines)}
+                        ${renderGameRow('🚀', 'Crash', games.crash)}
+                        ${renderGameRow('🐦', 'Flappy Bird', games.flappy)}
+                    </div>
+
+                    <div class="section-title">🏆 Thành Tựu (${achievements.filter(a => a.unlocked).length}/${achievements.length})</div>
+                    <div class="ach-grid">
+                        ${achievements.map(a => `
+                            <div class="ach-card ${a.unlocked ? 'unlocked' : 'locked'}">
+                                <div class="ach-icon">${a.icon}</div>
+                                <div class="ach-name">${a.name}</div>
+                                <div class="ach-desc">${a.desc}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="section-title">📜 Hoạt Động Gần Đây</div>
+                    <div class="activity-list">
+                        ${recent.length === 0 ? '<div class="activity-item"><span class="activity-text" style="text-align:center;width:100%">Chưa có hoạt động</span></div>' : ''}
+                        ${recent.map(tx => {
+                    const icon = TX_ICONS[tx.type] || '📝';
+                    const isPos = tx.amount > 0;
+                    return `<div class="activity-item">
+                                <span class="activity-icon">${icon}</span>
+                                <span class="activity-text">${formatTxType(tx.type)}</span>
+                                <span class="activity-amount ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${formatNum(tx.amount)} $</span>
+                                <span class="activity-time">${timeAgo(tx.time)}</span>
+                            </div>`;
+                }).join('')}
+                    </div>
+                </div>
+
+                <div class="profile-footer">
+                    <p>© 2026 PIXEL PLAYZONE — Profile</p>
+                </div>`;
+            }
+
+            function renderGameRow(icon, name, data) {
+                const d = data || { games: 0, wins: 0, profit: 0 };
+                const profit = d.profit || 0;
+                const games = d.games || 0;
+                const wins = d.wins || 0;
+                const wr = games > 0 ? (wins / games * 100).toFixed(0) : '—';
+                return `<div class="game-row">
+                <span class="game-icon">${icon}</span>
+                <div class="game-info">
+                    <div class="game-name">${name}</div>
+                    <div class="game-detail">${games} ván · ${wins} thắng · WR ${wr}%</div>
+                </div>
+                <span class="game-profit ${profit >= 0 ? 'pos' : 'neg'}">${profit >= 0 ? '+' : ''}${formatNum(profit)} $</span>
+            </div>`;
+            }
+
+            function formatTxType(type) {
+                const map = {
+                    mines_bet: 'Đặt cược Mines', mines_win: 'Thắng Mines', mines_lose: 'Thua Mines',
+                    crash_bet: 'Đặt cược Crash', crash_win: 'Thắng Crash', crash_bust: 'Thua Crash',
+                    crash_cashout: 'Cashout Crash', crash_cancel: 'Hủy cược Crash',
+                    poker_win: 'Thắng Poker', poker_lose: 'Thua Poker', poker_bet: 'Cược Poker',
+                    taixiu_bet: 'Cược Tài Xỉu', taixiu_win: 'Thắng Tài Xỉu', taixiu_lose: 'Thua Tài Xỉu',
+                    flappy_reward: 'Thưởng Flappy', daily_reward: 'Thưởng ngày', daily_spin: 'Quay thưởng'
+                };
+                return map[type] || type;
+            }
+
+            function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+            loadProfile();
+        })();
+    </script>
+    <script src="/js/sound-system.js"></script>
+    <script src="/js/notify-system.js"></script>
+    <script src="/js/theme-system.js"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
+</body>
+
+</html>

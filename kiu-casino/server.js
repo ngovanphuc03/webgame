@@ -1324,6 +1324,84 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
     }
 });
 
+// ============================================================
+// PROFILE STATS API
+// ============================================================
+app.get('/api/profile/stats', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        // Overall stats from transactions
+        const [allTx] = await dbPool.execute(
+            'SELECT type, amount, details, created_at FROM transactions WHERE user_id=? AND guild_id=? ORDER BY created_at DESC LIMIT 500',
+            [uid, TARGET_GUILD_ID]
+        );
+
+        // Game type mapping
+        const gameTypes = {
+            taixiu: ['taixiu_bet', 'taixiu_win'],
+            poker: ['poker_bet', 'poker_win'],
+            mines: ['mines_bet', 'mines_cashout', 'mines_lose'],
+            crash: ['crash_bet', 'crash_cashout', 'crash_bust'],
+            flappy: ['flappy_reward']
+        };
+
+        // Per-game breakdown
+        const breakdown = {};
+        for (const [game, types] of Object.entries(gameTypes)) {
+            const gameTx = allTx.filter(t => types.includes(t.type));
+            const betTypes = types.filter(t => t.includes('bet') || t.includes('lose') || t.includes('bust'));
+            const winTypes = types.filter(t => t.includes('win') || t.includes('cashout') || t.includes('reward'));
+
+            const bets = gameTx.filter(t => betTypes.includes(t.type));
+            const wins = gameTx.filter(t => winTypes.includes(t.type));
+
+            const totalBet = bets.reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+            const totalWin = wins.reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+
+            breakdown[game] = {
+                games: bets.length,
+                wins: wins.length,
+                totalBet,
+                totalWin,
+                profit: totalWin - totalBet
+            };
+        }
+
+        // Overall totals
+        const totalGames = Object.values(breakdown).reduce((s, g) => s + g.games, 0);
+        const totalWins = Object.values(breakdown).reduce((s, g) => s + g.wins, 0);
+        const totalBet = Object.values(breakdown).reduce((s, g) => s + g.totalBet, 0);
+        const totalWin = Object.values(breakdown).reduce((s, g) => s + g.totalWin, 0);
+        const profit = totalWin - totalBet;
+
+        // Recent activity (last 20 transactions)
+        const recent = allTx.slice(0, 20).map(t => ({
+            type: t.type,
+            amount: Number(t.amount),
+            details: t.details ? (typeof t.details === 'string' ? JSON.parse(t.details) : t.details) : null,
+            time: t.created_at
+        }));
+
+        // Joined date (first transaction or fallback)
+        const joinDate = allTx.length > 0 ? allTx[allTx.length - 1].created_at : new Date();
+
+        res.json({
+            totalGames,
+            totalWins,
+            winRate: totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0,
+            totalBet,
+            totalWin,
+            profit,
+            breakdown,
+            recent,
+            joinDate
+        });
+    } catch (e) {
+        console.error('Profile Stats Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
 // Manual sync endpoint (admin)
 app.get('/api/sync-users', requireAuth, async (req, res) => {
     if (!BOT_TOKEN) {
@@ -1474,6 +1552,12 @@ app.get('/daily', (req, res) => {
 app.get('/leaderboard', (req, res) => {
     if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'leaderboard.html'));
+});
+
+// Serve Profile page
+app.get('/profile', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
 

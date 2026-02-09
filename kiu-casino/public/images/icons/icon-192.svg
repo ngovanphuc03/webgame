@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#030014"/>
+      <stop offset="50%" style="stop-color:#1a0a3e"/>
+      <stop offset="100%" style="stop-color:#030014"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f0ff"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="35" fill="url(#bg)"/>
+  <rect x="8" y="8" width="177" height="177" rx="29" fill="none" stroke="url(#glow)" stroke-width="3"/>
+  <text x="50%" y="52%" text-anchor="middle" dominant-baseline="central" font-size="86" fill="url(#glow)" font-family="sans-serif" font-weight="900">PP</text>
+  <text x="50%" y="80%" text-anchor="middle" font-size="19" fill="#00f0ff" font-family="sans-serif" opacity="0.7">PLAYZONE</text>
+</svg>
