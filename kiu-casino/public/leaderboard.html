@@ -1081,8 +1081,7 @@
 
         <div class="my-rank reveal" id="myRankCard" style="display:none">
             <div class="my-rank-pos" id="myRankPos">#?</div>
-            <img class="my-rank-avatar" id="myRankAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt=""
-                referrerpolicy="no-referrer">
+            <img class="my-rank-avatar" id="myRankAvatar" src="/images/ui/default-avatar.svg" alt="">
             <div class="my-rank-info">
                 <div class="my-rank-label">YOUR RANK</div>
                 <div class="my-rank-name" id="myRankName">-</div>
@@ -1240,7 +1239,7 @@
                     const card = document.getElementById('myRankCard'); card.style.display = 'flex';
                     document.getElementById('myRankPos').textContent = '#' + lb.my_rank;
                     document.getElementById('myRankName').textContent = me.username;
-                    document.getElementById('myRankAvatar').src = me.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    document.getElementById('myRankAvatar').src = me.avatar || '/images/ui/default-avatar.svg';
                     document.getElementById('myRankBalance').textContent = Number(me.balance).toLocaleString() + ' $';
                 }
 
@@ -1263,7 +1262,7 @@
     <div class="podium-item ${classes[i]}">
       <div class="podium-medal">${medals[i]}</div>
       <div class="podium-avatar-wrap">
-        <img class="podium-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/embed/avatars/0.png';">
+        <img class="podium-avatar" src="${u.avatar || '/images/ui/default-avatar.svg'}" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
       </div>
       <div class="podium-name">${escapeHtml(u.username || 'User')}</div>
       <div class="podium-balance">${Number(u.balance).toLocaleString()} $</div>
@@ -1284,7 +1283,7 @@
       <div class="lb-row ${rc} ${isMe ? 'is-me' : ''}" style="animation-delay:${i * .04}s">
         <div class="lb-rank ${rankColor}">${medal}</div>
         <div class="lb-user">
-          <img class="lb-avatar" src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/embed/avatars/0.png';">
+          <img class="lb-avatar" src="${u.avatar || '/images/ui/default-avatar.svg'}" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
           <span class="lb-name">${escapeHtml(u.username || 'User')}${isMe ? ' <span class="lb-me-tag">YOU</span>' : ''}</span>
         </div>
         <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>

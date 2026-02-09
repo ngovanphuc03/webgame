@@ -1697,7 +1697,7 @@
         <div class="user-panel">
           <div class="balance-chip">💰 <span>${Number(u.balance).toLocaleString()} $</span></div>
           <a href="/profile" class="user-avatar-wrap" title="Xem hồ sơ">
-            <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="avatar" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/embed/avatars/0.png';">
+            <img src="${u.avatar || '/images/ui/default-avatar.svg'}" class="avatar" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
           </a>
           <a href="/profile" class="username" title="Xem hồ sơ" style="text-decoration:none">${escapeHtml(u.username)}</a>
           <button onclick="logout()" class="btn-exit">EXIT</button>

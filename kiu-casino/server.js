@@ -55,7 +55,7 @@ app.use((req, res, next) => {
         "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: https://cdn.discordapp.com https://cdn.discord.com https://media.discordapp.net",
+        "img-src 'self' data:",
         "connect-src 'self' ws: wss:",
         "frame-ancestors 'none'"
     ].join('; '));
@@ -387,6 +387,39 @@ app.get('/auth/logout', (req, res) => {
     res.redirect('/');
 });
 
+// --- AVATAR PROXY (bypass CSP/referrer/CORS issues with Discord CDN) ---
+app.get('/api/avatar/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    if (!/^\d{17,20}$/.test(userId)) return res.status(400).send('Invalid user ID');
+    try {
+        // Get avatar URL from DB
+        const [rows] = await dbPool.execute(
+            'SELECT avatar FROM wallet WHERE guild_id=? AND user_id=?',
+            [TARGET_GUILD_ID, userId]
+        );
+        let avatarUrl = '';
+        if (rows.length && rows[0].avatar) {
+            avatarUrl = rows[0].avatar;
+        } else {
+            const index = Number((BigInt(userId) >> 22n) % 6n);
+            avatarUrl = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+        }
+        // Fetch from Discord CDN and pipe to client
+        const imgRes = await axios.get(avatarUrl, {
+            responseType: 'arraybuffer',
+            timeout: 5000,
+            headers: { 'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)' }
+        });
+        const contentType = imgRes.headers['content-type'] || 'image/png';
+        res.set('Content-Type', contentType);
+        res.set('Cache-Control', 'public, max-age=3600'); // cache 1h
+        res.send(Buffer.from(imgRes.data));
+    } catch (e) {
+        // Fallback: serve local default avatar
+        res.redirect('/images/ui/default-avatar.svg');
+    }
+});
+
 // API /api/me (enabled when DB configured)
 app.get('/api/me', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
@@ -412,15 +445,8 @@ app.get('/api/me', requireAuth, async (req, res) => {
             } catch (e) { }
         }
 
-        // Fallback if avatar is empty (default Discord avatar)
-        if (!info.avatar) {
-            try {
-                const index = Number((BigInt(uid) >> 22n) % 6n);
-                info.avatar = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
-            } catch (e) {
-                info.avatar = "https://cdn.discordapp.com/embed/avatars/0.png";
-            }
-        }
+        // Always use avatar proxy to bypass CSP/referrer/CORS issues
+        info.avatar = `/api/avatar/${uid}`;
 
         res.json({ ...info, balance: r.length ? r[0].balance : 0 });
     } catch (e) { res.status(500).json({ error: 'DB Error' }); }
@@ -1282,23 +1308,12 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
             );
         }
 
-        const leaderboard = rows.map(r => {
-            let av = r.avatar || '';
-            if (!av) {
-                try {
-                    const index = Number((BigInt(r.user_id) >> 22n) % 6n);
-                    av = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
-                } catch (e) {
-                    av = 'https://cdn.discordapp.com/embed/avatars/0.png';
-                }
-            }
-            return {
-                user_id: r.user_id,
-                balance: Number(r.balance),
-                username: r.username || ('User_' + String(r.user_id).slice(-4)),
-                avatar: av
-            };
-        });
+        const leaderboard = rows.map(r => ({
+            user_id: r.user_id,
+            balance: Number(r.balance),
+            username: r.username || ('User_' + String(r.user_id).slice(-4)),
+            avatar: `/api/avatar/${r.user_id}`
+        }));
 
         // Find my rank - safer query that handles missing user
         let myRank = null;
