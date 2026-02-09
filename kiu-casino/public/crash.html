@@ -5,12 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="description" content="🚀 Crash - Đặt cược và rút tiền trước khi tên lửa nổ tung tại Pixel PlayZone!">
+    <meta property="og:title" content="🚀 Crash - Pixel PlayZone">
+    <meta property="og:description"
+        content="Tên lửa bay cao - rút tiền kịp lúc! Game cược hấp dẫn nhất Pixel PlayZone.">
+    <meta property="og:image" content="/images/icons/icon-512.svg">
+    <meta property="og:type" content="website">
     <meta name="theme-color" content="#030014">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <title>🚀 CRASH - Pixel PlayZone</title>
     <link rel="stylesheet" href="css/fonts.css">
+    <script defer src="/socket.io/socket.io.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
@@ -940,6 +947,26 @@
 </head>
 
 <body>
+    <noscript>
+        <div
+            style="background:#030014;color:#fff;padding:40px;text-align:center;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+            <h2>⚠️ Bạn cần bật JavaScript để chơi Pixel PlayZone!</h2>
+        </div>
+    </noscript>
+    <div id="ppz-loading"
+        style="position:fixed;inset:0;background:#030014;z-index:99999;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:opacity .5s">
+        <div
+            style="width:60px;height:60px;border:3px solid transparent;border-top-color:#06b6d4;border-bottom-color:#8b5cf6;border-radius:50%;animation:ppzSpin 1s linear infinite">
+        </div>
+        <p style="color:#06b6d4;margin-top:16px;font-size:14px;letter-spacing:4px">LOADING</p>
+    </div>
+    <style>
+        @keyframes ppzSpin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+    </style>
     <div class="bg-stars"></div>
 
     <!-- TOPBAR -->
@@ -1099,13 +1126,15 @@
                AUDIO
                ═══════════════════════════════════════ */
             const sfxFiles = {
-                bet: '/sounds/mines/chip.mp3',
-                tick: '/sounds/mines/tile_click.mp3',
-                cashout: '/sounds/mines/cashout.mp3',
-                crash: '/sounds/mines/boom.mp3',
-                win: '/sounds/mines/gem_reveal.mp3',
+                bet: '/sounds/crash/bet.mp3',
+                rocket: '/sounds/crash/rocket.mp3',
+                tick: '/sounds/tick.mp3',
+                tension: '/sounds/crash/tension.mp3',
+                cashout: '/sounds/crash/cashout.mp3',
+                crash: '/sounds/crash/explode.mp3',
+                win: '/sounds/crash/win.mp3',
             };
-            const sfxVol = { bet: .4, tick: .15, cashout: .7, crash: .6, win: .5 };
+            const sfxVol = { bet: .4, rocket: .3, tick: .15, tension: .25, cashout: .7, crash: .6, win: .5 };
             const audioPool = {};
             for (const [k, v] of Object.entries(sfxFiles)) {
                 audioPool[k] = [];
@@ -1115,8 +1144,12 @@
                 }
             }
             function play(name) {
+                // Respect global sound settings
+                if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
                 const pool = audioPool[name]; if (!pool) return;
+                const globalVol = window.PPZSound ? window.PPZSound.getSettings().sfxVol : 1;
                 const a = pool.find(s => s.paused || s.ended) || pool[0];
+                a.volume = (sfxVol[name] || .5) * globalVol;
                 try { a.currentTime = 0; a.play().catch(() => { }); } catch (e) { }
             }
             function vib(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } }
@@ -1385,21 +1418,146 @@
             }
 
             /* ═══════════════════════════════════════
-               GAME LOOP
+               SOCKET.IO MULTIPLAYER
                ═══════════════════════════════════════ */
-            function startWaitingPhase() {
+            const socket = io();
+            socket.emit('crash_join');
+
+            let lastTickSound = 0;
+
+            socket.on('crash_state', d => {
+                roundHistory = d.history || [];
+                renderHistBar();
+                if (d.phase === 'waiting') {
+                    startWaitingPhase(d.waitRemaining);
+                } else if (d.phase === 'flying') {
+                    startFlyingPhase();
+                    currentMult = d.mult || 1;
+                } else if (d.phase === 'crashed') {
+                    crashPoint = d.crashPoint;
+                    doCrash();
+                }
+            });
+
+            socket.on('crash_waiting', d => {
+                roundHistory = d.history || [];
+                renderHistBar();
+                startWaitingPhase(d.waitMs);
+            });
+
+            socket.on('crash_flying', d => {
+                startFlyingPhase();
+            });
+
+            socket.on('crash_tick', d => {
+                if (phase !== 'flying') return;
+                currentMult = d.mult;
+                chartPoints.push(currentMult);
+                if (chartPoints.length > 300) chartPoints.shift();
+
+                multEl.textContent = currentMult.toFixed(2) + 'x';
+                if (currentMult >= 5) multEl.className = 'chart-mult danger';
+                else if (currentMult >= 2) multEl.className = 'chart-mult rising';
+                else multEl.className = 'chart-mult';
+
+                if (playerBet > 0 && !cashedOut) {
+                    const pw = Math.floor(playerBet * currentMult);
+                    infoMult.textContent = currentMult.toFixed(2) + 'x';
+                    infoWin.textContent = pw.toLocaleString() + ' $';
+                }
+
+                drawChart(chartPoints, currentMult, false);
+
+                // Tick sounds
+                const now = Date.now();
+                if (now - lastTickSound > 800) {
+                    lastTickSound = now;
+                    if (currentMult >= 5) play('tension');
+                    else if (currentMult >= 2) play('tick');
+                }
+
+                // Auto cashout
+                if (playerBet > 0 && !cashedOut && !_cashLock && autoCashout > 1 && currentMult >= autoCashout) {
+                    doCashout();
+                }
+            });
+
+            socket.on('crash_crashed', d => {
+                crashPoint = d.crashPoint;
+                doCrash();
+                addHistoryChip(crashPoint);
+            });
+
+            socket.on('crash_bet_ok', d => {
+                balance = d.newBalance; animBal(balance);
+                playerBet = d.bet;
+                play('bet'); vib(40);
+                infoBet.textContent = d.bet.toLocaleString() + ' $';
+                infoMult.textContent = '1.00x';
+                infoWin.textContent = d.bet.toLocaleString() + ' $';
+                setBetControlsEnabled(false);
+                actionRow.innerHTML = '<button class="abtn btn-bet" disabled>✅ Đã đặt cược</button>';
+                msg('✅ Đã đặt ' + d.bet.toLocaleString() + ' $ — Đợi tên lửa!', '');
+            });
+
+            socket.on('crash_bet_error', d => {
+                msg('❌ ' + d.msg, 'lose');
+                _betLock = false;
+                const btn = actionRow.querySelector('.abtn');
+                if (btn) { btn.classList.remove('loading'); btn.textContent = '🚀 ĐẶT CƯỢC'; }
+            });
+
+            socket.on('crash_cashout_ok', d => {
+                cashedOut = true;
+                cashoutMult = d.mult;
+                balance = d.newBalance; animBal(balance);
+                play('cashout');
+                if (cashoutMult >= 3) setTimeout(() => play('win'), 200);
+                vib([50, 30, 50, 30, 100]);
+
+                infoMult.textContent = cashoutMult.toFixed(2) + 'x';
+                infoWin.textContent = '+' + d.winAmount.toLocaleString() + ' $';
+                msg(`💰 Rút +${d.winAmount.toLocaleString()} $ (x${cashoutMult.toFixed(2)})`, 'win');
+                addHist(true, playerBet, cashoutMult, d.winAmount);
+
+                const fl = document.createElement('div');
+                fl.style.cssText = 'position:fixed;inset:0;background:rgba(0,255,157,.12);z-index:999;pointer-events:none;animation:flashOut .4s ease forwards';
+                document.body.appendChild(fl);
+                setTimeout(() => fl.remove(), 450);
+                spawnParticles(window.innerWidth / 2, window.innerHeight / 2, '#00ff9d', 10);
+
+                actionRow.innerHTML = '<button class="abtn btn-bet" disabled style="background:linear-gradient(135deg,#00b894,#00ff9d);color:#000">✅ ĐÃ RÚT ' + cashoutMult.toFixed(2) + 'x</button>';
+                _cashLock = false;
+            });
+
+            socket.on('crash_player_cashout', d => {
+                // Show other players' cashouts in the UI
+                if (d.username) {
+                    const el = document.createElement('div');
+                    el.className = 'rmsg';
+                    el.textContent = `${d.username} rút x${d.mult.toFixed(2)} (+${d.winAmount.toLocaleString()} $)`;
+                    el.style.cssText = 'position:fixed;top:120px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(0,255,157,.7);z-index:100;animation:ppzSlideUp .5s ease forwards';
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 2000);
+                }
+            });
+
+            socket.on('crash_players', d => {
+                // Could show player list / bet amounts - simple player count for now
+            });
+
+            /* ═══════════════════════════════════════
+               GAME LOOP (Server-driven via Socket.IO)
+               ═══════════════════════════════════════ */
+            function startWaitingPhase(waitMs) {
                 phase = 'waiting';
                 currentMult = 1.0;
                 chartPoints = [1];
                 cashedOut = false;
                 cashoutMult = 0;
                 playerBet = 0;
-                elapsed = 0;
                 _betLock = false;
                 _cashLock = false;
-
-                // Cleanup any stale bet entry on server before new round
-                api('/api/crash/cleanup', 'POST').catch(() => { });
 
                 multEl.textContent = '1.00x';
                 multEl.className = 'chart-mult';
@@ -1408,28 +1566,26 @@
                 rmsgEl.textContent = ''; rmsgEl.className = 'rmsg';
                 infoBet.textContent = '—'; infoMult.textContent = '—'; infoWin.textContent = '—';
 
-                // Enable bet controls
                 setBetControlsEnabled(true);
-
-                // Show bet button
                 actionRow.innerHTML = '<button class="abtn btn-bet" id="btnBet" onclick="window._placeBet()">🚀 ĐẶT CƯỢC</button>';
 
                 drawChart([1], 1, false);
 
                 // Countdown
-                let remaining = WAIT_TIME / 1000;
+                let remaining = (waitMs || 6000) / 1000;
                 cdEl.textContent = `Bắt đầu sau ${remaining.toFixed(1)}s`;
                 cdEl.style.display = 'block';
 
                 clearInterval(waitTimer);
                 const startT = performance.now();
+                const totalWait = waitMs || 6000;
                 waitTimer = setInterval(() => {
                     const el = (performance.now() - startT) / 1000;
-                    remaining = Math.max(0, (WAIT_TIME / 1000) - el);
+                    remaining = Math.max(0, (totalWait / 1000) - el);
                     cdEl.textContent = `Bắt đầu sau ${remaining.toFixed(1)}s`;
                     if (remaining <= 0) {
                         clearInterval(waitTimer);
-                        startFlyingPhase();
+                        cdEl.style.display = 'none';
                     }
                 }, 100);
             }
@@ -1437,124 +1593,23 @@
             function startFlyingPhase() {
                 phase = 'flying';
                 cdEl.style.display = 'none';
-                _betLock = false; // reset in case it was stuck
-
-                // Disable bet controls during flight
+                clearInterval(waitTimer);
                 setBetControlsEnabled(false);
 
-                // If player has a bet, fetch crash point from SERVER
-                if (playerBet > 0) {
-                    let retries = 0;
-                    const tryStart = () => {
-                        api('/api/crash/start').then(d => {
-                            if (d.error && retries < 3) {
-                                // Server says "wait" — retry after short delay
-                                retries++;
-                                console.warn('[Crash] Start retry', retries, d.error);
-                                setTimeout(tryStart, 500);
-                                return;
-                            }
-                            if (d.error || !d.crashPoint) {
-                                // Genuine error — use local fallback
-                                crashPoint = 1 + Math.random() * 5;
-                                console.warn('[Crash] Failed to get server crashPoint, using fallback');
-                            } else {
-                                crashPoint = d.crashPoint;
-                            }
-                            console.log('[Crash] CrashPoint:', crashPoint);
-                            beginFlying();
-                        }).catch(() => {
-                            crashPoint = 1 + Math.random() * 5;
-                            console.warn('[Crash] Network error, using fallback crashPoint');
-                            beginFlying();
-                        });
-                    };
-                    tryStart();
-                } else {
-                    // No bet — generate locally for spectating animation
-                    const r = Math.random();
-                    crashPoint = r < 0.04 ? 1.00 : Math.min(Math.round((1 / (1 - r)) * 100) / 100, MAX_MULT);
-                    console.log('[Crash] Spectate crashPoint:', crashPoint);
-                    beginFlying();
-                }
-            }
-
-            function beginFlying() {
                 statusEl.textContent = '🚀 ĐANG BAY';
                 statusEl.className = 'chart-status live';
+                play('rocket'); vib(80);
+                chartPoints = [1];
 
-                // If player has bet, show cashout button
                 if (playerBet > 0) {
                     actionRow.innerHTML = '<button class="abtn btn-cashout pulse" id="btnCashout" onclick="window._doCashout()">💰 RÚT TIỀN</button>';
                 } else {
                     actionRow.innerHTML = '<button class="abtn btn-bet" disabled>⏳ ĐỢI ROUND SAU</button>';
                 }
-
-                elapsed = 0;
-                chartPoints = [1];
-                const startT = performance.now();
-                let lastTick = startT;
-
-                clearInterval(roundTimer);
-                roundTimer = setInterval(() => {
-                    const now = performance.now();
-                    elapsed = (now - startT) / 1000;
-
-                    // Multiplier formula: exponential growth
-                    // m = e^(speed * t), speed adjusts curve steepness
-                    const speed = 0.06 + elapsed * 0.003; // accelerating growth
-                    currentMult = Math.round(Math.pow(Math.E, speed * elapsed) * 100) / 100;
-                    currentMult = Math.max(1.00, currentMult);
-
-                    // Check crash
-                    if (currentMult >= crashPoint) {
-                        currentMult = crashPoint;
-                        doCrash();
-                        return;
-                    }
-
-                    // Cap
-                    if (currentMult >= MAX_MULT) {
-                        currentMult = MAX_MULT;
-                        doCrash();
-                        return;
-                    }
-
-                    // Auto cashout — guard against race with doCrash
-                    if (playerBet > 0 && !cashedOut && !_cashLock && autoCashout > 1 && currentMult >= autoCashout) {
-                        doCashout();
-                        return; // stop this tick, doCashout handles the rest
-                    }
-
-                    // Update UI
-                    chartPoints.push(currentMult);
-                    if (chartPoints.length > 300) chartPoints.shift();
-
-                    multEl.textContent = currentMult.toFixed(2) + 'x';
-                    if (currentMult >= 5) multEl.className = 'chart-mult danger';
-                    else if (currentMult >= 2) multEl.className = 'chart-mult rising';
-                    else multEl.className = 'chart-mult';
-
-                    // Update win preview
-                    if (playerBet > 0 && !cashedOut) {
-                        const pw = Math.floor(playerBet * currentMult);
-                        infoMult.textContent = currentMult.toFixed(2) + 'x';
-                        infoWin.textContent = pw.toLocaleString() + ' $';
-                    }
-
-                    drawChart(chartPoints, currentMult, false);
-
-                    // Tick sound at milestones
-                    if (now - lastTick > 800) {
-                        lastTick = now;
-                        if (currentMult >= 3) play('tick');
-                    }
-                }, TICK_MS);
             }
 
             function doCrash() {
-                if (phase === 'crashed') return; // prevent double-fire
-                clearInterval(roundTimer);
+                if (phase === 'crashed') return;
                 phase = 'crashed';
 
                 multEl.textContent = crashPoint.toFixed(2) + 'x';
@@ -1564,44 +1619,32 @@
                 play('crash');
                 vib([100, 50, 100, 50, 200]);
 
-                // Flash
                 const fl = document.createElement('div');
                 fl.style.cssText = 'position:fixed;inset:0;background:rgba(255,20,40,.2);z-index:999;pointer-events:none;animation:flashOut .4s ease forwards';
                 document.body.appendChild(fl);
                 setTimeout(() => fl.remove(), 450);
 
                 chartPoints.push(crashPoint);
-                drawChart(chartPoints, currentMult, true);
+                drawChart(chartPoints, crashPoint, true);
 
-                // If player bet and didn't cashout
                 if (playerBet > 0 && !cashedOut) {
-                    const loss = playerBet;
-                    msg(`💥 NỔ! Mất ${loss.toLocaleString()} $`, 'lose');
+                    msg(`💥 NỔ! Mất ${playerBet.toLocaleString()} $`, 'lose');
                     infoMult.textContent = crashPoint.toFixed(2) + 'x';
-                    infoWin.textContent = '-' + loss.toLocaleString() + ' $';
+                    infoWin.textContent = '-' + playerBet.toLocaleString() + ' $';
                     addHist(false, playerBet, crashPoint, 0);
-                    // Report bust to server so it cleans up the bet entry (retry once on failure)
-                    api('/api/crash/bust').catch(() => {
-                        setTimeout(() => api('/api/crash/bust').catch(() => { }), 1000);
-                    });
                 }
 
-                addHistoryChip(crashPoint);
-
                 actionRow.innerHTML = '<button class="abtn btn-bet" disabled>⏳ Round mới...</button>';
-
-                // Next round
-                setTimeout(startWaitingPhase, 2500);
             }
 
             /* ═══════════════════════════════════════
-               PLACE BET
+               PLACE BET (via Socket.IO)
                ═══════════════════════════════════════ */
             let _betLock = false;
-            window._placeBet = async function () {
+            window._placeBet = function () {
                 if (phase !== 'waiting' || _betLock) return;
                 bet = Math.max(MIN_BET, Math.min(MAX_BET, parseInt(betInput.value) || MIN_BET));
-                betInput.value = bet; // sync display
+                betInput.value = bet;
                 autoCashout = Math.max(1.1, Math.min(MAX_MULT, parseFloat(autoInput.value) || 2));
 
                 if (balance < bet) {
@@ -1613,107 +1656,20 @@
                 const btn = actionRow.querySelector('.abtn');
                 if (btn) { btn.classList.add('loading'); btn.textContent = 'Đang đặt...'; }
 
-                try {
-                    const d = await api('/api/crash/bet', { bet });
-                    if (d.error) { msg('❌ ' + d.error, 'lose'); _betLock = false; if (btn) btn.classList.remove('loading'); return; }
-
-                    balance = d.newBalance; animBal(balance);
-                    playerBet = bet;
-                    play('bet'); vib(40);
-
-                    infoBet.textContent = bet.toLocaleString() + ' $';
-                    infoMult.textContent = '1.00x';
-                    infoWin.textContent = bet.toLocaleString() + ' $';
-
-                    // Disable bet controls after placing bet
-                    setBetControlsEnabled(false);
-
-                    actionRow.innerHTML = `<button class="abtn btn-cancel" onclick="window._cancelBet()">✕ Hủy cược</button>`;
-                    msg('✅ Đã đặt ' + bet.toLocaleString() + ' $ — Đợi tên lửa!', '');
-                } catch (e) {
-                    msg('❌ Lỗi kết nối!', 'lose');
-                } finally {
-                    _betLock = false;
-                }
+                socket.emit('crash_bet', { bet, autoCashout });
             };
 
             /* ═══════════════════════════════════════
-               CANCEL BET (only during waiting)
-               ═══════════════════════════════════════ */
-            window._cancelBet = async function () {
-                if (phase !== 'waiting' || playerBet <= 0) return;
-                try {
-                    const d = await api('/api/crash/cancel');
-                    if (d.error) { msg('❌ ' + d.error, 'lose'); return; }
-                    balance = d.newBalance; animBal(balance);
-                    playerBet = 0;
-                    infoBet.textContent = '—'; infoMult.textContent = '—'; infoWin.textContent = '—';
-                    msg('↩ Đã hủy cược', '');
-                    // Re-enable bet controls
-                    setBetControlsEnabled(true);
-                    actionRow.innerHTML = '<button class="abtn btn-bet" onclick="window._placeBet()">🚀 ĐẶT CƯỢC</button>';
-                } catch (e) { msg('❌ Lỗi!', 'lose'); }
-            };
-
-            /* ═══════════════════════════════════════
-               CASHOUT
+               CASHOUT (via Socket.IO)
                ═══════════════════════════════════════ */
             window._doCashout = doCashout;
             let _cashLock = false;
-            async function doCashout() {
+            function doCashout() {
                 if (phase !== 'flying' || playerBet <= 0 || cashedOut || _cashLock) return;
                 _cashLock = true;
-                cashedOut = true;
-                cashoutMult = currentMult;
-                const winAmount = Math.floor(playerBet * cashoutMult);
-                const profit = winAmount - playerBet;
-
-                // Add loading state to button
                 const btn = actionRow.querySelector('.abtn');
                 if (btn) btn.classList.add('loading');
-
-                try {
-                    const d = await api('/api/crash/cashout', { multiplier: cashoutMult });
-                    if (d.error) {
-                        cashedOut = false;
-                        _cashLock = false;
-                        if (btn) btn.classList.remove('loading');
-                        if (d.crashed) {
-                            // Server says already crashed
-                            msg('💥 Đã nổ rồi! x' + (d.crashPoint || '?'), 'lose');
-                        } else {
-                            msg('❌ ' + d.error, 'lose');
-                        }
-                        return;
-                    }
-
-                    balance = d.newBalance; animBal(balance);
-                    play('cashout');
-                    if (cashoutMult >= 3) { setTimeout(() => play('win'), 200); }
-                    vib([50, 30, 50, 30, 100]);
-
-                    infoMult.textContent = cashoutMult.toFixed(2) + 'x';
-                    infoWin.textContent = '+' + winAmount.toLocaleString() + ' $';
-
-                    msg(`💰 Rút +${winAmount.toLocaleString()} $ (x${cashoutMult.toFixed(2)})`, 'win');
-                    addHist(true, playerBet, cashoutMult, winAmount);
-
-                    // Flash green
-                    const fl = document.createElement('div');
-                    fl.style.cssText = 'position:fixed;inset:0;background:rgba(0,255,157,.12);z-index:999;pointer-events:none;animation:flashOut .4s ease forwards';
-                    document.body.appendChild(fl);
-                    setTimeout(() => fl.remove(), 450);
-
-                    // Particles at center
-                    spawnParticles(window.innerWidth / 2, window.innerHeight / 2, '#00ff9d', 10);
-
-                    actionRow.innerHTML = '<button class="abtn btn-bet" disabled style="background:linear-gradient(135deg,#00b894,#00ff9d);color:#000">✅ ĐÃ RÚT ' + cashoutMult.toFixed(2) + 'x</button>';
-                } catch (e) {
-                    cashedOut = false;
-                    msg('❌ Lỗi kết nối!', 'lose');
-                } finally {
-                    _cashLock = false;
-                }
+                socket.emit('crash_cashout');
             }
 
             /* ═══════════════════════════════════════
@@ -1759,7 +1715,7 @@
             loadBalance();
             updatePresets();
             drawChart([1], 1, false);
-            startWaitingPhase();
+            // Game loop starts when socket receives crash_state/crash_waiting
 
             // Periodic balance resync every 30s to prevent stale balance
             setInterval(() => {
@@ -1770,8 +1726,11 @@
     </script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
+    <script src="/js/tutorial-system.js"></script>
+    <script src="/js/chat-system.js"></script>
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
+    <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>
 
 </html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="description" content="Admin Dashboard - Pixel PlayZone Management Panel">
+    <meta property="og:title" content="🔧 Admin - Pixel PlayZone">
+    <meta property="og:description" content="Bảng điều khiển quản trị Pixel PlayZone.">
+    <meta property="og:image" content="/images/icons/icon-512.svg">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#030014">
+    <meta name="robots" content="noindex,nofollow">
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=/">
+    </noscript>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
+    <title>🔧 Admin Dashboard - Pixel PlayZone</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="css/fonts.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #030014;
+            --surface: rgba(12, 6, 30, .95);
+            --surface2: rgba(20, 10, 45, .88);
+            --border: rgba(139, 92, 246, .15);
+            --accent: #8b5cf6;
+            --accent2: #00f0ff;
+            --neon-green: #00ff9d;
+            --neon-red: #ff3355;
+            --neon-gold: #ffd700;
+            --text: #fff;
+            --muted: rgba(255, 255, 255, .5);
+            --radius: 16px
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'DearPix', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased
+        }
+
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, .08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(0, 240, 255, .06) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(255, 0, 170, .04) 0%, transparent 60%)
+        }
+
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            background: rgba(3, 0, 20, .85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .nav-back {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: .7;
+            transition: .3s
+        }
+
+        .nav-back:hover {
+            opacity: 1
+        }
+
+        .nav-title {
+            font-size: 16px;
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(139, 92, 246, .3)
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 16px 100px
+        }
+
+        .access-denied {
+            text-align: center;
+            padding: 80px 20px;
+            font-size: 18px;
+            color: var(--neon-red)
+        }
+
+        .access-denied a {
+            color: var(--accent2);
+            text-decoration: none
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .ov-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center
+        }
+
+        .ov-icon {
+            font-size: 28px;
+            margin-bottom: 8px
+        }
+
+        .ov-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .ov-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .cyan {
+            color: var(--accent2)
+        }
+
+        .green {
+            color: var(--neon-green)
+        }
+
+        .gold {
+            color: var(--neon-gold)
+        }
+
+        .red {
+            color: var(--neon-red)
+        }
+
+        .purple {
+            color: var(--accent)
+        }
+
+        .section-title {
+            font-size: 15px;
+            color: var(--accent);
+            margin: 20px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .game-rev-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px
+        }
+
+        .game-rev-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .game-rev-icon {
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139, 92, 246, .08);
+            border-radius: 12px
+        }
+
+        .game-rev-info {
+            flex: 1
+        }
+
+        .game-rev-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .game-rev-detail {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .game-rev-profit {
+            font-size: 14px;
+            font-weight: 700
+        }
+
+        .pos {
+            color: var(--neon-green)
+        }
+
+        .neg {
+            color: var(--neon-red)
+        }
+
+        .top-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px
+        }
+
+        .top-table th {
+            text-align: left;
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .top-table td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, .03)
+        }
+
+        .top-table tr:nth-child(odd) td {
+            background: rgba(255, 255, 255, .01)
+        }
+
+        .rank {
+            width: 30px;
+            text-align: center
+        }
+
+        .rank-1 {
+            color: var(--neon-gold);
+            font-size: 16px
+        }
+
+        .rank-2 {
+            color: #c0c0c0;
+            font-size: 15px
+        }
+
+        .rank-3 {
+            color: #cd7f32;
+            font-size: 14px
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, .2);
+            font-size: 11px
+        }
+
+        @media(max-width:480px) {
+            .overview-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .ov-value {
+                font-size: 18px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+    <nav class="nav">
+        <a class="nav-back" href="/">← Lobby</a>
+        <span class="nav-title">🔧 Admin Dashboard</span>
+    </nav>
+
+    <div class="container" id="content">
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">⏳ Đang kiểm tra quyền...</div>
+    </div>
+
+    <script>
+        (async function () {
+            const content = document.getElementById('content');
+
+            // Check admin access
+            try {
+                const res = await fetch('/api/admin/check');
+                if (!res.ok) { location.href = '/'; return; }
+                const { isAdmin } = await res.json();
+                if (!isAdmin) {
+                    content.innerHTML = '<div class="access-denied">🚫 Bạn không có quyền truy cập.<br><a href="/">← Về Lobby</a></div>';
+                    return;
+                }
+            } catch (e) {
+                content.innerHTML = '<div class="access-denied">❌ Lỗi kết nối.<br><a href="/">← Về Lobby</a></div>';
+                return;
+            }
+
+            // Load stats
+            try {
+                const res = await fetch('/api/admin/stats');
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                renderDashboard(data);
+            } catch (e) {
+                content.innerHTML = '<div class="access-denied">❌ Không thể tải dữ liệu.<br><a href="/">← Về Lobby</a></div>';
+            }
+
+            function fmt(n) { return Number(n).toLocaleString('vi-VN'); }
+
+            function renderDashboard(d) {
+                const gs = d.gameStats || {};
+                const totalHouseProfit = Object.values(gs).reduce((s, g) => s + (g.profit || 0), 0);
+
+                const gameIcons = { mines: '💣', crash: '🚀', poker: '🃏', taixiu: '🎲', flappy: '🐦', daily: '🎁' };
+                const gameNames = { mines: 'Mines', crash: 'Crash', poker: 'Poker', taixiu: 'Tài Xỉu', flappy: 'Flappy Bird', daily: 'Daily Reward' };
+
+                content.innerHTML = `
+                    <div class="overview-grid">
+                        <div class="ov-card">
+                            <div class="ov-icon">👥</div>
+                            <div class="ov-value cyan">${fmt(d.playerCount)}</div>
+                            <div class="ov-label">Tổng người chơi</div>
+                        </div>
+                        <div class="ov-card">
+                            <div class="ov-icon">⚡</div>
+                            <div class="ov-value green">${fmt(d.activePlayers)}</div>
+                            <div class="ov-label">Active 24h</div>
+                        </div>
+                        <div class="ov-card">
+                            <div class="ov-icon">💰</div>
+                            <div class="ov-value gold">${fmt(d.totalBalance)} $</div>
+                            <div class="ov-label">Tổng tiền lưu thông</div>
+                        </div>
+                        <div class="ov-card">
+                            <div class="ov-icon">📊</div>
+                            <div class="ov-value purple">${fmt(d.txCount24h)}</div>
+                            <div class="ov-label">Giao dịch 24h</div>
+                        </div>
+                        <div class="ov-card">
+                            <div class="ov-icon">🏦</div>
+                            <div class="ov-value ${totalHouseProfit >= 0 ? 'green' : 'red'}">${totalHouseProfit >= 0 ? '+' : ''}${fmt(totalHouseProfit)} $</div>
+                            <div class="ov-label">House Profit (7 ngày)</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">🎮 Doanh Thu Theo Game (7 ngày)</div>
+                    <div class="game-rev-grid">
+                        ${Object.entries(gs).map(([game, stats]) => `
+                            <div class="game-rev-card">
+                                <div class="game-rev-icon">${gameIcons[game] || '🎯'}</div>
+                                <div class="game-rev-info">
+                                    <div class="game-rev-name">${gameNames[game] || game}</div>
+                                    <div class="game-rev-detail">Cược: ${fmt(stats.bets)} $ · Trả: ${fmt(stats.wins)} $</div>
+                                </div>
+                                <div class="game-rev-profit ${stats.profit >= 0 ? 'pos' : 'neg'}">${stats.profit >= 0 ? '+' : ''}${fmt(stats.profit)} $</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="section-title">👑 Top 10 Đại Gia</div>
+                    <table class="top-table">
+                        <thead><tr><th class="rank">#</th><th>Người chơi</th><th style="text-align:right">Số dư</th></tr></thead>
+                        <tbody>
+                            ${(d.topPlayers || []).map((p, i) => {
+                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+                    return `<tr>
+                                    <td class="rank rank-${i + 1}">${medal}</td>
+                                    <td>${escHtml(p.username || p.user_id)}</td>
+                                    <td style="text-align:right;color:var(--neon-gold);font-weight:700">${fmt(p.balance)} $</td>
+                                </tr>`;
+                }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="footer">© 2026 PIXEL PLAYZONE — Admin Dashboard</div>
+                `;
+            }
+
+            function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        })();
+    </script>
+    <script defer src="/socket.io/socket.io.js"></script>
+    <script src="/js/sound-system.js"></script>
+    <script src="/js/notify-system.js"></script>
+    <script src="/js/chat-system.js"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
+</body>
+
+</html>

@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Daily Reward - Vòng quay may mắn hàng ngày tại Pixel PlayZone">
+    <meta property="og:title" content="🎁 Daily Reward - Pixel PlayZone">
+    <meta property="og:description" content="Đăng nhập hàng ngày, quay vòng quay may mắn nhận xu thưởng miễn phí!">
+    <meta property="og:image" content="/images/icons/icon-512.svg">
+    <meta property="og:type" content="website">
     <meta name="theme-color" content="#0a1628">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon"
@@ -570,6 +574,26 @@
 </head>
 
 <body>
+    <noscript>
+        <div
+            style="background:#0a1628;color:#fff;padding:40px;text-align:center;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+            <h2>⚠️ Bạn cần bật JavaScript để chơi Pixel PlayZone!</h2>
+        </div>
+    </noscript>
+    <div id="ppz-loading"
+        style="position:fixed;inset:0;background:#0a1628;z-index:99999;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:opacity .5s">
+        <div
+            style="width:60px;height:60px;border:3px solid transparent;border-top-color:#8b5cf6;border-bottom-color:#06b6d4;border-radius:50%;animation:ppzSpin 1s linear infinite">
+        </div>
+        <p style="color:#8b5cf6;margin-top:16px;font-size:14px;letter-spacing:4px">LOADING</p>
+    </div>
+    <style>
+        @keyframes ppzSpin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+    </style>
     <div class="ambient-orb orb-1"></div>
     <div class="ambient-orb orb-2"></div>
     <div class="ambient-orb orb-3"></div>
@@ -631,14 +655,25 @@
         let balance = 0, currentAngle = 0, isSpinning = false;
 
         const SFX = {
-            spin: new Audio('/sounds/spin.mp3'),
+            spin: new Audio('/sounds/daily/spin.mp3'),
+            spinTick: new Audio('/sounds/daily/spin_tick.mp3'),
+            reveal: new Audio('/sounds/daily/reveal.mp3'),
             win: new Audio('/sounds/win.mp3'),
             tick: new Audio('/sounds/tick.mp3'),
             click: new Audio('/sounds/click.mp3'),
         };
         Object.values(SFX).forEach(a => { a.volume = 0.5; a.preload = 'auto'; });
-        SFX.win.volume = 0.7;
-        function playSound(n) { try { SFX[n].currentTime = 0; SFX[n].play().catch(() => { }); } catch (e) { } }
+        SFX.win.volume = 0.7; SFX.spinTick.volume = 0.3;
+        function playSound(n) {
+            // Respect global sound settings
+            if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
+            try {
+                const a = SFX[n]; if (!a) return;
+                const globalVol = window.PPZSound ? window.PPZSound.getSettings().sfxVol : 1;
+                a.volume = (n === 'win' ? 0.7 : n === 'spinTick' ? 0.3 : 0.5) * globalVol;
+                a.currentTime = 0; a.play().catch(() => { });
+            } catch (e) { }
+        }
 
         function drawWheel() {
             const canvas = document.getElementById('wheelCanvas');
@@ -736,10 +771,19 @@
             btn.disabled = true; btn.textContent = '🔄 ĐANG QUAY...';
             playSound('spin');
 
+            // Spin tick sound effect — fast ticks that slow down
+            let tickCount = 0, tickMax = 30;
+            const tickInterval = setInterval(() => {
+                tickCount++;
+                playSound('spinTick');
+                if (tickCount >= tickMax) clearInterval(tickInterval);
+            }, 80 + tickCount * 8); // accelerating delay
+
             try {
                 const res = await fetch('/api/daily/claim', { method: 'POST' });
                 const data = await res.json();
                 if (data.error) {
+                    clearInterval(tickInterval);
                     document.getElementById('cooldownMsg').textContent = '❌ ' + data.error;
                     btn.disabled = false; btn.textContent = '🎁 NHẬN THƯỞNG';
                     isSpinning = false; return;
@@ -756,11 +800,13 @@
                 canvas.style.transform = `rotate(${currentAngle}deg)`;
 
                 await new Promise(r => setTimeout(r, 4500));
+                clearInterval(tickInterval);
 
                 balance = Number(data.newBalance);
                 document.getElementById('balance').textContent = balance.toLocaleString();
 
-                playSound('win');
+                playSound('reveal');
+                setTimeout(() => playSound('win'), 400);
                 document.getElementById('rewardEmoji').textContent = data.emoji || '💰';
                 document.getElementById('rewardAmount').textContent = '+' + Number(data.reward).toLocaleString() + ' $';
                 document.getElementById('resultPopup').classList.add('active');
@@ -768,6 +814,7 @@
                 btn.textContent = '✅ ĐÃ NHẬN HÔM NAY';
                 loadDailyStatus();
             } catch (e) {
+                clearInterval(tickInterval);
                 document.getElementById('cooldownMsg').textContent = '❌ Lỗi kết nối!';
                 btn.disabled = false; btn.textContent = '🎁 NHẬN THƯỞNG';
             }
@@ -825,10 +872,14 @@
             }
         })();
     </script>
+    <script defer src="/socket.io/socket.io.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
+    <script src="/js/tutorial-system.js"></script>
+    <script src="/js/chat-system.js"></script>
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
+    <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>
 
 </html>

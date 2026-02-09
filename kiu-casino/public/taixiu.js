@@ -33,7 +33,9 @@ const SoundManager = {
         open: 'sounds/open.mp3',
         win: 'sounds/win.mp3',
         lose: 'sounds/lose.mp3',
-        bgm: 'sounds/bgm.mp3'
+        bgm: 'sounds/bgm.mp3',
+        dice_roll: 'sounds/taixiu/dice_roll.mp3',
+        dice_land: 'sounds/taixiu/dice_land.mp3'
     },
     sounds: {},
     initialized: {},
@@ -53,8 +55,13 @@ const SoundManager = {
     },
 
     play(name) {
+        // Respect global sound settings
+        if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
         const sound = this.getSound(name);
         if (sound) {
+            const globalVol = window.PPZSound ? window.PPZSound.getSettings().sfxVol : 1;
+            const baseVol = name === 'bgm' ? 0.5 : 0.8;
+            sound.volume = baseVol * globalVol;
             sound.currentTime = 0;
             sound.play().catch(e => console.log('Sound error:', e));
         }
@@ -171,6 +178,7 @@ function openBowl() {
     bowlWrap.style.opacity = 0;
     document.getElementById('result-toast').style.opacity = 1;
     SoundManager.play('open');
+    SoundManager.play('dice_land');
 
     // Show winner glow NOW
     if (currentResultSide) {
@@ -263,6 +271,7 @@ socket.on('tx_update', (data) => {
             isBettingPhase = false; canOpenBowl = false; resetBowl();
             bowlWrap.classList.add('shaking');
             SoundManager.play('shaking');
+            setTimeout(() => SoundManager.play('dice_roll'), 300);
 
             safeSetText('my-tai', '');
             safeSetText('my-xiu', ''); // Safe update
@@ -276,6 +285,7 @@ socket.on('tx_update', (data) => {
         } else {
             bowlWrap.classList.remove('shaking');
             SoundManager.stop('shaking');
+            SoundManager.stop('dice_roll');
 
             if (data.phase === 'betting') { isBettingPhase = true; canOpenBowl = false; resetBowl(); }
             else if (data.phase === 'opening' || data.phase === 'result') {

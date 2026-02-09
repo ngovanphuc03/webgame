@@ -182,6 +182,19 @@ const dbPool = mysql.createPool({
         `);
         console.log('✅ mines_games table ready');
 
+        // --- CREATE ACHIEVEMENTS TABLE ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS achievements (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                guild_id VARCHAR(64) NOT NULL,
+                user_id VARCHAR(64) NOT NULL,
+                badge_key VARCHAR(64) NOT NULL,
+                unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_badge (guild_id, user_id, badge_key)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+        console.log('✅ achievements table ready');
+
     } catch (e) { console.error('Auto-migrate error:', e.message); }
 })();
 
@@ -807,6 +820,124 @@ setInterval(async () => {
 }, 30000);
 
 // ============================================================
+// GLOBAL CHAT: In-memory message history
+// ============================================================
+const chatHistory = [];
+
+// CRASH MULTIPLAYER: Shared Rounds via Socket.IO
+// ============================================================
+const crashRoom = 'crash_room';
+const crashState = {
+    phase: 'waiting',      // 'waiting' | 'flying' | 'crashed'
+    crashPoint: 0,
+    roundId: 0,
+    flyStartTime: 0,
+    waitEndTime: 0,
+    currentMult: 1.00,
+    bettors: new Map(),     // socketId -> { userId, bet, cashedOut, cashoutMult }
+    history: []             // last 20 crash points
+};
+
+const CRASH_WAIT_MS = 6000;
+const CRASH_TICK_MS = 50;
+let crashRoundTimer = null;
+let crashTickTimer = null;
+
+function crashEmit(event, data) {
+    io.to(crashRoom).emit(event, data);
+}
+
+function startCrashWaitingPhase() {
+    crashState.phase = 'waiting';
+    crashState.roundId++;
+    crashState.crashPoint = generateCrashPoint();
+    crashState.currentMult = 1.00;
+    crashState.bettors.clear();
+    crashState.waitEndTime = Date.now() + CRASH_WAIT_MS;
+
+    crashEmit('crash_waiting', {
+        roundId: crashState.roundId,
+        waitMs: CRASH_WAIT_MS,
+        history: crashState.history.slice(0, 15)
+    });
+
+    console.log(`[CrashMP] Round #${crashState.roundId} waiting, crashPoint=${crashState.crashPoint}`);
+
+    crashRoundTimer = setTimeout(() => {
+        startCrashFlyingPhase();
+    }, CRASH_WAIT_MS);
+}
+
+function startCrashFlyingPhase() {
+    crashState.phase = 'flying';
+    crashState.flyStartTime = Date.now();
+
+    crashEmit('crash_flying', { roundId: crashState.roundId });
+
+    // Tick loop
+    crashTickTimer = setInterval(() => {
+        const elapsed = (Date.now() - crashState.flyStartTime) / 1000;
+        const speed = 0.06 + elapsed * 0.003;
+        crashState.currentMult = Math.round(Math.pow(Math.E, speed * elapsed) * 100) / 100;
+        crashState.currentMult = Math.max(1.00, crashState.currentMult);
+
+        if (crashState.currentMult >= crashState.crashPoint || crashState.currentMult >= 100) {
+            crashState.currentMult = crashState.crashPoint;
+            doCrashRoundEnd();
+            return;
+        }
+
+        // Check auto-cashouts (from bettors with autoCashout set)
+        // This is handled client-side via crash_cashout event
+
+        crashEmit('crash_tick', { mult: crashState.currentMult });
+    }, CRASH_TICK_MS);
+}
+
+async function doCrashRoundEnd() {
+    clearInterval(crashTickTimer);
+    crashState.phase = 'crashed';
+
+    // Mark all non-cashed-out bettors as busted
+    for (const [sid, bettor] of crashState.bettors) {
+        if (!bettor.cashedOut) {
+            // Log loss
+            await logTxSimple(bettor.userId, 'crash_bust', -bettor.bet, 0, 0,
+                { bet: bettor.bet, crashPoint: crashState.crashPoint, roundId: crashState.roundId }).catch(() => { });
+        }
+    }
+
+    crashState.history.unshift(crashState.crashPoint);
+    if (crashState.history.length > 20) crashState.history.pop();
+
+    // Collect all bettors for display
+    const bettorsArr = [];
+    for (const [sid, b] of crashState.bettors) {
+        bettorsArr.push({
+            username: b.username || 'Ẩn danh',
+            bet: b.bet,
+            cashedOut: b.cashedOut,
+            cashoutMult: b.cashoutMult || 0,
+            profit: b.cashedOut ? Math.floor(b.bet * b.cashoutMult) - b.bet : -b.bet
+        });
+    }
+
+    crashEmit('crash_crashed', {
+        roundId: crashState.roundId,
+        crashPoint: crashState.crashPoint,
+        bettors: bettorsArr
+    });
+
+    console.log(`[CrashMP] Round #${crashState.roundId} CRASHED at ${crashState.crashPoint}x, ${crashState.bettors.size} bettors`);
+
+    // Next round after delay
+    setTimeout(() => startCrashWaitingPhase(), 3000);
+}
+
+// Start the first crash round (delayed so server is fully ready)
+setTimeout(() => startCrashWaitingPhase(), 3000);
+
+// ============================================================
 // MINES GAME API (DB-persistent, transactional)
 // ============================================================
 const minesLimiter = rateLimit({
@@ -1419,6 +1550,144 @@ app.get('/api/profile/stats', requireAuth, async (req, res) => {
     }
 });
 
+// ============================================================
+// ACHIEVEMENT / BADGE SYSTEM
+// ============================================================
+const BADGE_DEFS = {
+    first_win: { icon: '🏆', name: 'Chiến Thắng Đầu Tiên', desc: 'Thắng 1 ván bất kỳ' },
+    high_roller: { icon: '💎', name: 'High Roller', desc: 'Đặt cược tổng cộng 100,000$' },
+    lucky_star: { icon: '⭐', name: 'Ngôi Sao May Mắn', desc: 'Thắng 10 ván' },
+    crash_master: { icon: '🚀', name: 'Crash Master', desc: 'Cashout ở hệ số ≥ 5x' },
+    mine_sweeper: { icon: '💣', name: 'Gỡ Bom Chuyên Nghiệp', desc: 'Mở 15+ ô trong 1 ván Mines' },
+    poker_shark: { icon: '🃏', name: 'Poker Shark', desc: 'Thắng 5 ván Poker' },
+    daily_streak: { icon: '🔥', name: 'Siêng Năng', desc: 'Điểm danh 7 ngày' },
+    big_winner: { icon: '👑', name: 'Đại Gia', desc: 'Tổng thắng đạt 500,000$' },
+    chat_social: { icon: '💬', name: 'Tay Hòm Chìa Khóa', desc: 'Gửi 50 tin nhắn chat' },
+    veteran: { icon: '🎖️', name: 'Cựu Binh', desc: 'Chơi tổng cộng 100 ván' }
+};
+
+async function checkAndAwardBadges(userId) {
+    const awarded = [];
+    try {
+        // Get existing badges
+        const [existing] = await dbPool.execute(
+            'SELECT badge_key FROM achievements WHERE guild_id=? AND user_id=?',
+            [TARGET_GUILD_ID, userId]
+        );
+        const has = new Set(existing.map(r => r.badge_key));
+
+        // Get transaction stats
+        const [txRows] = await dbPool.execute(
+            'SELECT type, amount, details FROM transactions WHERE user_id=? AND guild_id=?',
+            [userId, TARGET_GUILD_ID]
+        );
+
+        const winTypes = ['mines_cashout', 'crash_win', 'poker_win', 'taixiu_win', 'flappy_reward'];
+        const betTypes = ['mines_bet', 'crash_bet', 'poker_bet', 'taixiu_bet'];
+
+        const totalWins = txRows.filter(t => winTypes.includes(t.type)).length;
+        const totalBets = txRows.filter(t => betTypes.includes(t.type)).length;
+        const totalBetAmount = txRows.filter(t => betTypes.includes(t.type))
+            .reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+        const totalWinAmount = txRows.filter(t => winTypes.includes(t.type))
+            .reduce((s, t) => s + Number(t.amount), 0);
+        const pokerWins = txRows.filter(t => t.type === 'poker_win').length;
+
+        // Check crash details for high multiplier
+        const crashWins = txRows.filter(t => t.type === 'crash_win');
+        let hasCrash5x = false;
+        for (const cw of crashWins) {
+            try {
+                const d = typeof cw.details === 'string' ? JSON.parse(cw.details) : cw.details;
+                if (d && d.multiplier >= 5) { hasCrash5x = true; break; }
+            } catch (e) { }
+        }
+
+        // Check mines details for 15+ reveals
+        const minesCashouts = txRows.filter(t => t.type === 'mines_cashout');
+        let hasMines15 = false;
+        for (const mc of minesCashouts) {
+            try {
+                const d = typeof mc.details === 'string' ? JSON.parse(mc.details) : mc.details;
+                if (d && d.revealed >= 15) { hasMines15 = true; break; }
+            } catch (e) { }
+        }
+
+        // Check daily streak
+        const [dailyRows] = await dbPool.execute(
+            'SELECT streak FROM daily_rewards WHERE guild_id=? AND user_id=?',
+            [TARGET_GUILD_ID, userId]
+        ).catch(() => [[]]);
+        const streak = dailyRows.length ? dailyRows[0].streak : 0;
+
+        // Award logic
+        const checks = [
+            ['first_win', totalWins >= 1],
+            ['high_roller', totalBetAmount >= 100000],
+            ['lucky_star', totalWins >= 10],
+            ['crash_master', hasCrash5x],
+            ['mine_sweeper', hasMines15],
+            ['poker_shark', pokerWins >= 5],
+            ['daily_streak', streak >= 7],
+            ['big_winner', totalWinAmount >= 500000],
+            ['veteran', totalBets >= 100]
+        ];
+
+        for (const [key, condition] of checks) {
+            if (!has.has(key) && condition) {
+                try {
+                    await dbPool.execute(
+                        'INSERT IGNORE INTO achievements (guild_id, user_id, badge_key) VALUES (?,?,?)',
+                        [TARGET_GUILD_ID, userId, key]
+                    );
+                    awarded.push(key);
+                } catch (e) { }
+            }
+        }
+    } catch (e) {
+        console.error('Badge check error:', e.message);
+    }
+    return awarded;
+}
+
+// Get user achievements
+app.get('/api/achievements', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            'SELECT badge_key, unlocked_at FROM achievements WHERE guild_id=? AND user_id=? ORDER BY unlocked_at DESC',
+            [TARGET_GUILD_ID, uid]
+        );
+        // Also check & award new ones
+        const newBadges = await checkAndAwardBadges(uid);
+
+        const badges = rows.map(r => ({
+            key: r.badge_key,
+            ...BADGE_DEFS[r.badge_key],
+            unlockedAt: r.unlocked_at
+        }));
+
+        // If new badges were just awarded, add them too
+        for (const key of newBadges) {
+            if (!badges.find(b => b.key === key)) {
+                badges.push({ key, ...BADGE_DEFS[key], unlockedAt: new Date() });
+            }
+        }
+
+        res.json({
+            badges,
+            allBadges: Object.entries(BADGE_DEFS).map(([key, def]) => ({
+                key, ...def,
+                unlocked: badges.some(b => b.key === key)
+            })),
+            newBadges: newBadges.map(k => ({ key: k, ...BADGE_DEFS[k] }))
+        });
+    } catch (e) {
+        console.error('Achievements Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
 // Manual sync endpoint (admin)
 app.get('/api/sync-users', requireAuth, async (req, res) => {
     if (!BOT_TOKEN) {
@@ -1485,6 +1754,86 @@ app.get('/api/admin/transactions', requireAuth, async (req, res) => {
     }
 });
 
+// Admin: check if current user is admin
+app.get('/api/admin/check', requireAuth, (req, res) => {
+    const uid = req.cookies.user_id;
+    const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+    res.json({ isAdmin: adminIds.includes(uid) });
+});
+
+// Admin: dashboard stats
+app.get('/api/admin/stats', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!adminIds.includes(uid)) return res.status(403).json({ error: 'Không có quyền' });
+
+    try {
+        // Total players
+        const [[{ playerCount }]] = await dbPool.execute(
+            'SELECT COUNT(*) as playerCount FROM wallet WHERE guild_id=?', [TARGET_GUILD_ID]
+        );
+        // Total balance in circulation
+        const [[{ totalBalance }]] = await dbPool.execute(
+            'SELECT COALESCE(SUM(balance),0) as totalBalance FROM wallet WHERE guild_id=?', [TARGET_GUILD_ID]
+        );
+        // Transaction stats (last 24h)
+        const [[{ txCount24h }]] = await dbPool.execute(
+            "SELECT COUNT(*) as txCount24h FROM transactions WHERE guild_id=? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+            [TARGET_GUILD_ID]
+        );
+        // Revenue by game type (last 7 days): bets - wins = house profit
+        const [revRows] = await dbPool.execute(
+            `SELECT type, SUM(amount) as total FROM transactions
+             WHERE guild_id=? AND created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
+             GROUP BY type`, [TARGET_GUILD_ID]
+        );
+        const revenue = {};
+        for (const r of revRows) {
+            revenue[r.type] = Number(r.total);
+        }
+        // Top 10 players by balance
+        const [topPlayers] = await dbPool.execute(
+            'SELECT user_id, username, balance FROM wallet WHERE guild_id=? ORDER BY balance DESC LIMIT 10',
+            [TARGET_GUILD_ID]
+        );
+        // Active players (had transactions in last 24h)
+        const [[{ activePlayers }]] = await dbPool.execute(
+            "SELECT COUNT(DISTINCT user_id) as activePlayers FROM transactions WHERE guild_id=? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+            [TARGET_GUILD_ID]
+        );
+        // Transactions per game (last 7 days)
+        const gameGroups = {
+            mines: ['mines_bet', 'mines_cashout', 'mines_lose'],
+            crash: ['crash_bet', 'crash_win', 'crash_bust'],
+            poker: ['poker_bet', 'poker_win'],
+            taixiu: ['taixiu_bet', 'taixiu_win'],
+            flappy: ['flappy_reward'],
+            daily: ['daily_reward', 'daily_spin']
+        };
+        const gameStats = {};
+        for (const [game, types] of Object.entries(gameGroups)) {
+            const betTypes = types.filter(t => t.includes('bet') || t.includes('lose') || t.includes('bust'));
+            const winTypes = types.filter(t => t.includes('win') || t.includes('cashout') || t.includes('reward') || t.includes('spin'));
+            const bets = betTypes.reduce((s, t) => s + Math.abs(revenue[t] || 0), 0);
+            const wins = winTypes.reduce((s, t) => s + Math.abs(revenue[t] || 0), 0);
+            gameStats[game] = { bets, wins, profit: bets - wins };
+        }
+
+        res.json({
+            playerCount,
+            totalBalance: Number(totalBalance),
+            txCount24h,
+            activePlayers,
+            topPlayers: topPlayers.map(p => ({ ...p, balance: Number(p.balance) })),
+            gameStats,
+            revenue
+        });
+    } catch (e) {
+        console.error('Admin Stats Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
 // ============================================================
 // MANAGER GAME
 // ============================================================
@@ -1526,11 +1875,183 @@ io.on('connection', (socket) => {
             socket.emit(result.success ? 'tx_bet_success' : 'tx_bet_error', { msg: result.msg || 'OK' });
         });
     }
+
+    // KẾT NỐI GLOBAL CHAT
+    socket.on('chat_join', () => {
+        socket.join('chat_room');
+        // Send last 50 messages
+        socket.emit('chat_history', chatHistory.slice(-50));
+    });
+
+    socket.on('chat_send', (data) => {
+        if (!data || !data.text || typeof data.text !== 'string') return;
+        const text = data.text.trim().slice(0, 200);
+        if (!text) return;
+
+        // Rate-limit: max 3 msgs per 3 seconds per socket
+        const now = Date.now();
+        if (!socket._chatTimes) socket._chatTimes = [];
+        socket._chatTimes = socket._chatTimes.filter(t => now - t < 3000);
+        if (socket._chatTimes.length >= 3) {
+            socket.emit('chat_system', 'Bạn gửi tin nhắn quá nhanh! Chờ vài giây...');
+            return;
+        }
+        socket._chatTimes.push(now);
+
+        const msg = {
+            username: userInfo.username || 'Khách',
+            userId: userId || socket.id,
+            text,
+            ts: now
+        };
+        chatHistory.push(msg);
+        // Keep only last 200 messages in memory
+        if (chatHistory.length > 200) chatHistory.splice(0, chatHistory.length - 200);
+        io.to('chat_room').emit('chat_message', msg);
+
+        // Track chat count for chat_social badge
+        if (userId) {
+            if (!socket._chatCount) socket._chatCount = 0;
+            socket._chatCount++;
+            if (socket._chatCount === 50) {
+                checkAndAwardBadges(userId).then(newBadges => {
+                    // chat_social won't fire here since we check in checkAndAwardBadges via transactions
+                    // Instead award directly
+                    dbPool.execute('INSERT IGNORE INTO achievements (guild_id, user_id, badge_key) VALUES (?,?,?)',
+                        [TARGET_GUILD_ID, userId, 'chat_social']).catch(() => { });
+                }).catch(() => { });
+            }
+        }
+    });
+
+    // KẾT NỐI CRASH MULTIPLAYER
+    socket.on('crash_join', () => {
+        socket.join(crashRoom);
+        // Send current state
+        const remaining = Math.max(0, crashState.waitEndTime - Date.now());
+        socket.emit('crash_state', {
+            phase: crashState.phase,
+            roundId: crashState.roundId,
+            mult: crashState.currentMult,
+            crashPoint: crashState.phase === 'crashed' ? crashState.crashPoint : undefined,
+            waitRemaining: remaining,
+            history: crashState.history.slice(0, 15),
+            playerCount: io.sockets.adapter.rooms.get(crashRoom)?.size || 0
+        });
+    });
+
+    socket.on('crash_bet', async (data) => {
+        if (!userId || crashState.phase !== 'waiting') {
+            socket.emit('crash_bet_error', { msg: 'Không thể đặt cược lúc này!' }); return;
+        }
+        // Check if already bet this round
+        if (crashState.bettors.has(socket.id)) {
+            socket.emit('crash_bet_error', { msg: 'Bạn đã đặt cược rồi!' }); return;
+        }
+        const bet = parseInt(data.bet);
+        if (!bet || bet < 500 || bet > 100000) {
+            socket.emit('crash_bet_error', { msg: 'Cược 500 - 100,000 $' }); return;
+        }
+
+        // Deduct balance
+        const conn = await dbPool.getConnection();
+        try {
+            await conn.beginTransaction();
+            const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, userId]);
+            if (!rows.length || Number(rows[0].balance) < bet) {
+                await conn.rollback(); conn.release();
+                socket.emit('crash_bet_error', { msg: 'Không đủ tiền!' }); return;
+            }
+            const balBefore = Number(rows[0].balance);
+            await conn.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [bet, TARGET_GUILD_ID, userId]);
+            await logTx(conn, userId, 'crash_bet', -bet, balBefore, balBefore - bet, { bet, roundId: crashState.roundId });
+            await conn.commit(); conn.release();
+
+            crashState.bettors.set(socket.id, {
+                userId, bet, cashedOut: false, cashoutMult: 0,
+                username: userInfo.username, autoCashout: parseFloat(data.autoCashout) || 0
+            });
+
+            socket.emit('crash_bet_ok', { bet, newBalance: balBefore - bet });
+            // Broadcast player count
+            crashEmit('crash_players', {
+                count: crashState.bettors.size,
+                bets: Array.from(crashState.bettors.values()).map(b => ({
+                    username: b.username, bet: b.bet, cashedOut: b.cashedOut
+                }))
+            });
+        } catch (e) {
+            await conn.rollback().catch(() => { }); conn.release();
+            socket.emit('crash_bet_error', { msg: 'Lỗi server' });
+        }
+    });
+
+    socket.on('crash_cashout', async () => {
+        if (!userId || crashState.phase !== 'flying') return;
+        const bettor = crashState.bettors.get(socket.id);
+        if (!bettor || bettor.cashedOut) return;
+
+        const mult = crashState.currentMult;
+        if (mult >= crashState.crashPoint) return; // Already crashed
+
+        bettor.cashedOut = true;
+        bettor.cashoutMult = mult;
+        const winAmount = Math.floor(bettor.bet * mult);
+
+        // Credit balance
+        const conn = await dbPool.getConnection();
+        try {
+            await conn.beginTransaction();
+            const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, userId]);
+            const balBefore = rows.length ? Number(rows[0].balance) : 0;
+            await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, userId]);
+            await logTx(conn, userId, 'crash_win', winAmount, balBefore, balBefore + winAmount,
+                { bet: bettor.bet, multiplier: mult, crashPoint: crashState.crashPoint, roundId: crashState.roundId });
+            await conn.commit(); conn.release();
+
+            socket.emit('crash_cashout_ok', { mult, winAmount, profit: winAmount - bettor.bet, newBalance: balBefore + winAmount });
+            // Broadcast cashout to room
+            crashEmit('crash_player_cashout', { username: bettor.username, mult, winAmount });
+        } catch (e) {
+            bettor.cashedOut = false;
+            await conn.rollback().catch(() => { }); conn.release();
+        }
+    });
+
+    socket.on('disconnect', () => {
+        // If player disconnects during flying and has active bet, auto-cashout at current mult if possible
+        if (crashState.phase === 'flying' && crashState.bettors.has(socket.id)) {
+            const bettor = crashState.bettors.get(socket.id);
+            if (!bettor.cashedOut && crashState.currentMult < crashState.crashPoint) {
+                // Auto-cashout on disconnect
+                bettor.cashedOut = true;
+                bettor.cashoutMult = crashState.currentMult;
+                const winAmount = Math.floor(bettor.bet * crashState.currentMult);
+                dbPool.getConnection().then(async conn => {
+                    try {
+                        await conn.beginTransaction();
+                        const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, bettor.userId]);
+                        const balBefore = rows.length ? Number(rows[0].balance) : 0;
+                        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [winAmount, TARGET_GUILD_ID, bettor.userId]);
+                        await logTx(conn, bettor.userId, 'crash_win', winAmount, balBefore, balBefore + winAmount,
+                            { bet: bettor.bet, multiplier: crashState.currentMult, autoCashout: true, disconnect: true });
+                        await conn.commit(); conn.release();
+                    } catch (e) { await conn.rollback().catch(() => { }); conn.release(); }
+                }).catch(() => { });
+            }
+        }
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 // LEGACY REDIRECT
 app.get('/lobby.html', (req, res) => res.redirect('/'));
+
+// Admin Dashboard (friendly route)
+app.get('/admin', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
 // Serve Taixiu page (friendly route without .html)
 app.get('/taixiu', (req, res) => {

@@ -6,6 +6,10 @@
     <title>🂡 Texas Hold'em VIP - Pixel PlayZone</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Texas Hold'em Poker VIP - Chơi poker online miễn phí tại Pixel PlayZone!">
+    <meta property="og:title" content="🂡 Texas Hold'em VIP - Pixel PlayZone">
+    <meta property="og:description" content="Poker Texas Hold'em multiplayer. Bàn VIP, side pot, all-in. Chơi ngay!">
+    <meta property="og:image" content="/images/icons/icon-512.svg">
+    <meta property="og:type" content="website">
     <meta name="theme-color" content="#0f0a1a">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon"
@@ -19,8 +23,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:wght@400;600;700&family=Outfit:wght@400;600;700;900&display=swap"
         rel="stylesheet">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script defer src="/socket.io/socket.io.js"></script>
 
     <style>
         :root {
@@ -1205,8 +1209,27 @@
 </head>
 
 <body>
+    <noscript>
+        <div
+            style="background:#0f0a1a;color:#fff;padding:40px;text-align:center;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+            <h2>⚠️ Bạn cần bật JavaScript để chơi Pixel PlayZone!</h2>
+        </div>
+    </noscript>
+    <div id="ppz-loading"
+        style="position:fixed;inset:0;background:#0f0a1a;z-index:99999;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:opacity .5s">
+        <div
+            style="width:60px;height:60px;border:3px solid transparent;border-top-color:#f59e0b;border-bottom-color:#10b981;border-radius:50%;animation:ppzSpin 1s linear infinite">
+        </div>
+        <p style="color:#f59e0b;margin-top:16px;font-size:14px;letter-spacing:4px">LOADING</p>
+    </div>
+    <style>
+        @keyframes ppzSpin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+    </style>
     <!-- Ambient Effects -->
-    <div class="ambient-glow glow-1"></div>
     <div class="ambient-glow glow-2"></div>
 
     <!-- TOP BAR -->
@@ -1290,8 +1313,11 @@
     <script src="poker.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
+    <script src="/js/tutorial-system.js"></script>
+    <script src="/js/chat-system.js"></script>
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
+    <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>
 
 </html>

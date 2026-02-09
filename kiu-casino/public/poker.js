@@ -21,7 +21,7 @@ const SFX = {
     chip: new Audio('/sounds/poker/chip_place.mp3'),
     check: new Audio('/sounds/poker/check.mp3'),
     fold: new Audio('/sounds/poker/card_flip.mp3'),
-    win: new Audio('/sounds/poker/shuffle.mp3'),
+    win: new Audio('/sounds/poker/win.mp3'),
     call: new Audio('/sounds/poker/chip_stack.mp3'),
     raise: new Audio('/sounds/poker/chip_heavy.mp3'),
     timer: new Audio('/sounds/poker/tick.mp3')
@@ -35,9 +35,12 @@ Object.values(SFX).forEach(audio => {
 
 function playSound(key) {
     if (!state.soundEnabled || !SFX[key]) return;
+    // Respect global sound settings
+    if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
     try {
         const audio = SFX[key].cloneNode(); // Clone for simultaneous plays
-        audio.volume = 0.48; // 80% of original 0.6
+        const globalVol = window.PPZSound ? window.PPZSound.getSettings().sfxVol : 1;
+        audio.volume = 0.48 * globalVol;
         audio.play().catch(() => { });
     } catch (e) { }
 }

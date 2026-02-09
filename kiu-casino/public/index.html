@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
         content="PIXEL PLAYZONE - Thế giới game giải trí: Tài Xỉu, Poker, Flappy Bird, Mines. Chơi miễn phí!">
+    <meta property="og:title" content="PIXEL PLAYZONE - Thế giới game giải trí">
+    <meta property="og:description"
+        content="Casino online miễn phí: Tài Xỉu, Poker, Crash, Mines, Flappy Bird. Đăng nhập Discord để chơi!">
+    <meta property="og:image" content="/images/icons/icon-512.svg">
+    <meta property="og:type" content="website">
     <meta name="theme-color" content="#0a0b1e">
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1411,6 +1416,12 @@
     <div class="hex-grid"></div>
     <div class="scanlines"></div>
 
+    <noscript>
+        <div
+            style="background:#0a0b1e;color:#fff;padding:40px;text-align:center;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+            <h2>⚠️ Bạn cần bật JavaScript để chơi Pixel PlayZone!</h2>
+        </div>
+    </noscript>
     <div id="loading">
         <div class="loader-hex"></div>
         <p class="loader-text">LOADING</p>
@@ -1567,6 +1578,36 @@
             </div>
         </div>
 
+        <div class="game-card c-lb" onclick="enterGame('/history')">
+            <div class="card-banner banner-lb" style="background:linear-gradient(135deg,#1a0530,#0a1628)"><span
+                    class="card-icon">📜</span></div>
+            <div class="card-content">
+                <div class="card-title">LỊCH SỬ GIAO DỊCH</div>
+                <div class="card-desc">Xem lại tất cả lịch sử đặt cược, thắng thua và phần thưởng.</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>📊</i> Chi tiết</div>
+                    <div class="meta-item"><i>🔍</i> Bộ lọc</div>
+                </div>
+                <button class="btn-play btn-purple">XEM LỊCH SỬ ▸</button>
+            </div>
+        </div>
+
+        <!-- Admin card: hidden by default, shown only for admins -->
+        <div class="game-card c-lb" id="admin-card" style="display:none" onclick="enterGame('/admin')">
+            <div class="card-banner banner-lb" style="background:linear-gradient(135deg,#2d0a0a,#1a0530)"><span
+                    class="card-icon">🔧</span></div>
+            <div class="card-content">
+                <div class="card-title">ADMIN DASHBOARD</div>
+                <div class="card-desc">Bảng điều khiển quản trị — thống kê, doanh thu, quản lý.</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>📊</i> Revenue</div>
+                    <div class="meta-item"><i>👥</i> Players</div>
+                </div>
+                <button class="btn-play btn-red" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">QUẢN TRỊ
+                    ▸</button>
+            </div>
+        </div>
+
     </div>
 
     <footer class="footer">
@@ -1702,6 +1743,10 @@
           <a href="/profile" class="username" title="Xem hồ sơ" style="text-decoration:none">${escapeHtml(u.username)}</a>
           <button onclick="logout()" class="btn-exit">EXIT</button>
         </div>`;
+                    // Check admin
+                    fetch('/api/admin/check').then(r => r.json()).then(d => {
+                        if (d.isAdmin) { const ac = document.getElementById('admin-card'); if (ac) ac.style.display = '' }
+                    }).catch(() => { });
                 }
             } catch (e) { console.error(e) }
             setTimeout(() => { const l = document.getElementById('loading'); l.style.opacity = '0'; l.style.visibility = 'hidden'; setTimeout(() => l.style.display = 'none', 600) }, 400);
@@ -1740,8 +1785,10 @@
         }
         checkAuth();
     </script>
+    <script defer src="/socket.io/socket.io.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
+    <script src="/js/chat-system.js"></script>
     <script>
         // PWA Service Worker registration
         if ('serviceWorker' in navigator) {
