@@ -1,13 +1,13 @@
 /* ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Game Tutorial System
  *  Include on game pages: <script src="/js/tutorial-system.js"></script>
- *  Only renders button when logged in (has user_id cookie)
+ *  Only renders button when logged in (has user_info cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     function isLoggedIn() {
-        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_info='));
     }
 
     const TUTORIALS = {
@@ -79,6 +79,14 @@
         if (!tut) return;
 
         const toolbar = document.getElementById('ppz-toolbar');
+        if (!toolbar) {
+            // Toolbar not yet created (async checkAuth) — retry up to 3s
+            if (!createTutorialBtn._retries) createTutorialBtn._retries = 0;
+            if (createTutorialBtn._retries++ < 30) {
+                setTimeout(() => createTutorialBtn(gameKey), 100);
+            }
+            return;
+        }
 
         const btn = document.createElement('button');
         btn.id = 'ppz-tutorial-btn';
@@ -89,10 +97,6 @@
 
         if (toolbar) {
             toolbar.appendChild(btn);
-        } else {
-            // Fallback: append to body (shouldn't happen if toolbar exists)
-            btn.style.cssText = 'position:fixed;bottom:140px;right:20px;z-index:9989;width:44px;height:44px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5);color:#fff';
-            document.body.appendChild(btn);
         }
 
         // Auto-show on first visit

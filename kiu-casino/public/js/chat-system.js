@@ -2,13 +2,13 @@
  *  PIXEL PLAYZONE — Global Chat System
  *  Include on every page: <script src="/js/chat-system.js"></script>
  *  Requires Socket.IO to be loaded
- *  Only renders UI when logged in (has user_id cookie)
+ *  Only renders UI when logged in (has user_info cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     function isLoggedIn() {
-        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_info='));
     }
 
     const MAX_MESSAGES = 100;
@@ -38,6 +38,14 @@
         if (document.getElementById('ppz-chat-panel')) return;
 
         const toolbar = document.getElementById('ppz-toolbar');
+        if (!toolbar) {
+            // Toolbar not yet created (async checkAuth on index.html) — retry up to 3s
+            if (!initChat._retries) initChat._retries = 0;
+            if (initChat._retries++ < 30) {
+                setTimeout(initChat, 100);
+            }
+            return;
+        }
 
         // Connect socket
         if (typeof io !== 'undefined') {
@@ -128,8 +136,6 @@
 
         if (toolbar) {
             toolbar.appendChild(btn);
-        } else {
-            document.body.appendChild(btn);
         }
         document.body.appendChild(win);
 

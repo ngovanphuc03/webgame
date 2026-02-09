@@ -1,13 +1,13 @@
 /* ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Realtime Notification System
  *  Include on every page: <script src="/js/notify-system.js"></script>
- *  Bell UI only renders when logged in (has user_id cookie)
+ *  Bell UI only renders when logged in (has user_info cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     function isLoggedIn() {
-        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_info='));
     }
 
     const MAX_TOASTS = 5;
@@ -151,6 +151,14 @@
         if (document.getElementById('ppz-notif-bell')) return;
 
         const toolbar = document.getElementById('ppz-toolbar');
+        if (!toolbar) {
+            // Toolbar not yet created (async checkAuth on index.html) — retry up to 3s
+            if (!createBellUI._retries) createBellUI._retries = 0;
+            if (createBellUI._retries++ < 30) {
+                setTimeout(createBellUI, 100);
+            }
+            return;
+        }
 
         const bell = document.createElement('button');
         bell.id = 'ppz-notif-bell';
@@ -169,8 +177,6 @@
 
         if (toolbar) {
             toolbar.appendChild(bell);
-        } else {
-            document.body.appendChild(bell);
         }
         document.body.appendChild(panel);
 

@@ -1,14 +1,14 @@
 /* ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Global Sound System
  *  Include on every page: <script src="/js/sound-system.js"></script>
- *  Only renders UI when logged in (has user_id cookie)
+ *  Only renders UI when logged in (has user_info cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
-    // Check login status — no user_id cookie = don't show UI
+    // Check login status — user_info cookie is httpOnly:false so JS can read it
     function isLoggedIn() {
-        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_info='));
     }
 
     const SOUNDS = {
@@ -119,12 +119,20 @@
         saveSettings(settings);
     }
 
-    // UI Panel — renders into #ppz-toolbar if available, else fixed button
+    // UI Panel — renders into #ppz-toolbar if available, else retries
     function createSoundPanel() {
         if (!isLoggedIn()) return; // Don't show if not logged in
         if (document.getElementById('ppz-sound-panel')) return;
 
         const toolbar = document.getElementById('ppz-toolbar');
+        if (!toolbar) {
+            // Toolbar not yet created (async checkAuth on index.html) — retry up to 3s
+            if (!createSoundPanel._retries) createSoundPanel._retries = 0;
+            if (createSoundPanel._retries++ < 30) {
+                setTimeout(createSoundPanel, 100);
+            }
+            return;
+        }
 
         const panel = document.createElement('div');
         panel.id = 'ppz-sound-panel';
@@ -176,8 +184,6 @@
             toolbar.appendChild(btn);
             document.body.appendChild(menu);
             document.head.appendChild(style);
-        } else {
-            document.body.appendChild(panel);
         }
 
         // Events
