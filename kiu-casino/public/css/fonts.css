@@ -1,0 +1,12 @@
+/* ═══════════════════════════════════════════════════════ */
+/*  PIXEL PLAYZONE - Global Font: DearPix               */
+/*  Loaded on ALL pages for consistent typography        */
+/* ═══════════════════════════════════════════════════════ */
+
+@font-face {
+    font-family: 'DearPix';
+    src: url('../fonts/dearpix-1-94.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}

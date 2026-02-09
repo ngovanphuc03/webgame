@@ -529,9 +529,15 @@ app.post('/api/crash/bet', requireAuth, crashLimiter, async (req, res) => {
         return res.status(400).json({ error: 'Cược không hợp lệ (500 - 100,000)' });
     }
 
-    // Prevent double bet
-    if (crashBets.has(uid)) {
-        return res.status(400).json({ error: 'Bạn đã đặt cược rồi!' });
+    // Prevent double bet — only block if bet is still active
+    const existing = crashBets.get(uid);
+    if (existing) {
+        // If old bet is finished (cashedOut, busted), clean it up and allow new bet
+        if (existing.status === 'cashedOut' || existing.status === 'busted') {
+            crashBets.delete(uid);
+        } else {
+            return res.status(400).json({ error: 'Bạn đã đặt cược rồi!' });
+        }
     }
 
     const conn = await dbPool.getConnection();
@@ -686,9 +692,8 @@ app.post('/api/crash/cashout', requireAuth, crashLimiter, async (req, res) => {
         await conn.commit();
         conn.release();
 
-        entry.status = 'cashedOut';
-        entry.cashedAt = mult;
-        setTimeout(() => crashBets.delete(uid), 30000);
+        // Clean up immediately — don't leave stale entries
+        crashBets.delete(uid);
 
         console.log(`[Crash] User ${uid} CASHOUT! Bet=${entry.bet}, Mult=${mult}, CrashPoint=${entry.crashPoint}, Win=${winAmount}`);
         res.json({ success: true, multiplier: mult, winAmount, profit, newBalance: balAfter });
@@ -706,7 +711,9 @@ app.post('/api/crash/bust', requireAuth, async (req, res) => {
     const entry = crashBets.get(uid);
 
     if (!entry || (entry.status !== 'active' && entry.status !== 'pending')) {
-        return res.json({ success: true }); // Already handled
+        // Clean up any stale entry regardless of status
+        crashBets.delete(uid);
+        return res.json({ success: true });
     }
 
     const crashPoint = entry.crashPoint || 1.00;
@@ -717,6 +724,21 @@ app.post('/api/crash/bust', requireAuth, async (req, res) => {
     console.log(`[Crash] User ${uid} BUSTED at ${crashPoint}x, lost ${entry.bet}`);
     crashBets.delete(uid);
     res.json({ success: true, crashPoint });
+});
+
+// Check & cleanup stale crash bet for this user (called at start of each round)
+app.post('/api/crash/cleanup', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const entry = crashBets.get(uid);
+    if (entry) {
+        // If bet is completed or older than 60s, just clean it up
+        if (entry.status === 'cashedOut' || entry.status === 'busted' ||
+            Date.now() - entry.ts > 60000) {
+            crashBets.delete(uid);
+            console.log(`[Crash] Cleanup stale entry for ${uid} (status: ${entry.status})`);
+        }
+    }
+    res.json({ success: true });
 });
 
 // Auto-cleanup stale crash bets — refund if still pending, log loss if active

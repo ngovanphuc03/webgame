@@ -1,8 +1,4 @@
-/* Fonts */
-@font-face {
-    font-family: 'DearPix';
-    src: url('../fonts/dearpix-1-94.ttf') format('truetype');
-}
+/* Fonts - DearPix loaded via css/fonts.css globally */
 
 :root {
     --sky-blue: #70c5ce;
@@ -10,11 +6,6 @@
     --primary-color: #e55b2b;
     --secondary-color: #fca048;
     --dark-color: #543847;
-}
-
-@font-face {
-    font-family: 'PixelFont';
-    src: local('DearPix'), url('../fonts/dearpix-1-94.ttf') format('truetype');
 }
 
 * {

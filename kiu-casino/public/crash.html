@@ -9,6 +9,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <title>🚀 CRASH - Pixel PlayZone</title>
+    <link rel="stylesheet" href="css/fonts.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
@@ -34,8 +35,8 @@
             --text: #fff;
             --muted: rgba(255, 255, 255, .5);
             --radius: 14px;
-            --font-display: 'Orbitron', sans-serif;
-            --font-body: 'Rajdhani', sans-serif;
+            --font-display: 'DearPix', 'Orbitron', sans-serif;
+            --font-body: 'DearPix', 'Rajdhani', sans-serif;
         }
 
         html {
@@ -1396,6 +1397,9 @@
                 _betLock = false;
                 _cashLock = false;
 
+                // Cleanup any stale bet entry on server before new round
+                api('/api/crash/cleanup', 'POST').catch(() => { });
+
                 multEl.textContent = '1.00x';
                 multEl.className = 'chart-mult';
                 statusEl.textContent = '⏳ ĐẶT CƯỢC';
@@ -1575,8 +1579,10 @@
                     infoMult.textContent = crashPoint.toFixed(2) + 'x';
                     infoWin.textContent = '-' + loss.toLocaleString() + ' $';
                     addHist(false, playerBet, crashPoint, 0);
-                    // Report bust to server so it cleans up the bet entry
-                    api('/api/crash/bust').catch(() => { });
+                    // Report bust to server so it cleans up the bet entry (retry once on failure)
+                    api('/api/crash/bust').catch(() => {
+                        setTimeout(() => api('/api/crash/bust').catch(() => { }), 1000);
+                    });
                 }
 
                 addHistoryChip(crashPoint);
@@ -1594,6 +1600,7 @@
             window._placeBet = async function () {
                 if (phase !== 'waiting' || _betLock) return;
                 bet = Math.max(MIN_BET, Math.min(MAX_BET, parseInt(betInput.value) || MIN_BET));
+                betInput.value = bet; // sync display
                 autoCashout = Math.max(1.1, Math.min(MAX_MULT, parseFloat(autoInput.value) || 2));
 
                 if (balance < bet) {
