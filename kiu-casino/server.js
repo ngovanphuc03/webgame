@@ -55,7 +55,7 @@ app.use((req, res, next) => {
         "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: https://cdn.discordapp.com",
+        "img-src 'self' data: https://cdn.discordapp.com https://cdn.discord.com https://media.discordapp.net",
         "connect-src 'self' ws: wss:",
         "frame-ancestors 'none'"
     ].join('; '));

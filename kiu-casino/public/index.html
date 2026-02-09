@@ -351,6 +351,13 @@
             padding: 2px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .user-avatar-wrap:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 16px rgba(139, 92, 246, .4);
         }
 
         .avatar {
@@ -1703,10 +1710,10 @@
                     userArea.innerHTML = `
         <div class="user-panel">
           <div class="balance-chip">💰 <span>${Number(u.balance).toLocaleString()} $</span></div>
-          <div class="user-avatar-wrap">
+          <a href="/profile" class="user-avatar-wrap" title="Xem hồ sơ">
             <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="avatar" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-          </div>
-          <span class="username">${escapeHtml(u.username)}</span>
+          </a>
+          <a href="/profile" class="username" title="Xem hồ sơ" style="text-decoration:none">${escapeHtml(u.username)}</a>
           <button onclick="logout()" class="btn-exit">EXIT</button>
         </div>`;
                 }
