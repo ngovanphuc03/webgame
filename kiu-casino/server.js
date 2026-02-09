@@ -221,7 +221,8 @@ async function fetchDiscordUser(userId) {
         const { username, avatar, id } = res.data;
         let avatarUrl = '';
         if (avatar) {
-            avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png?size=128`;
+            const ext = avatar.startsWith('a_') ? 'gif' : 'png';
+            avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=128`;
         } else {
             const index = Number((BigInt(id) >> 22n) % 6n);
             avatarUrl = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
@@ -312,7 +313,8 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
 
         let avatarUrl = "";
         if (avatar) {
-            avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+            const ext = avatar.startsWith('a_') ? 'gif' : 'png';
+            avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=128`;
         } else {
             try {
                 const index = Number((BigInt(id) >> 22n) % 6n);

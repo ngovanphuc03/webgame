@@ -1567,20 +1567,6 @@
             </div>
         </div>
 
-        <div class="game-card c-profile" onclick="enterGame('/profile')">
-            <div class="card-status status-new">✦ NEW</div>
-            <div class="card-banner" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)"><span
-                    class="card-icon">👤</span></div>
-            <div class="card-content">
-                <div class="card-title">HỒ SƠ CÁ NHÂN</div>
-                <div class="card-desc">Xem thành tích, thống kê game và bộ sưu tập danh hiệu của bạn.</div>
-                <div class="card-meta">
-                    <div class="meta-item"><i>📊</i> Thống kê</div>
-                    <div class="meta-item"><i>🏅</i> Thành tích</div>
-                </div>
-                <button class="btn-play" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)">XEM HỒ SƠ ▸</button>
-            </div>
-        </div>
     </div>
 
     <footer class="footer">
@@ -1711,7 +1697,7 @@
         <div class="user-panel">
           <div class="balance-chip">💰 <span>${Number(u.balance).toLocaleString()} $</span></div>
           <a href="/profile" class="user-avatar-wrap" title="Xem hồ sơ">
-            <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="avatar" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+            <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="avatar" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/embed/avatars/0.png';">
           </a>
           <a href="/profile" class="username" title="Xem hồ sơ" style="text-decoration:none">${escapeHtml(u.username)}</a>
           <button onclick="logout()" class="btn-exit">EXIT</button>
@@ -1756,7 +1742,6 @@
     </script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
-    <script src="/js/theme-system.js"></script>
     <script>
         // PWA Service Worker registration
         if ('serviceWorker' in navigator) {
