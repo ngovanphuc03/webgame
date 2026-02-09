@@ -1,16 +1,20 @@
 /* ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Realtime Notification System
  *  Include on every page: <script src="/js/notify-system.js"></script>
+ *  Bell UI only renders when logged in (has user_id cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
+
+    function isLoggedIn() {
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+    }
 
     const MAX_TOASTS = 5;
     const TOAST_DURATION = 4500;
     let container = null;
     let toastQueue = [];
 
-    // Notification types with icons and colors
     const TYPES = {
         info: { icon: 'ℹ️', color: '#00f0ff', glow: 'rgba(0,240,255,.15)' },
         success: { icon: '✅', color: '#00ff9d', glow: 'rgba(0,255,157,.15)' },
@@ -45,14 +49,12 @@
             @keyframes ppzToastOut{to{opacity:0;transform:translateX(80px);height:0;padding:0;margin:0;border:0}}
             @media(max-width:480px){#ppz-notify-container{right:8px;max-width:calc(100% - 16px)}.ppz-toast{padding:12px 14px}}
 
-            /* Notification bell */
-            #ppz-notif-bell{position:fixed;bottom:80px;right:20px;z-index:9989;width:48px;height:48px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-            #ppz-notif-bell:hover{border-color:rgba(139,92,246,.6);transform:scale(1.1)}
-            #ppz-notif-badge{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:#ff3355;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;font-family:'DearPix',sans-serif;border:2px solid rgba(3,0,20,.9)}
+            /* Notification bell — toolbar style */
+            #ppz-notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#ff3355;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'DearPix',sans-serif}
             #ppz-notif-badge.hidden{display:none}
-            #ppz-notif-history{position:fixed;bottom:140px;right:20px;z-index:9990;width:340px;max-height:420px;background:rgba(3,0,20,.95);backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,.15);border-radius:16px;display:none;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;color:#fff;overflow:hidden}
-            #ppz-notif-history.show{display:flex;flex-direction:column;animation:ppzSlideUp .3s ease}
-            @keyframes ppzSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+            #ppz-notif-history{position:fixed;top:60px;right:20px;z-index:99999;width:340px;max-height:420px;background:rgba(3,0,20,.95);backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,.15);border-radius:16px;display:none;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;color:#fff;overflow:hidden}
+            #ppz-notif-history.show{display:flex;flex-direction:column;animation:ppzSlideDown .3s ease}
+            @keyframes ppzSlideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
             .ppz-nh-header{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
             .ppz-nh-header h3{font-size:14px;color:#8b5cf6;margin:0;display:flex;align-items:center;gap:6px}
             .ppz-nh-clear{background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;cursor:pointer;font-family:'DearPix',sans-serif}
@@ -66,7 +68,7 @@
             .ppz-nh-item .ni-msg{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
             .ppz-nh-item .ni-time{font-size:10px;color:rgba(255,255,255,.25);margin-top:3px}
             .ppz-nh-empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,.3);font-size:13px}
-            @media(max-width:480px){#ppz-notif-history{right:8px;width:calc(100% - 16px);bottom:130px}}
+            @media(max-width:480px){#ppz-notif-history{right:8px;width:calc(100% - 16px)}}
         `;
         document.head.appendChild(style);
         document.body.appendChild(container);
@@ -77,7 +79,6 @@
         try { return JSON.parse(localStorage.getItem('ppz_notifs') || '[]'); } catch (e) { return []; }
     }
     function saveHistory(list) {
-        // Keep max 50 notifications
         try { localStorage.setItem('ppz_notifs', JSON.stringify(list.slice(0, 50))); } catch (e) { }
     }
     function getUnread() {
@@ -93,7 +94,6 @@
         createContainer();
         const cfg = TYPES[type] || TYPES.info;
 
-        // Save to history
         const entry = { title, msg, type, ts: Date.now() };
         const hist = getHistory();
         hist.unshift(entry);
@@ -101,7 +101,6 @@
         setUnread(getUnread() + 1);
         renderHistory();
 
-        // Create toast element
         const toast = document.createElement('div');
         toast.className = 'ppz-toast';
         toast.style.borderColor = cfg.glow;
@@ -116,11 +115,9 @@
 
         container.appendChild(toast);
 
-        // Animate progress bar
         const bar = toast.querySelector('.ppz-toast-bar');
         requestAnimationFrame(() => { bar.style.transitionDuration = duration + 'ms'; bar.style.width = '0%'; });
 
-        // Auto remove
         const timer = setTimeout(() => removeToast(toast), duration);
         toast.addEventListener('click', e => {
             if (e.target.closest('.ppz-toast-close')) return;
@@ -128,10 +125,8 @@
             removeToast(toast);
         });
 
-        // Play SFX
         if (window.PPZSound) window.PPZSound.play('click');
 
-        // Limit max visible toasts
         while (container.children.length > MAX_TOASTS) {
             container.firstChild.remove();
         }
@@ -142,7 +137,6 @@
         setTimeout(() => toast.remove(), 300);
     }
 
-    // Time ago helper
     function timeAgo(ts) {
         const d = Date.now() - ts;
         if (d < 60000) return 'Vừa xong';
@@ -151,15 +145,18 @@
         return Math.floor(d / 86400000) + ' ngày trước';
     }
 
-    // Bell + history panel
+    // Bell + history panel — only if logged in, renders into #ppz-toolbar
     function createBellUI() {
+        if (!isLoggedIn()) return;
         if (document.getElementById('ppz-notif-bell')) return;
+
+        const toolbar = document.getElementById('ppz-toolbar');
 
         const bell = document.createElement('button');
         bell.id = 'ppz-notif-bell';
+        bell.className = 'ppz-tb-btn';
         bell.title = 'Thông báo';
         bell.innerHTML = `🔔<span id="ppz-notif-badge" class="${getUnread() > 0 ? '' : 'hidden'}">${getUnread()}</span>`;
-        document.body.appendChild(bell);
 
         const panel = document.createElement('div');
         panel.id = 'ppz-notif-history';
@@ -169,9 +166,16 @@
                 <button class="ppz-nh-clear" id="ppz-nh-clear">Xóa tất cả</button>
             </div>
             <div class="ppz-nh-list" id="ppz-nh-list"></div>`;
+
+        if (toolbar) {
+            toolbar.appendChild(bell);
+        } else {
+            document.body.appendChild(bell);
+        }
         document.body.appendChild(panel);
 
-        bell.addEventListener('click', () => {
+        bell.addEventListener('click', (e) => {
+            e.stopPropagation();
             panel.classList.toggle('show');
             if (panel.classList.contains('show')) {
                 setUnread(0);
@@ -229,7 +233,7 @@
         createContainer(); createBellUI();
     }
 
-    // Global API
+    // Global API (always available for programmatic use)
     window.PPZNotify = {
         show: notify,
         info: (title, msg) => notify(title, msg, 'info'),

@@ -2,9 +2,14 @@
  *  PIXEL PLAYZONE — Global Chat System
  *  Include on every page: <script src="/js/chat-system.js"></script>
  *  Requires Socket.IO to be loaded
+ *  Only renders UI when logged in (has user_id cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
+
+    function isLoggedIn() {
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+    }
 
     const MAX_MESSAGES = 100;
     const EMOJIS = ['😀', '😂', '🤣', '😎', '🤩', '🥳', '😱', '🤯', '💀', '👻', '🔥', '💰', '🎰', '🎲', '🃏', '💎', '🚀', '💣', '🏆', '👑', '❤️', '💜', '✅', '❌', '⭐', '🎯', '🎁', '🍀'];
@@ -14,7 +19,6 @@
     let myUsername = 'Khách';
     let myAvatar = '';
 
-    // Try to get user info from cookie
     try {
         const cookies = document.cookie.split(';').reduce((acc, c) => {
             const [k, v] = c.trim().split('=');
@@ -30,7 +34,10 @@
     } catch (e) { }
 
     function initChat() {
+        if (!isLoggedIn()) return;
         if (document.getElementById('ppz-chat-panel')) return;
+
+        const toolbar = document.getElementById('ppz-toolbar');
 
         // Connect socket
         if (typeof io !== 'undefined') {
@@ -59,66 +66,78 @@
             });
         }
 
-        // Create chat UI
-        const panel = document.createElement('div');
-        panel.id = 'ppz-chat-panel';
-        panel.innerHTML = `
-            <style>
-                #ppz-chat-btn{position:fixed;bottom:80px;left:20px;z-index:9990;width:48px;height:48px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-                #ppz-chat-btn:hover{border-color:rgba(139,92,246,.6);transform:scale(1.1)}
-                #ppz-chat-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 4px}
-                #ppz-chat-window{position:fixed;bottom:80px;left:20px;z-index:9991;width:320px;height:420px;background:rgba(3,0,20,.97);backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,.15);border-radius:16px;display:none;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;overflow:hidden}
-                #ppz-chat-window.show{display:flex;animation:ppzChatSlide .3s ease}
-                @keyframes ppzChatSlide{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-                .ppz-chat-header{padding:12px 16px;border-bottom:1px solid rgba(139,92,246,.1);display:flex;justify-content:space-between;align-items:center}
-                .ppz-chat-header h3{font-size:14px;color:#8b5cf6;margin:0;display:flex;align-items:center;gap:6px}
-                .ppz-chat-header .close{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:2px;transition:.3s}
-                .ppz-chat-header .close:hover{color:#fff}
-                .ppz-chat-messages{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.2) transparent}
-                .ppz-chat-msg{padding:6px 10px;border-radius:8px;font-size:12px;line-height:1.4;background:rgba(255,255,255,.03);word-wrap:break-word}
-                .ppz-chat-msg.system{color:rgba(139,92,246,.6);font-style:italic;background:none;padding:4px 10px;font-size:11px}
-                .ppz-chat-msg .name{font-weight:700;color:#06b6d4;font-size:11px;margin-bottom:2px}
-                .ppz-chat-msg .text{color:rgba(255,255,255,.8)}
-                .ppz-chat-msg .time{font-size:9px;color:rgba(255,255,255,.2);float:right;margin-top:2px}
-                .ppz-chat-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid rgba(139,92,246,.1);align-items:center}
-                .ppz-chat-input-row input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(139,92,246,.1);border-radius:20px;padding:8px 14px;color:#fff;font-size:12px;font-family:inherit;outline:none;transition:.3s}
-                .ppz-chat-input-row input:focus{border-color:rgba(139,92,246,.4)}
-                .ppz-chat-input-row button{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:.3s}
-                .ppz-chat-send{background:rgba(139,92,246,.2);color:#8b5cf6}
-                .ppz-chat-send:hover{background:rgba(139,92,246,.4)}
-                .ppz-chat-emoji-btn{background:rgba(255,255,255,.05);color:rgba(255,255,255,.5)}
-                .ppz-chat-emoji-btn:hover{background:rgba(255,255,255,.1)}
-                .ppz-chat-emoji-panel{display:none;padding:8px;border-top:1px solid rgba(139,92,246,.1);flex-wrap:wrap;gap:4px;justify-content:center}
-                .ppz-chat-emoji-panel.show{display:flex}
-                .ppz-chat-emoji-panel span{cursor:pointer;font-size:18px;padding:4px;border-radius:6px;transition:.2s}
-                .ppz-chat-emoji-panel span:hover{background:rgba(255,255,255,.1);transform:scale(1.2)}
-                @media (max-width:480px){
-                    #ppz-chat-window{width:calc(100% - 40px);left:20px;height:50vh;bottom:80px}
-                }
-            </style>
-            <button id="ppz-chat-btn" title="Chat">💬<span id="ppz-chat-badge"></span></button>
-            <div id="ppz-chat-window">
-                <div class="ppz-chat-header">
-                    <h3>💬 Chat chung</h3>
-                    <button class="close" onclick="document.getElementById('ppz-chat-window').classList.remove('show');window._ppzChatOpen=false">&times;</button>
-                </div>
-                <div class="ppz-chat-messages" id="ppz-chat-messages"></div>
-                <div class="ppz-chat-emoji-panel" id="ppz-emoji-panel">
-                    ${EMOJIS.map(e => `<span onclick="document.getElementById('ppz-chat-input').value+='${e}';document.getElementById('ppz-chat-input').focus()">${e}</span>`).join('')}
-                </div>
-                <div class="ppz-chat-input-row">
-                    <button class="ppz-chat-emoji-btn" onclick="document.getElementById('ppz-emoji-panel').classList.toggle('show')">😀</button>
-                    <input type="text" id="ppz-chat-input" placeholder="Nhập tin nhắn..." maxlength="200" autocomplete="off">
-                    <button class="ppz-chat-send" onclick="window._ppzSendChat()">➤</button>
-                </div>
+        // Inject CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            #ppz-chat-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:9px;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;font-weight:700;padding:0 3px}
+            #ppz-chat-window{position:fixed;top:60px;right:20px;z-index:99999;width:320px;height:420px;background:rgba(3,0,20,.97);backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,.15);border-radius:16px;display:none;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;overflow:hidden}
+            #ppz-chat-window.show{display:flex;animation:ppzChatSlide .3s ease}
+            @keyframes ppzChatSlide{from{opacity:0;transform:translateY(-10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+            .ppz-chat-header{padding:12px 16px;border-bottom:1px solid rgba(139,92,246,.1);display:flex;justify-content:space-between;align-items:center}
+            .ppz-chat-header h3{font-size:14px;color:#8b5cf6;margin:0;display:flex;align-items:center;gap:6px}
+            .ppz-chat-header .close{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:2px;transition:.3s}
+            .ppz-chat-header .close:hover{color:#fff}
+            .ppz-chat-messages{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.2) transparent}
+            .ppz-chat-msg{padding:6px 10px;border-radius:8px;font-size:12px;line-height:1.4;background:rgba(255,255,255,.03);word-wrap:break-word}
+            .ppz-chat-msg.system{color:rgba(139,92,246,.6);font-style:italic;background:none;padding:4px 10px;font-size:11px}
+            .ppz-chat-msg .name{font-weight:700;color:#06b6d4;font-size:11px;margin-bottom:2px}
+            .ppz-chat-msg .text{color:rgba(255,255,255,.8)}
+            .ppz-chat-msg .time{font-size:9px;color:rgba(255,255,255,.2);float:right;margin-top:2px}
+            .ppz-chat-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid rgba(139,92,246,.1);align-items:center}
+            .ppz-chat-input-row input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(139,92,246,.1);border-radius:20px;padding:8px 14px;color:#fff;font-size:12px;font-family:inherit;outline:none;transition:.3s}
+            .ppz-chat-input-row input:focus{border-color:rgba(139,92,246,.4)}
+            .ppz-chat-input-row button{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:.3s}
+            .ppz-chat-send{background:rgba(139,92,246,.2);color:#8b5cf6}
+            .ppz-chat-send:hover{background:rgba(139,92,246,.4)}
+            .ppz-chat-emoji-btn{background:rgba(255,255,255,.05);color:rgba(255,255,255,.5)}
+            .ppz-chat-emoji-btn:hover{background:rgba(255,255,255,.1)}
+            .ppz-chat-emoji-panel{display:none;padding:8px;border-top:1px solid rgba(139,92,246,.1);flex-wrap:wrap;gap:4px;justify-content:center}
+            .ppz-chat-emoji-panel.show{display:flex}
+            .ppz-chat-emoji-panel span{cursor:pointer;font-size:18px;padding:4px;border-radius:6px;transition:.2s}
+            .ppz-chat-emoji-panel span:hover{background:rgba(255,255,255,.1);transform:scale(1.2)}
+            @media (max-width:480px){
+                #ppz-chat-window{width:calc(100% - 40px);right:20px;height:50vh}
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create chat button
+        const btn = document.createElement('button');
+        btn.id = 'ppz-chat-btn';
+        btn.className = 'ppz-tb-btn';
+        btn.title = 'Chat';
+        btn.innerHTML = '💬<span id="ppz-chat-badge"></span>';
+
+        // Create chat window
+        const win = document.createElement('div');
+        win.id = 'ppz-chat-window';
+        win.innerHTML = `
+            <div class="ppz-chat-header">
+                <h3>💬 Chat chung</h3>
+                <button class="close" onclick="document.getElementById('ppz-chat-window').classList.remove('show');window._ppzChatOpen=false">&times;</button>
+            </div>
+            <div class="ppz-chat-messages" id="ppz-chat-messages"></div>
+            <div class="ppz-chat-emoji-panel" id="ppz-emoji-panel">
+                ${EMOJIS.map(e => `<span onclick="document.getElementById('ppz-chat-input').value+='${e}';document.getElementById('ppz-chat-input').focus()">${e}</span>`).join('')}
+            </div>
+            <div class="ppz-chat-input-row">
+                <button class="ppz-chat-emoji-btn" onclick="document.getElementById('ppz-emoji-panel').classList.toggle('show')">😀</button>
+                <input type="text" id="ppz-chat-input" placeholder="Nhập tin nhắn..." maxlength="200" autocomplete="off">
+                <button class="ppz-chat-send" onclick="window._ppzSendChat()">➤</button>
             </div>`;
-        document.body.appendChild(panel);
+
+        if (toolbar) {
+            toolbar.appendChild(btn);
+        } else {
+            document.body.appendChild(btn);
+        }
+        document.body.appendChild(win);
 
         // Toggle chat
-        document.getElementById('ppz-chat-btn').addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             chatOpen = !chatOpen;
             window._ppzChatOpen = chatOpen;
-            const win = document.getElementById('ppz-chat-window');
             if (chatOpen) {
                 win.classList.add('show');
                 unreadCount = 0;
@@ -127,6 +146,15 @@
                 const list = document.getElementById('ppz-chat-messages');
                 list.scrollTop = list.scrollHeight;
             } else {
+                win.classList.remove('show');
+            }
+        });
+
+        // Close on outside click
+        document.addEventListener('click', e => {
+            if (chatOpen && !win.contains(e.target) && !btn.contains(e.target)) {
+                chatOpen = false;
+                window._ppzChatOpen = false;
                 win.classList.remove('show');
             }
         });
@@ -144,7 +172,6 @@
 
         socket.emit('chat_send', { text });
         input.value = '';
-        // Close emoji panel
         const ep = document.getElementById('ppz-emoji-panel');
         if (ep) ep.classList.remove('show');
     };
@@ -165,7 +192,6 @@
 
         list.appendChild(el);
 
-        // Limit messages
         while (list.children.length > MAX_MESSAGES) {
             list.removeChild(list.firstChild);
         }

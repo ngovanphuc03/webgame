@@ -25,6 +25,18 @@ function safeGetElement(id) {
     return document.getElementById(id);
 }
 
+// Update total-bet elements preserving the 💵 icon span
+function safeSetTotal(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const spans = el.querySelectorAll('span');
+    if (spans.length >= 2) {
+        spans[1].innerText = formatMoney(value);
+    } else {
+        el.innerText = formatMoney(value);
+    }
+}
+
 // --- SOUND MANAGER WITH LAZY LOADING ---
 const SoundManager = {
     paths: {
@@ -263,8 +275,8 @@ socket.on('tx_timer', (t) => {
 
 socket.on('tx_update', (data) => {
     try {
-        safeSetText('total-tai', formatMoney(data.total_tai));
-        safeSetText('total-xiu', formatMoney(data.total_xiu));
+        safeSetTotal('total-tai', data.total_tai);
+        safeSetTotal('total-xiu', data.total_xiu);
         if (data.msg) showNotif(data.msg);
 
         if (data.phase === 'shaking') {
@@ -417,8 +429,8 @@ socket.on('tx_bet_success', () => {
 });
 socket.on('tx_bet_error', (d) => showNotif(d.msg));
 socket.on('tx_totals', (d) => {
-    document.getElementById('total-tai').innerText = formatMoney(d.total_tai);
-    document.getElementById('total-xiu').innerText = formatMoney(d.total_xiu);
+    safeSetTotal('total-tai', d.total_tai);
+    safeSetTotal('total-xiu', d.total_xiu);
 });
 
 // --- VISUAL EFFECTS HELPERS ---

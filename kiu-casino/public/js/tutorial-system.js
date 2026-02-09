@@ -1,9 +1,14 @@
 /* ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Game Tutorial System
  *  Include on game pages: <script src="/js/tutorial-system.js"></script>
+ *  Only renders button when logged in (has user_id cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
+
+    function isLoggedIn() {
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+    }
 
     const TUTORIALS = {
         mines: {
@@ -69,19 +74,26 @@
     };
 
     function createTutorialBtn(gameKey) {
+        if (!isLoggedIn()) return;
         const tut = TUTORIALS[gameKey];
         if (!tut) return;
 
-        // Create floating button
+        const toolbar = document.getElementById('ppz-toolbar');
+
         const btn = document.createElement('button');
         btn.id = 'ppz-tutorial-btn';
+        btn.className = 'ppz-tb-btn';
         btn.innerHTML = '❓';
         btn.title = 'Hướng dẫn chơi';
-        btn.style.cssText = 'position:fixed;bottom:140px;right:20px;z-index:9989;width:44px;height:44px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5);color:#fff';
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = 'rgba(139,92,246,.6)'; btn.style.transform = 'scale(1.1)'; });
-        btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'rgba(139,92,246,.3)'; btn.style.transform = 'scale(1)'; });
-        btn.addEventListener('click', () => showTutorial(tut));
-        document.body.appendChild(btn);
+        btn.addEventListener('click', (e) => { e.stopPropagation(); showTutorial(tut); });
+
+        if (toolbar) {
+            toolbar.appendChild(btn);
+        } else {
+            // Fallback: append to body (shouldn't happen if toolbar exists)
+            btn.style.cssText = 'position:fixed;bottom:140px;right:20px;z-index:9989;width:44px;height:44px;border-radius:50%;border:2px solid rgba(139,92,246,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5);color:#fff';
+            document.body.appendChild(btn);
+        }
 
         // Auto-show on first visit
         const key = `ppz_tut_${gameKey}`;
@@ -92,7 +104,6 @@
     }
 
     function showTutorial(tut) {
-        // Remove existing
         const old = document.getElementById('ppz-tutorial-modal');
         if (old) old.remove();
 

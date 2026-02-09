@@ -399,6 +399,36 @@
             box-shadow: 0 0 20px rgba(255, 51, 102, 0.15)
         }
 
+        /* Toolbar for utility buttons (sound, notify, chat) — appears in user-panel */
+        #ppz-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 4px;
+        }
+
+        .ppz-tb-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0, 240, 255, .25);
+            background: rgba(0, 240, 255, .08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            transition: .3s;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .ppz-tb-btn:hover {
+            border-color: rgba(0, 240, 255, .5);
+            background: rgba(0, 240, 255, .15);
+            transform: scale(1.1);
+        }
+
         .btn-login {
             padding: 10px 24px;
             border: none;
@@ -1737,6 +1767,7 @@
                     userArea.innerHTML = `
         <div class="user-panel">
           <div class="balance-chip">💰 <span>${Number(u.balance).toLocaleString()} $</span></div>
+          <div id="ppz-toolbar"></div>
           <a href="/profile" class="user-avatar-wrap" title="Xem hồ sơ">
             <img src="${u.avatar || '/images/ui/default-avatar.svg'}" class="avatar" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
           </a>

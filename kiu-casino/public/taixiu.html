@@ -16,7 +16,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
     <title>🎲 Tài Xỉu VIP - Pixel PlayZone</title>
 
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
     <!-- Vietnamese-Optimized Font -->
@@ -63,6 +63,7 @@
             <span class="btn-text">← LOBBY</span>
         </a>
         <div class="header-right">
+            <div id="ppz-toolbar" style="display:flex;align-items:center;gap:6px"></div>
             <button id="music-btn" onclick="toggleMusic()" class="icon-btn">🎵</button>
             <div class="user-money">
                 <span class="money-icon">💰</span>
@@ -89,7 +90,7 @@
         </div>
 
         <div class="center-stage">
-            <div class="timer-container">
+            <div class="timer-container" id="timer-container">
                 <div class="timer-ring"></div>
                 <div class="timer" id="timer">00</div>
             </div>

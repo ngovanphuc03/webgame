@@ -1,9 +1,15 @@
 /* ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Global Sound System
  *  Include on every page: <script src="/js/sound-system.js"></script>
+ *  Only renders UI when logged in (has user_id cookie)
  * ═══════════════════════════════════════════════════════ */
 (function () {
     'use strict';
+
+    // Check login status — no user_id cookie = don't show UI
+    function isLoggedIn() {
+        return document.cookie.split(';').some(c => c.trim().startsWith('user_id='));
+    }
 
     const SOUNDS = {
         click: '/sounds/click.mp3',
@@ -113,19 +119,22 @@
         saveSettings(settings);
     }
 
-    // UI Panel
+    // UI Panel — renders into #ppz-toolbar if available, else fixed button
     function createSoundPanel() {
+        if (!isLoggedIn()) return; // Don't show if not logged in
         if (document.getElementById('ppz-sound-panel')) return;
+
+        const toolbar = document.getElementById('ppz-toolbar');
 
         const panel = document.createElement('div');
         panel.id = 'ppz-sound-panel';
         panel.innerHTML = `
             <style>
-                #ppz-sound-btn{position:fixed;bottom:20px;right:20px;z-index:9990;width:48px;height:48px;border-radius:50%;border:2px solid rgba(0,240,255,.3);background:rgba(3,0,20,.9);backdrop-filter:blur(10px);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;transition:.3s;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-                #ppz-sound-btn:hover{border-color:rgba(0,240,255,.6);transform:scale(1.1);box-shadow:0 0 25px rgba(0,240,255,.2)}
-                #ppz-sound-menu{position:fixed;bottom:80px;right:20px;z-index:9991;background:rgba(3,0,20,.95);backdrop-filter:blur(20px);border:1px solid rgba(0,240,255,.15);border-radius:16px;padding:20px;width:280px;display:none;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;color:#fff}
-                #ppz-sound-menu.show{display:block;animation:ppzSlideUp .3s ease}
-                @keyframes ppzSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+                .ppz-tb-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(0,240,255,.25);background:rgba(0,240,255,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:.3s;position:relative;flex-shrink:0}
+                .ppz-tb-btn:hover{border-color:rgba(0,240,255,.5);background:rgba(0,240,255,.15);transform:scale(1.1)}
+                #ppz-sound-menu{position:fixed;top:60px;right:20px;z-index:99999;background:rgba(3,0,20,.95);backdrop-filter:blur(20px);border:1px solid rgba(0,240,255,.15);border-radius:16px;padding:20px;width:280px;display:none;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;color:#fff}
+                #ppz-sound-menu.show{display:block;animation:ppzSlideDown .3s ease}
+                @keyframes ppzSlideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
                 #ppz-sound-menu h3{font-size:15px;margin:0 0 14px;color:#00f0ff;display:flex;align-items:center;gap:8px}
                 .ppz-snd-row{display:flex;align-items:center;justify-content:space-between;margin:10px 0;font-size:13px;color:rgba(255,255,255,.8)}
                 .ppz-snd-row label{flex:1}
@@ -138,7 +147,7 @@
                 .ppz-snd-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#00f0ff;cursor:pointer;border:none}
                 .ppz-snd-label{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
             </style>
-            <button id="ppz-sound-btn" title="Âm thanh">🔊</button>
+            <button class="ppz-tb-btn" id="ppz-sound-btn" title="Âm thanh">${(settings.sfxOn || settings.bgmOn) ? '🔊' : '🔇'}</button>
             <div id="ppz-sound-menu">
                 <h3>🔊 Âm Thanh</h3>
                 <div class="ppz-snd-row">
@@ -158,10 +167,22 @@
                     <div class="ppz-snd-label">Âm lượng SFX: <span id="ppz-sfx-val">${Math.round(settings.sfxVol * 100)}%</span></div>
                 </div>
             </div>`;
-        document.body.appendChild(panel);
+
+        if (toolbar) {
+            // Insert just the button into toolbar, menu stays in panel appended to body
+            const btn = panel.querySelector('#ppz-sound-btn');
+            const menu = panel.querySelector('#ppz-sound-menu');
+            const style = panel.querySelector('style');
+            toolbar.appendChild(btn);
+            document.body.appendChild(menu);
+            document.head.appendChild(style);
+        } else {
+            document.body.appendChild(panel);
+        }
 
         // Events
-        document.getElementById('ppz-sound-btn').addEventListener('click', () => {
+        document.getElementById('ppz-sound-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
             document.getElementById('ppz-sound-menu').classList.toggle('show');
         });
         document.getElementById('ppz-bgm-toggle').addEventListener('click', () => toggleBGM());
@@ -208,7 +229,7 @@
         createSoundPanel();
     }
 
-    // Expose global API
+    // Expose global API (always available for programmatic use even if UI hidden)
     window.PPZSound = {
         play: playSFX,
         playBGM, pauseBGM, toggleBGM, toggleSFX,
