@@ -439,7 +439,7 @@ async function sendReward(v) {
 
 function updateBalanceDisplay(bal) {
     const el = document.getElementById('userBalance');
-    if (el) el.innerText = bal.toLocaleString();
+    if (el) el.innerText = (Number(bal) || 0).toLocaleString();
 }
 
 async function fetchBalance() {

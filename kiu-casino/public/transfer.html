@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="description" content="Chuyển tiền - Pixel PlayZone">
+    <meta property="og:title" content="💸 Chuyển Tiền - Pixel PlayZone">
+    <meta name="theme-color" content="#030014">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💸</text></svg>">
+    <title>💸 Chuyển Tiền - Pixel PlayZone</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #030014;
+            --surface: rgba(12, 6, 30, .95);
+            --surface2: rgba(20, 10, 45, .88);
+            --border: rgba(139, 92, 246, .15);
+            --accent: #8b5cf6;
+            --accent2: #00f0ff;
+            --neon-green: #00ff9d;
+            --neon-red: #ff3355;
+            --neon-gold: #ffd700;
+            --text: #fff;
+            --muted: rgba(255, 255, 255, .5);
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'DearPix', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: radial-gradient(ellipse at 20% 20%, rgba(0, 255, 157, .06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, .06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, .03) 0%, transparent 60%);
+        }
+
+        /* ═══ NAVBAR ═══ */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 56px;
+            background: rgba(3, 0, 20, .85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .nav-back {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            transition: .3s
+        }
+
+        .nav-back:hover {
+            background: rgba(139, 92, 246, .15)
+        }
+
+        .nav-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent)
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .bal-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255, 215, 0, .08);
+            border: 1px solid rgba(255, 215, 0, .2);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-gold)
+        }
+
+        #ppz-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .ppz-tb-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0, 240, 255, .25);
+            background: rgba(0, 240, 255, .08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            transition: .3s;
+            position: relative
+        }
+
+        .ppz-tb-btn:hover {
+            border-color: rgba(0, 240, 255, .5);
+            background: rgba(0, 240, 255, .15);
+            transform: scale(1.1)
+        }
+
+        /* ═══ MAIN CONTAINER ═══ */
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 30px 20px 80px
+        }
+
+        /* ═══ HEADER ═══ */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px
+        }
+
+        .page-icon {
+            font-size: 56px;
+            display: block;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 157, .3));
+            animation: floatIcon 3s ease-in-out infinite
+        }
+
+        @keyframes floatIcon {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--neon-green), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .page-header p {
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        /* ═══ CARD ═══ */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-green), var(--accent), var(--accent2));
+            opacity: .6
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        /* ═══ FORM ═══ */
+        .form-group {
+            margin-bottom: 18px
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            background: rgba(0, 0, 0, .3);
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: .3s
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 16px rgba(139, 92, 246, .15)
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, .2)
+        }
+
+        .form-input.error {
+            border-color: var(--neon-red) !important;
+            box-shadow: 0 0 12px rgba(255, 51, 85, .15)
+        }
+
+        .form-hint {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .3);
+            margin-top: 6px
+        }
+
+        .form-error {
+            font-size: 11px;
+            color: var(--neon-red);
+            margin-top: 6px;
+            display: none
+        }
+
+        /* ═══ SEARCH RESULTS ═══ */
+        .search-results {
+            margin-top: 8px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: none;
+            max-height: 200px;
+            overflow-y: auto
+        }
+
+        .search-results.show {
+            display: block
+        }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: .2s;
+            background: rgba(0, 0, 0, .2)
+        }
+
+        .search-item:hover {
+            background: rgba(139, 92, 246, .1)
+        }
+
+        .search-item+.search-item {
+            border-top: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .search-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border)
+        }
+
+        .search-item .si-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .search-item .si-id {
+            font-size: 10px;
+            color: var(--muted)
+        }
+
+        /* ═══ RECIPIENT PREVIEW ═══ */
+        .recipient-preview {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: rgba(0, 255, 157, .06);
+            border: 1px solid rgba(0, 255, 157, .15);
+            margin-bottom: 18px
+        }
+
+        .recipient-preview.show {
+            display: flex
+        }
+
+        .recipient-preview img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-green)
+        }
+
+        .rp-info {
+            flex: 1
+        }
+
+        .rp-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--neon-green)
+        }
+
+        .rp-id {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .rp-remove {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, .3);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            transition: .3s
+        }
+
+        .rp-remove:hover {
+            color: var(--neon-red)
+        }
+
+        /* ═══ AMOUNT PRESETS ═══ */
+        .amount-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px
+        }
+
+        .preset-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, .2);
+            color: var(--neon-gold);
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: .3s;
+            font-weight: 700
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 215, 0, .1);
+            border-color: rgba(255, 215, 0, .3)
+        }
+
+        /* ═══ SUBMIT BUTTON ═══ */
+        .btn-transfer {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00ff9d, #00c9ff);
+            color: #030014;
+            font-size: 15px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: .3s;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 6px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .btn-transfer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .25), transparent);
+            animation: btnShine 3s ease infinite
+        }
+
+        @keyframes btnShine {
+            0% {
+                left: -100%
+            }
+
+            100% {
+                left: 200%
+            }
+        }
+
+        .btn-transfer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 255, 157, .25)
+        }
+
+        .btn-transfer:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none !important
+        }
+
+        /* ═══ SUCCESS MODAL ═══ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, .7);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center
+        }
+
+        .modal-overlay.show {
+            display: flex
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid rgba(0, 255, 157, .2);
+            border-radius: 20px;
+            padding: 36px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: modalPop .4s cubic-bezier(.34, 1.56, .64, 1)
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(.7);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        .modal-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 157, .4))
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--neon-green);
+            margin-bottom: 10px
+        }
+
+        .modal-msg {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            line-height: 1.6
+        }
+
+        .modal-amount {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--neon-gold);
+            margin: 12px 0
+        }
+
+        .modal-close {
+            margin-top: 20px;
+            padding: 10px 30px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: .3s
+        }
+
+        .modal-close:hover {
+            background: rgba(139, 92, 246, .15)
+        }
+
+        /* ═══ HISTORY ═══ */
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .history-item:last-child {
+            border-bottom: none
+        }
+
+        .hi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0
+        }
+
+        .hi-icon.send {
+            background: rgba(255, 51, 85, .1);
+            border: 1px solid rgba(255, 51, 85, .2)
+        }
+
+        .hi-icon.receive {
+            background: rgba(0, 255, 157, .1);
+            border: 1px solid rgba(0, 255, 157, .2)
+        }
+
+        .hi-body {
+            flex: 1;
+            min-width: 0
+        }
+
+        .hi-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .hi-note {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .hi-right {
+            text-align: right;
+            flex-shrink: 0
+        }
+
+        .hi-amount {
+            font-size: 14px;
+            font-weight: 700
+        }
+
+        .hi-amount.out {
+            color: var(--neon-red)
+        }
+
+        .hi-amount.in {
+            color: var(--neon-green)
+        }
+
+        .hi-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .25);
+            margin-top: 3px
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 30px;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        /* ═══ LOADING ═══ */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, .2);
+            border-top-color: var(--neon-green);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        @media(max-width: 480px) {
+            .container {
+                padding: 20px 14px 80px
+            }
+
+            .card {
+                padding: 18px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+
+    <!-- NAV -->
+    <nav class="nav">
+        <a href="/" class="nav-back">← Lobby</a>
+        <span class="nav-title">💸 CHUYỂN TIỀN</span>
+        <div class="nav-right">
+            <div class="bal-pill">💰 <span id="my-balance">...</span></div>
+            <div id="ppz-toolbar"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="page-header">
+            <span class="page-icon">💸</span>
+            <h1>Chuyển Tiền</h1>
+            <p>Gửi tiền cho bạn bè nhanh chóng & an toàn</p>
+        </div>
+
+        <!-- TRANSFER FORM -->
+        <div class="card">
+            <div class="card-title">📤 Gửi Tiền</div>
+
+            <!-- Search recipient -->
+            <div class="form-group">
+                <label class="form-label">Người nhận</label>
+                <input type="text" class="form-input" id="search-input" placeholder="🔍 Tìm theo tên hoặc ID..."
+                    autocomplete="off">
+                <div class="form-hint">Nhập tên người chơi hoặc Discord ID</div>
+                <div class="search-results" id="search-results"></div>
+            </div>
+
+            <!-- Selected recipient preview -->
+            <div class="recipient-preview" id="recipient-preview">
+                <img src="" id="rp-avatar" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg'">
+                <div class="rp-info">
+                    <div class="rp-name" id="rp-name"></div>
+                    <div class="rp-id" id="rp-id"></div>
+                </div>
+                <button class="rp-remove" id="rp-remove" title="Xóa">✕</button>
+            </div>
+
+            <!-- Amount -->
+            <div class="form-group">
+                <label class="form-label">Số tiền</label>
+                <input type="number" class="form-input" id="amount-input" placeholder="Nhập số tiền..." min="1000"
+                    max="1000000" step="100">
+                <div class="form-hint">Tối thiểu 1,000$ — Tối đa 1,000,000$</div>
+                <div class="amount-presets">
+                    <button class="preset-btn" onclick="setAmount(1000)">1K</button>
+                    <button class="preset-btn" onclick="setAmount(5000)">5K</button>
+                    <button class="preset-btn" onclick="setAmount(10000)">10K</button>
+                    <button class="preset-btn" onclick="setAmount(50000)">50K</button>
+                    <button class="preset-btn" onclick="setAmount(100000)">100K</button>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="form-group">
+                <label class="form-label">Lời nhắn (tùy chọn)</label>
+                <input type="text" class="form-input" id="note-input" placeholder="Ghi chú..." maxlength="100">
+            </div>
+
+            <div class="form-error" id="form-error"></div>
+
+            <button class="btn-transfer" id="btn-submit" onclick="submitTransfer()">
+                💸 CHUYỂN TIỀN
+            </button>
+        </div>
+
+        <!-- TRANSFER HISTORY -->
+        <div class="card">
+            <div class="card-title">📜 Lịch Sử Chuyển Tiền</div>
+            <div id="history-list">
+                <div class="empty-history">⏳ Đang tải...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal-overlay" id="success-modal">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <div class="modal-title">Chuyển Tiền Thành Công!</div>
+            <div class="modal-msg" id="modal-msg"></div>
+            <div class="modal-amount" id="modal-amount"></div>
+            <button class="modal-close" onclick="closeModal()">Đóng</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/sound-system.js"></script>
+    <script src="/js/notify-system.js"></script>
+    <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
+    <script>
+        let myBalance = 0;
+        let selectedRecipient = null;
+        let searchTimeout = null;
+
+        // ═══ INIT ═══
+        async function init() {
+            try {
+                const res = await fetch('/api/me');
+                if (!res.ok) { location.href = '/'; return; }
+                const u = await res.json();
+                myBalance = Number(u.balance) || 0;
+                document.getElementById('my-balance').textContent = myBalance.toLocaleString() + ' $';
+            } catch (e) {
+                location.href = '/';
+            }
+            loadHistory();
+        }
+
+        // ═══ USER SEARCH ═══
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            const q = searchInput.value.trim();
+            if (q.length < 2) { searchResults.classList.remove('show'); return; }
+            searchTimeout = setTimeout(() => searchUsers(q), 300);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if (searchResults.children.length > 0 && searchInput.value.trim().length >= 2)
+                searchResults.classList.add('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchResults.contains(e.target) && e.target !== searchInput)
+                searchResults.classList.remove('show');
+        });
+
+        async function searchUsers(q) {
+            try {
+                const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                if (!data.users || data.users.length === 0) {
+                    searchResults.innerHTML = '<div style="padding:14px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Không tìm thấy người chơi</div>';
+                    searchResults.classList.add('show');
+                    return;
+                }
+                searchResults.innerHTML = data.users.map(u => `
+                    <div class="search-item" onclick="selectRecipient('${u.user_id}','${escapeHtml(u.username)}','${u.avatar}')">
+                        <img src="${u.avatar}" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg'">
+                        <div>
+                            <div class="si-name">${escapeHtml(u.username)}</div>
+                            <div class="si-id">ID: ${u.user_id}</div>
+                        </div>
+                    </div>
+                `).join('');
+                searchResults.classList.add('show');
+            } catch (e) { /* ignore */ }
+        }
+
+        function selectRecipient(id, name, avatar) {
+            selectedRecipient = { id, name, avatar };
+            document.getElementById('rp-avatar').src = avatar;
+            document.getElementById('rp-name').textContent = name;
+            document.getElementById('rp-id').textContent = 'ID: ' + id;
+            document.getElementById('recipient-preview').classList.add('show');
+            searchResults.classList.remove('show');
+            searchInput.value = '';
+            searchInput.style.display = 'none';
+            if (window.PPZSound) window.PPZSound.play('click');
+        }
+
+        document.getElementById('rp-remove').addEventListener('click', () => {
+            selectedRecipient = null;
+            document.getElementById('recipient-preview').classList.remove('show');
+            searchInput.style.display = '';
+            searchInput.focus();
+        });
+
+        function setAmount(val) {
+            document.getElementById('amount-input').value = val;
+            if (window.PPZSound) window.PPZSound.play('click');
+        }
+
+        // ═══ SUBMIT ═══
+        async function submitTransfer() {
+            const btn = document.getElementById('btn-submit');
+            const errEl = document.getElementById('form-error');
+            errEl.style.display = 'none';
+
+            if (!selectedRecipient) {
+                showError('Vui lòng chọn người nhận!');
+                return;
+            }
+
+            const amount = parseInt(document.getElementById('amount-input').value);
+            if (!amount || amount < 1000 || amount > 1000000) {
+                showError('Số tiền phải từ 1,000 đến 1,000,000$');
+                return;
+            }
+            if (amount > myBalance) {
+                showError('Không đủ tiền! Số dư: ' + myBalance.toLocaleString() + '$');
+                return;
+            }
+
+            const note = document.getElementById('note-input').value.trim().slice(0, 100);
+
+            // Confirm
+            if (!confirm(`Chuyển ${amount.toLocaleString()}$ cho ${selectedRecipient.name}?`)) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Đang chuyển...';
+
+            try {
+                const res = await fetch('/api/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipientId: selectedRecipient.id,
+                        amount,
+                        note
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showError(data.error || 'Lỗi chuyển tiền');
+                    btn.disabled = false;
+                    btn.innerHTML = '💸 CHUYỂN TIỀN';
+                    if (window.PPZSound) window.PPZSound.play('lose');
+                    return;
+                }
+
+                // Success!
+                myBalance = Number(data.newBalance) || 0;
+                document.getElementById('my-balance').textContent = myBalance.toLocaleString() + ' $';
+
+                // Show success modal
+                document.getElementById('modal-msg').textContent =
+                    `Đã chuyển thành công cho ${data.recipientName}`;
+                document.getElementById('modal-amount').textContent =
+                    amount.toLocaleString() + ' $';
+                document.getElementById('success-modal').classList.add('show');
+
+                if (window.PPZSound) window.PPZSound.play('win');
+
+                // Reset form
+                selectedRecipient = null;
+                document.getElementById('recipient-preview').classList.remove('show');
+                searchInput.style.display = '';
+                document.getElementById('amount-input').value = '';
+                document.getElementById('note-input').value = '';
+                btn.disabled = false;
+                btn.innerHTML = '💸 CHUYỂN TIỀN';
+
+                // Reload history
+                loadHistory();
+
+            } catch (e) {
+                showError('Lỗi kết nối server');
+                btn.disabled = false;
+                btn.innerHTML = '💸 CHUYỂN TIỀN';
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('form-error');
+            el.textContent = '❌ ' + msg;
+            el.style.display = 'block';
+            if (window.PPZSound) window.PPZSound.play('lose');
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.remove('show');
+        }
+
+        // ═══ HISTORY ═══
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/transfer/history');
+                const data = await res.json();
+                const list = document.getElementById('history-list');
+
+                if (!data.transactions || data.transactions.length === 0) {
+                    list.innerHTML = '<div class="empty-history">📭 Chưa có giao dịch chuyển tiền</div>';
+                    return;
+                }
+
+                list.innerHTML = data.transactions.map(tx => {
+                    const isSend = tx.type === 'transfer_send';
+                    const details = tx.details || {};
+                    const name = isSend ? (details.toName || 'User') : (details.fromName || 'User');
+                    const icon = isSend ? '📤' : '📥';
+                    const prefix = isSend ? 'Gửi cho' : 'Nhận từ';
+                    const amountClass = isSend ? 'out' : 'in';
+                    const amountSign = isSend ? '-' : '+';
+                    const note = details.note || '';
+                    const time = new Date(tx.time);
+                    const timeStr = time.toLocaleDateString('vi-VN') + ' ' + time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+                    return `<div class="history-item">
+                        <div class="hi-icon ${isSend ? 'send' : 'receive'}">${icon}</div>
+                        <div class="hi-body">
+                            <div class="hi-name">${prefix} ${escapeHtml(name)}</div>
+                            ${note ? `<div class="hi-note">"${escapeHtml(note)}"</div>` : ''}
+                        </div>
+                        <div class="hi-right">
+                            <div class="hi-amount ${amountClass}">${amountSign}${Math.abs(tx.amount).toLocaleString()}$</div>
+                            <div class="hi-time">${timeStr}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                document.getElementById('history-list').innerHTML =
+                    '<div class="empty-history">❌ Lỗi tải lịch sử</div>';
+            }
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

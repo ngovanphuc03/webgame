@@ -52,7 +52,7 @@
             /* Notification bell — toolbar style */
             #ppz-notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#ff3355;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'DearPix',sans-serif}
             #ppz-notif-badge.hidden{display:none}
-            #ppz-notif-history{position:fixed;top:60px;right:20px;z-index:99999;width:340px;max-height:420px;background:rgba(3,0,20,.95);backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,.15);border-radius:16px;display:none;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;color:#fff;overflow:hidden}
+            #ppz-notif-history{position:fixed;top:58px;right:20px;z-index:99999;width:340px;max-height:420px;background:rgba(3,0,20,.95);backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,.15);border-radius:16px;display:none;box-shadow:0 10px 40px rgba(0,0,0,.6);font-family:'DearPix',sans-serif;color:#fff;overflow:hidden}
             #ppz-notif-history.show{display:flex;flex-direction:column;animation:ppzSlideDown .3s ease}
             @keyframes ppzSlideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
             .ppz-nh-header{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
@@ -237,6 +237,59 @@
         document.addEventListener('DOMContentLoaded', () => { createContainer(); createBellUI(); });
     } else {
         createContainer(); createBellUI();
+    }
+
+    // ═══ TIER 2: Real-time server notifications via Socket.IO ═══
+    function initServerNotifications() {
+        if (!isLoggedIn()) return;
+        // Wait for socket.io to be available
+        function tryConnect() {
+            if (typeof io === 'undefined') {
+                setTimeout(tryConnect, 200);
+                return;
+            }
+            // Use global socket if chat-system already connected, else create one
+            const socket = window._ppzSocket || io();
+            window._ppzSocket = socket;
+
+            // Server push notifications (individual)
+            socket.on('server_notification', (data) => {
+                const type = data.type || 'info';
+                const title = data.title || '🔔 Thông báo';
+                const msg = data.msg || '';
+                notify(title, msg, type, 5000);
+                // Play appropriate sound
+                if (window.PPZSound) {
+                    if (type === 'jackpot' || type === 'reward') window.PPZSound.play('win');
+                    else if (type === 'level') window.PPZSound.play('open');
+                    else window.PPZSound.play('click');
+                }
+            });
+
+            // Balance update notification (supports both 'balance' and 'new_balance' fields)
+            socket.on('balance_update', (data) => {
+                const bal = data.balance !== undefined ? Number(data.balance) : (data.new_balance !== undefined ? Number(data.new_balance) : null);
+                if (bal === null || isNaN(bal)) return;
+                const balEls = document.querySelectorAll('.balance-chip span, #balance-display, .bal-value');
+                balEls.forEach(el => {
+                    el.textContent = bal.toLocaleString() + ' $';
+                });
+            });
+
+            // Online count
+            socket.on('online_count', (data) => {
+                const el = document.getElementById('ppz-online-count');
+                if (el) el.textContent = data.count || 0;
+            });
+        }
+        tryConnect();
+    }
+
+    // Init server notifications
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initServerNotifications);
+    } else {
+        initServerNotifications();
     }
 
     // Global API (always available for programmatic use)

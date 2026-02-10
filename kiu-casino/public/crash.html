@@ -18,6 +18,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <title>🚀 CRASH - Pixel PlayZone</title>
     <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
     <script src="/socket.io/socket.io.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
@@ -34,7 +35,7 @@
             --surface: rgba(12, 6, 30, .97);
             --surface2: rgba(20, 10, 45, .92);
             --border: rgba(100, 60, 255, .2);
-            --accent: #7c3aed;
+            --accent: #8b5cf6;
             --accent2: #06b6d4;
             --neon-cyan: #00f0ff;
             --neon-green: #00ff9d;
@@ -116,19 +117,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 18px;
-            background: rgba(5, 0, 18, .94);
-            border-bottom: 2px solid var(--border);
+            padding: 0 18px;
+            height: 56px;
+            background: rgba(3, 0, 20, .85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            position: sticky;
+            top: 0;
             z-index: 50;
-            contain: layout style;
         }
 
         .back {
-            background: rgba(255, 255, 255, .06);
-            border: 1.5px solid rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
             color: #fff;
-            padding: 8px 18px;
-            border-radius: 24px;
+            padding: 8px 16px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
             text-decoration: none;
@@ -139,22 +143,25 @@
         }
 
         .back:hover {
-            background: rgba(255, 255, 255, .12);
-            border-color: rgba(255, 255, 255, .3)
+            background: rgba(139, 92, 246, .15);
+            border-color: rgba(139, 92, 246, .3)
         }
 
         .bal {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            border: 2px solid #ffe55c;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, .1), rgba(255, 215, 0, .03));
+            border: 1px solid rgba(255, 215, 0, .25);
             border-radius: 50px;
-            padding: 8px 20px;
-            font-weight: 900;
-            color: #000;
-            font-size: 14px;
+            padding: 7px 18px;
+            font-weight: 700;
+            color: #ffd700;
+            font-size: 13px;
             font-family: var(--font-body);
-            box-shadow: 0 4px 16px rgba(255, 215, 0, .25);
             position: relative;
             overflow: hidden;
+            white-space: nowrap;
         }
 
         .bal::after {
@@ -1173,7 +1180,7 @@
                     const r = await fetch('/api/me');
                     if (!r.ok) { window.location.href = '/'; return; }
                     const d = await r.json();
-                    balance = Number(d.balance); animBal(balance);
+                    balance = Number(d.balance) || 0; animBal(balance);
                 } catch (e) { console.error(e); }
             }
             let balAnimId = 0;
@@ -1491,12 +1498,12 @@
             });
 
             socket.on('crash_bet_ok', d => {
-                balance = d.newBalance; animBal(balance);
-                playerBet = d.bet;
+                balance = Number(d.newBalance) || 0; animBal(balance);
+                playerBet = Number(d.bet) || 0;
                 play('bet'); vib(40);
-                infoBet.textContent = d.bet.toLocaleString() + ' $';
+                infoBet.textContent = playerBet.toLocaleString() + ' $';
                 infoMult.textContent = '1.00x';
-                infoWin.textContent = d.bet.toLocaleString() + ' $';
+                infoWin.textContent = playerBet.toLocaleString() + ' $';
                 setBetControlsEnabled(false);
                 actionRow.innerHTML = '<button class="abtn btn-bet" disabled>✅ Đã đặt cược</button>';
                 msg('✅ Đã đặt ' + d.bet.toLocaleString() + ' $ — Đợi tên lửa!', '');
@@ -1511,16 +1518,17 @@
 
             socket.on('crash_cashout_ok', d => {
                 cashedOut = true;
-                cashoutMult = d.mult;
-                balance = d.newBalance; animBal(balance);
+                cashoutMult = Number(d.mult) || 0;
+                balance = Number(d.newBalance) || 0; animBal(balance);
                 play('cashout');
                 if (cashoutMult >= 3) setTimeout(() => play('win'), 200);
                 vib([50, 30, 50, 30, 100]);
 
+                const winAmt = Number(d.winAmount) || 0;
                 infoMult.textContent = cashoutMult.toFixed(2) + 'x';
-                infoWin.textContent = '+' + d.winAmount.toLocaleString() + ' $';
-                msg(`💰 Rút +${d.winAmount.toLocaleString()} $ (x${cashoutMult.toFixed(2)})`, 'win');
-                addHist(true, playerBet, cashoutMult, d.winAmount);
+                infoWin.textContent = '+' + winAmt.toLocaleString() + ' $';
+                msg(`💰 Rút +${winAmt.toLocaleString()} $ (x${cashoutMult.toFixed(2)})`, 'win');
+                addHist(true, playerBet, cashoutMult, winAmt);
 
                 const fl = document.createElement('div');
                 fl.style.cssText = 'position:fixed;inset:0;background:rgba(0,255,157,.12);z-index:999;pointer-events:none;animation:flashOut .4s ease forwards';
@@ -1537,7 +1545,7 @@
                 if (d.username) {
                     const el = document.createElement('div');
                     el.className = 'rmsg';
-                    el.textContent = `${d.username} rút x${d.mult.toFixed(2)} (+${d.winAmount.toLocaleString()} $)`;
+                    el.textContent = `${d.username} rút x${(Number(d.mult) || 0).toFixed(2)} (+${(Number(d.winAmount) || 0).toLocaleString()} $)`;
                     el.style.cssText = 'position:fixed;top:120px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(0,255,157,.7);z-index:100;animation:ppzSlideUp .5s ease forwards';
                     document.body.appendChild(el);
                     setTimeout(() => el.remove(), 2000);
@@ -1730,6 +1738,7 @@
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
     <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
     <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>

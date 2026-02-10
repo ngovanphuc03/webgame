@@ -17,6 +17,7 @@
     <title>👤 Profile - Pixel PlayZone</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
     <style>
         * {
             box-sizing: border-box;
@@ -71,9 +72,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 24px;
+            padding: 0 20px;
+            height: 56px;
             background: rgba(3, 0, 20, .85);
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px) saturate(1.5);
             border-bottom: 1px solid rgba(255, 255, 255, .04)
         }
 
@@ -835,12 +837,14 @@
             'use strict';
 
             const TX_ICONS = {
-                mines_bet: '💣', mines_win: '💎', mines_lose: '💥',
+                mines_bet: '💣', mines_win: '💎', mines_lose: '💥', mines_expire_refund: '↩️',
                 crash_bet: '🚀', crash_win: '💰', crash_bust: '💥', crash_cashout: '✅',
                 poker_win: '🃏', poker_lose: '🃏', poker_bet: '🃏',
                 taixiu_bet: '🎲', taixiu_win: '🎲', taixiu_lose: '🎲',
                 flappy_reward: '🐦', daily_reward: '🎁',
-                daily_spin: '🎁', crash_cancel: '↩️'
+                daily_spin: '🎁', daily_claim: '🎁', crash_cancel: '↩️',
+                transfer_send: '📤', transfer_receive: '📥',
+                signup_bonus: '🎉', quest_reward: '🎯'
             };
             const GAME_NAMES = {
                 mines: 'Mines', crash: 'Crash', poker: 'Poker',
@@ -851,7 +855,7 @@
                 taixiu: '🎲', flappy: '🐦', daily: '🎁'
             };
 
-            function fmt(n) { return Number(n).toLocaleString('vi-VN'); }
+            function fmt(n) { const v = Number(n); return isNaN(v) ? '0' : v.toLocaleString('vi-VN'); }
             function timeAgo(ts) {
                 const d = Date.now() - new Date(ts).getTime();
                 if (d < 60000) return 'Vừa xong';
@@ -1124,7 +1128,9 @@
                     crash_cashout: 'Cashout Crash', crash_cancel: 'Hủy cược Crash',
                     poker_win: 'Thắng Poker', poker_lose: 'Thua Poker', poker_bet: 'Cược Poker',
                     taixiu_bet: 'Cược Tài Xỉu', taixiu_win: 'Thắng Tài Xỉu', taixiu_lose: 'Thua Tài Xỉu',
-                    flappy_reward: 'Thưởng Flappy', daily_reward: 'Thưởng ngày', daily_spin: 'Quay thưởng'
+                    flappy_reward: 'Thưởng Flappy', daily_reward: 'Thưởng ngày', daily_spin: 'Quay thưởng',
+                    transfer_send: 'Chuyển tiền đi', transfer_receive: 'Nhận chuyển tiền',
+                    daily_claim: 'Phần thưởng ngày', signup_bonus: 'Bonus đăng ký'
                 };
                 return map[type] || type;
             }
@@ -1136,6 +1142,7 @@
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
 </body>
 

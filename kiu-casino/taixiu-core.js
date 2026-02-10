@@ -186,6 +186,12 @@ class TaiXiuGame {
                 conn.release();
                 this.io.to(`user_${userId}`).emit('tx_win_notify', { amount: profit });
                 this.updateBalance(userId);
+                // Tier 2: Broadcast win to live feed
+                if (this.onWin && profit >= 2000) {
+                    const [uRows] = await this.db.execute('SELECT username FROM wallet WHERE guild_id=? AND user_id=?', [this.guildId, userId]);
+                    const uname = uRows.length ? (uRows[0].username || 'User') : 'User';
+                    this.onWin(userId, uname, 'taixiu', profit, { side: winnerSide, betAmount: amount });
+                }
             } catch (err) {
                 await conn.rollback().catch(() => { });
                 conn.release();
@@ -253,7 +259,7 @@ class TaiXiuGame {
     async updateBalance(userId) {
         try {
             const [rows] = await this.db.execute('SELECT balance FROM wallet WHERE guild_id = ? AND user_id = ?', [this.guildId, userId]);
-            if (rows.length > 0) this.io.to(`user_${userId}`).emit('balance_update', { new_balance: rows[0].balance });
+            if (rows.length > 0) this.io.to(`user_${userId}`).emit('balance_update', { balance: Number(rows[0].balance), new_balance: Number(rows[0].balance) });
         } catch (err) {
             console.error('[updateBalance Error]', err);
         }

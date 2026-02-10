@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
@@ -112,8 +113,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 24px;
-            height: 58px;
-            background: rgba(3, 0, 20, .7);
+            height: 56px;
+            background: rgba(3, 0, 20, .85);
             backdrop-filter: blur(20px) saturate(1.5);
             border-bottom: 1px solid rgba(255, 255, 255, .04);
             position: sticky;
@@ -125,38 +126,36 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255, 255, 255, .04);
-            border: 2px solid rgba(255, 255, 255, .08);
-            color: rgba(255, 255, 255, .7);
-            padding: 7px 16px;
-            border-radius: 3px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 10px;
             cursor: pointer;
             font-family: var(--font-pixel-en);
             font-size: 13px;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: .5px;
             text-decoration: none;
             transition: .3s;
-            image-rendering: pixelated;
-            box-shadow: 2px 2px 0 rgba(0, 0, 0, .3);
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, .08);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(139, 92, 246, .15)
+            background: rgba(139, 92, 246, .15);
+            border-color: rgba(139, 92, 246, .3);
+            color: #fff
         }
 
         .balance-pill {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: linear-gradient(135deg, rgba(255, 215, 0, .08), rgba(255, 215, 0, .02));
-            border: 1px solid rgba(255, 215, 0, .2);
+            background: linear-gradient(135deg, rgba(255, 215, 0, .1), rgba(255, 215, 0, .03));
+            border: 1px solid rgba(255, 215, 0, .25);
             border-radius: 50px;
-            padding: 6px 16px;
+            padding: 7px 18px;
             font-family: var(--font-display);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
             color: var(--neon-gold);
             position: relative;
@@ -1334,13 +1333,13 @@
                     document.getElementById('myRankAvatar').src = meData.avatar || '/images/ui/default-avatar.svg';
                     // Balance display varies by tab
                     if (tab === 'balance') {
-                        document.getElementById('myRankBalance').textContent = Number(meData.balance).toLocaleString() + ' $';
+                        document.getElementById('myRankBalance').textContent = Number(meData.balance || 0).toLocaleString() + ' $';
                     } else if (tab === 'level') {
                         const myEntry = list.find(l => l.user_id === lb.my_user_id);
-                        document.getElementById('myRankBalance').textContent = myEntry ? 'Lv.' + myEntry.level : '';
+                        document.getElementById('myRankBalance').textContent = myEntry ? 'Lv.' + (myEntry.level || 0) : '';
                     } else if (tab === 'xp') {
                         const myEntry = list.find(l => l.user_id === lb.my_user_id);
-                        document.getElementById('myRankBalance').textContent = myEntry ? myEntry.totalXp.toLocaleString() + ' XP' : '';
+                        document.getElementById('myRankBalance').textContent = myEntry ? (Number(myEntry.totalXp) || 0).toLocaleString() + ' XP' : '';
                     }
                 } else {
                     document.getElementById('myRankCard').style.display = 'none';
@@ -1356,9 +1355,9 @@
         }
 
         function getValueDisplay(user, tab) {
-            if (tab === 'balance') return Number(user.balance).toLocaleString() + ' $';
-            if (tab === 'level') return 'Lv.' + user.level;
-            if (tab === 'xp') return user.totalXp.toLocaleString() + ' XP';
+            if (tab === 'balance') return Number(user.balance || 0).toLocaleString() + ' $';
+            if (tab === 'level') return 'Lv.' + (user.level || 0);
+            if (tab === 'xp') return (Number(user.totalXp) || 0).toLocaleString() + ' XP';
             return '';
         }
 
@@ -1428,6 +1427,7 @@
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
     <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
     <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>

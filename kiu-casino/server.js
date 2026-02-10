@@ -467,7 +467,7 @@ app.get('/api/me', requireAuth, async (req, res) => {
         // Always use avatar proxy to bypass CSP/referrer/CORS issues
         info.avatar = `/api/avatar/${uid}`;
 
-        res.json({ ...info, balance: r.length ? r[0].balance : 0 });
+        res.json({ ...info, balance: r.length ? Number(r[0].balance) || 0 : 0 });
     } catch (e) { res.status(500).json({ error: 'DB Error' }); }
 });
 
@@ -958,6 +958,16 @@ app.post('/api/mines/cashout', requireAuth, async (req, res) => {
         conn.release();
 
         console.log(`[Mines] User ${uid} CASHED OUT! Bet=${game.bet}, Win=${winAmount}, Profit=${profit > 0 ? '+' : ''}${profit}`);
+
+        // Tier 2: Broadcast significant wins to live feed
+        if (profit > 0) {
+            try {
+                const [uRow] = await dbPool.execute('SELECT username FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+                const uname = uRow.length ? uRow[0].username : 'User';
+                broadcastWin(uid, uname, 'mines', winAmount, { multiplier, mineCount: game.mineCount });
+            } catch (e) { /* ignore */ }
+        }
+
         res.json({ success: true, multiplier, winAmount, profit, bet: game.bet, mines: game.mines, newBalance: balAfter });
     } catch (e) {
         await conn.rollback().catch(() => { });
@@ -1148,6 +1158,13 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
 
         console.log(`[Daily] User ${uid} claimed daily reward: ${totalReward} (wheel: ${segment.value}, streak bonus: ${streakBonus}, streak: ${streak})`);
 
+        // Tier 2: Broadcast daily win to live feed
+        if (totalReward >= 2000) {
+            const [uRows] = await dbPool.execute('SELECT username FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]);
+            const uname = uRows.length ? (uRows[0].username || 'User') : 'User';
+            broadcastWin(uid, uname, 'daily', totalReward, { streak, wheelValue: segment.value });
+        }
+
         res.json({
             success: true,
             reward: totalReward,
@@ -1162,6 +1179,225 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
         await conn.rollback().catch(() => { });
         conn.release();
         console.error('Daily Claim Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// ============================================================
+// TIER 2: LIVE ACTIVITY FEED (in-memory, broadcast via Socket.IO)
+// ============================================================
+const liveFeed = []; // Last 50 notable events
+const MAX_FEED = 50;
+const onlineUsers = new Map(); // socketId -> { userId, username, avatar, page, joinedAt }
+
+function pushLiveFeed(entry) {
+    entry.ts = Date.now();
+    entry.id = crypto.randomBytes(4).toString('hex');
+    liveFeed.unshift(entry);
+    if (liveFeed.length > MAX_FEED) liveFeed.pop();
+    io.emit('live_feed', entry);
+}
+
+// Helper: broadcast a notable win to the live feed
+function broadcastWin(userId, username, game, amount, details = {}) {
+    if (amount < 2000) return; // Only broadcast significant wins
+    const gameNames = { mines: '💣 Mines', crash: '🚀 Crash', poker: '🃏 Poker', taixiu: '🎲 Tài Xỉu', flappy: '🐦 Flappy', daily: '🎁 Daily' };
+    const gameName = gameNames[game] || game;
+    pushLiveFeed({
+        type: 'big_win', userId, username, game: gameName, amount, details,
+        msg: `${username} vừa thắng ${Number(amount).toLocaleString()}$ tại ${gameName}!`
+    });
+    // Also send real-time notification to the winner
+    io.to(`user_${userId}`).emit('server_notification', {
+        type: 'jackpot', title: '🎉 Chiến Thắng!',
+        msg: `Bạn đã thắng ${Number(amount).toLocaleString()}$ tại ${gameName}!`
+    });
+}
+
+// Helper: broadcast achievement unlock
+function broadcastAchievement(userId, username, badge) {
+    pushLiveFeed({
+        type: 'achievement', userId, username,
+        badge: badge.icon + ' ' + badge.name,
+        msg: `${username} đã mở khóa huy chương "${badge.name}"!`
+    });
+    io.to(`user_${userId}`).emit('server_notification', {
+        type: 'reward', title: '🏆 Achievement Unlocked!',
+        msg: `${badge.icon} ${badge.name} — ${badge.desc || ''}`
+    });
+}
+
+// Helper: broadcast level up
+function broadcastLevelUp(userId, username, newLevel, rankRole) {
+    pushLiveFeed({
+        type: 'level_up', userId, username, level: newLevel,
+        rank: rankRole.icon + ' ' + rankRole.name,
+        msg: `${username} đã lên Level ${newLevel}! ${rankRole.icon} ${rankRole.name}`
+    });
+    io.to(`user_${userId}`).emit('server_notification', {
+        type: 'level', title: '⭐ Level Up!',
+        msg: `Bạn đã lên Level ${newLevel}! Rank: ${rankRole.icon} ${rankRole.name}`
+    });
+}
+
+// Live Feed API — get recent activity
+app.get('/api/live-feed', requireAuth, (req, res) => {
+    res.json({ feed: liveFeed.slice(0, 30) });
+});
+
+// Online users API
+app.get('/api/online', requireAuth, (req, res) => {
+    const users = [];
+    const seen = new Set();
+    for (const [, u] of onlineUsers) {
+        if (u.userId && !seen.has(u.userId)) {
+            seen.add(u.userId);
+            users.push({ userId: u.userId, username: u.username, avatar: `/api/avatar/${u.userId}`, page: u.page });
+        }
+    }
+    res.json({ count: seen.size, users: users.slice(0, 50) });
+});
+
+// ============================================================
+// TIER 2: TRANSFER MONEY SYSTEM
+// ============================================================
+const transferLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    message: { error: 'Chuyển tiền quá nhanh! Đợi 1 phút.' }
+});
+
+app.post('/api/transfer', requireAuth, transferLimiter, async (req, res) => {
+    const senderId = req.cookies.user_id;
+    const { recipientId, amount, note } = req.body;
+
+    // Validate input
+    if (!recipientId || typeof recipientId !== 'string' || !/^\d{17,20}$/.test(recipientId)) {
+        return res.status(400).json({ error: 'ID người nhận không hợp lệ' });
+    }
+    if (recipientId === senderId) {
+        return res.status(400).json({ error: 'Không thể chuyển tiền cho chính mình' });
+    }
+    const amt = parseInt(amount);
+    if (!amt || amt < 1000 || amt > 1000000) {
+        return res.status(400).json({ error: 'Số tiền phải từ 1,000 đến 1,000,000$' });
+    }
+
+    const conn = await dbPool.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        // Lock sender wallet
+        const [senderRows] = await conn.execute(
+            'SELECT balance, username FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, senderId]
+        );
+        if (!senderRows.length || Number(senderRows[0].balance) < amt) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Không đủ tiền!' });
+        }
+
+        // Lock recipient wallet
+        const [recipientRows] = await conn.execute(
+            'SELECT balance, username FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, recipientId]
+        );
+        if (!recipientRows.length) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Không tìm thấy người nhận!' });
+        }
+
+        const senderBal = Number(senderRows[0].balance);
+        const recipientBal = Number(recipientRows[0].balance);
+        const senderName = senderRows[0].username || 'User';
+        const recipientName = recipientRows[0].username || 'User';
+
+        // Deduct from sender
+        await conn.execute('UPDATE wallet SET balance = balance - ? WHERE guild_id=? AND user_id=?', [amt, TARGET_GUILD_ID, senderId]);
+        // Credit recipient
+        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [amt, TARGET_GUILD_ID, recipientId]);
+
+        const safeNote = note ? String(note).slice(0, 100) : '';
+
+        // Log both sides
+        await logTx(conn, senderId, 'transfer_send', -amt, senderBal, senderBal - amt,
+            { to: recipientId, toName: recipientName, note: safeNote });
+        await logTx(conn, recipientId, 'transfer_receive', amt, recipientBal, recipientBal + amt,
+            { from: senderId, fromName: senderName, note: safeNote });
+
+        await conn.commit();
+        conn.release();
+
+        console.log(`[Transfer] ${senderId} (${senderName}) → ${recipientId} (${recipientName}): ${amt}$`);
+
+        // Real-time notifications (include both field names for compatibility)
+        io.to(`user_${senderId}`).emit('balance_update', { balance: senderBal - amt, new_balance: senderBal - amt });
+        io.to(`user_${recipientId}`).emit('balance_update', { balance: recipientBal + amt, new_balance: recipientBal + amt });
+        io.to(`user_${recipientId}`).emit('server_notification', {
+            type: 'reward', title: '💸 Nhận tiền!',
+            msg: `${senderName} đã chuyển cho bạn ${amt.toLocaleString()}$${safeNote ? ` — "${safeNote}"` : ''}`
+        });
+
+        // Live feed
+        pushLiveFeed({
+            type: 'transfer', from: senderName, to: recipientName, amount: amt,
+            msg: `${senderName} đã chuyển ${amt.toLocaleString()}$ cho ${recipientName}`
+        });
+
+        res.json({
+            success: true,
+            amount: amt,
+            recipientName,
+            newBalance: senderBal - amt
+        });
+    } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
+        console.error('Transfer Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// Search users for transfer
+app.get('/api/users/search', requireAuth, async (req, res) => {
+    const q = String(req.query.q || '').trim();
+    if (q.length < 2) return res.json({ users: [] });
+    try {
+        const [rows] = await dbPool.execute(
+            'SELECT user_id, username, avatar FROM wallet WHERE guild_id=? AND (username LIKE ? OR user_id=?) LIMIT 10',
+            [TARGET_GUILD_ID, `%${q}%`, q]
+        );
+        res.json({
+            users: rows.map(r => ({
+                user_id: r.user_id,
+                username: r.username || ('User_' + String(r.user_id).slice(-4)),
+                avatar: `/api/avatar/${r.user_id}`
+            }))
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// Transfer history
+app.get('/api/transfer/history', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT type, amount, balance_after, details, created_at FROM transactions
+             WHERE user_id=? AND guild_id=? AND type IN ('transfer_send','transfer_receive')
+             ORDER BY created_at DESC LIMIT 30`,
+            [uid, TARGET_GUILD_ID]
+        );
+        const txs = rows.map(r => ({
+            type: r.type,
+            amount: Number(r.amount),
+            balance_after: Number(r.balance_after),
+            details: r.details ? (typeof r.details === 'string' ? JSON.parse(r.details) : r.details) : null,
+            time: r.created_at
+        }));
+        res.json({ transactions: txs });
+    } catch (e) {
         res.status(500).json({ error: 'Lỗi Database' });
     }
 });
@@ -1612,6 +1848,12 @@ async function checkAndAwardBadges(userId) {
                         [TARGET_GUILD_ID, userId, key]
                     );
                     awarded.push(key);
+                    // Tier 2: Broadcast achievement to live feed
+                    try {
+                        const [uRow] = await dbPool.execute('SELECT username FROM wallet WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, userId]);
+                        const uname = uRow.length ? uRow[0].username : 'User';
+                        broadcastAchievement(userId, uname, BADGE_DEFS[key]);
+                    } catch (e) { /* ignore */ }
                 } catch (e) { }
             }
         }
@@ -1821,7 +2063,7 @@ const pokerGame = new PokerManager(io, dbPool);
 
 // --- START ---
 // txGame / taixiu-core integration (enabled if module present)
-let txGame; try { txGame = new (require('./taixiu-core'))(io, dbPool, TARGET_GUILD_ID); console.log('taixiu-core loaded'); } catch (e) { console.error('taixiu-core not loaded:', e?.message || e); }
+let txGame; try { txGame = new (require('./taixiu-core'))(io, dbPool, TARGET_GUILD_ID); txGame.onWin = broadcastWin; console.log('taixiu-core loaded'); } catch (e) { console.error('taixiu-core not loaded:', e?.message || e); }
 
 // Socket.IO authentication middleware
 io.use((socket, next) => {
@@ -1855,13 +2097,32 @@ io.on('connection', (socket) => {
         }
     } catch (e) { }
 
+    // ═══ TIER 2: Online tracking ═══
+    if (userId) {
+        socket.join(`user_${userId}`);
+        onlineUsers.set(socket.id, {
+            userId, username: userInfo.username, avatar: userInfo.avatar,
+            page: 'lobby', joinedAt: Date.now()
+        });
+        // Broadcast online count
+        const uniqueOnline = new Set([...onlineUsers.values()].map(u => u.userId)).size;
+        io.emit('online_count', { count: uniqueOnline });
+
+        // Handle page tracking
+        socket.on('page_visit', (data) => {
+            const u = onlineUsers.get(socket.id);
+            if (u) u.page = data?.page || 'lobby';
+        });
+
+        // Send live feed history on connect
+        socket.emit('live_feed_history', liveFeed.slice(0, 20));
+    }
 
     // KẾT NỐI POKER
     if (userInfo.id) pokerGame.handleSocket(socket, userInfo);
 
     // KẾT NỐI TAI XIU - FIX: Gọi sendCurrentState ngay khi connect
     if (typeof txGame !== 'undefined' && txGame && userId) {
-        socket.join(`user_${userId}`);
         if (txGame.sendCurrentState) txGame.sendCurrentState(socket); // FIX: Thực sự gọi hàm
         socket.on('tx_bet', async d => {
             const result = await txGame.handleBet(userId, d.side, +d.amount);
@@ -2005,6 +2266,8 @@ io.on('connection', (socket) => {
             socket.emit('crash_cashout_ok', { mult, winAmount, profit: winAmount - bettor.bet, newBalance: balBefore + winAmount });
             // Broadcast cashout to room
             crashEmit('crash_player_cashout', { username: bettor.username, mult, winAmount });
+            // Tier 2: Broadcast big crash wins
+            if (winAmount - bettor.bet > 0) broadcastWin(userId, bettor.username, 'crash', winAmount, { multiplier: mult });
         } catch (e) {
             bettor.cashedOut = false;
             await conn.rollback().catch(() => { }); conn.release();
@@ -2012,6 +2275,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
+        // Tier 2: Remove from online tracking
+        onlineUsers.delete(socket.id);
+        const uniqueOnline = new Set([...onlineUsers.values()].map(u => u.userId)).size;
+        io.emit('online_count', { count: uniqueOnline });
+
         // If player disconnects during flying and has active bet, auto-cashout at current mult if possible
         if (crashState.phase === 'flying' && crashState.bettors.has(socket.id)) {
             const bettor = crashState.bettors.get(socket.id);
@@ -2105,6 +2373,12 @@ app.get('/flappybird', (req, res) => {
 app.get('/history', (req, res) => {
     if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'history.html'));
+});
+
+// Serve Transfer page
+app.get('/transfer', (req, res) => {
+    if (!getPageUserId(req)) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'transfer.html'));
 });
 
 

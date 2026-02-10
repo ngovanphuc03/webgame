@@ -16,6 +16,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
     <title>📜 Lịch Sử Giao Dịch - Pixel PlayZone</title>
     <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -34,12 +35,12 @@
             --surface2: rgba(20, 10, 45, .88);
             --border: rgba(139, 92, 246, .15);
             --neon-purple: #8b5cf6;
-            --neon-cyan: #06b6d4;
-            --neon-green: #10b981;
-            --neon-red: #ef4444;
-            --neon-yellow: #f59e0b;
+            --neon-cyan: #00f0ff;
+            --neon-green: #00ff9d;
+            --neon-red: #ff3355;
+            --neon-yellow: #ffd700;
             --font-pixel-en: 'DearPix', 'Orbitron', sans-serif;
-            --font-body: 'Rajdhani', sans-serif;
+            --font-body: 'DearPix', 'Rajdhani', sans-serif;
         }
 
         body {
@@ -65,25 +66,41 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 20px;
-            background: rgba(3, 0, 20, .9);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border)
+            padding: 0 20px;
+            height: 56px;
+            background: rgba(3, 0, 20, .85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
         }
 
         .topbar a {
-            color: var(--neon-cyan);
+            color: #fff;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
             transition: .3s
         }
 
         .topbar a:hover {
+            background: rgba(139, 92, 246, .15);
+            border-color: rgba(139, 92, 246, .3);
             color: #fff
         }
 
         .topbar .bal {
-            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, .1), rgba(255, 215, 0, .03));
+            border: 1px solid rgba(255, 215, 0, .25);
+            border-radius: 50px;
+            padding: 7px 18px;
+            font-weight: 700;
+            font-size: 13px;
             color: var(--neon-yellow)
         }
 
@@ -149,7 +166,7 @@
         .summary-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 14px;
             text-align: center
         }
@@ -375,6 +392,7 @@
             <button class="filter-btn" data-type="taixiu">🎲 Tài Xỉu</button>
             <button class="filter-btn" data-type="flappy">🐦 Flappy</button>
             <button class="filter-btn" data-type="daily">🎁 Daily</button>
+            <button class="filter-btn" data-type="transfer">💸 Transfer</button>
         </div>
 
         <div id="txList" class="tx-list">
@@ -402,6 +420,8 @@
             flappy_reward: { icon: '🐦', label: 'Thưởng Flappy Bird' },
             daily_claim: { icon: '🎁', label: 'Phần thưởng hàng ngày' },
             signup_bonus: { icon: '🎉', label: 'Bonus đăng ký' },
+            transfer_send: { icon: '📤', label: 'Chuyển tiền đi' },
+            transfer_receive: { icon: '📥', label: 'Nhận chuyển tiền' },
         };
 
         let currentType = '';
@@ -412,7 +432,7 @@
         // Fetch balance
         fetch('/api/me', { credentials: 'include' }).then(r => r.json()).then(d => {
             if (d.error) { window.location.href = '/'; return; }
-            document.getElementById('bal').textContent = Number(d.balance).toLocaleString('vi');
+            document.getElementById('bal').textContent = Number(d.balance || 0).toLocaleString('vi');
         }).catch(() => window.location.href = '/');
 
         // Filters
@@ -469,8 +489,8 @@
                             ${detailStr ? `<div class="tx-detail">${detailStr}</div>` : ''}
                         </div>
                         <div>
-                            <div class="tx-amount ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${Number(tx.amount).toLocaleString('vi')} $</div>
-                            <div class="tx-balance">Số dư: ${Number(tx.balance_after).toLocaleString('vi')} $</div>
+                            <div class="tx-amount ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${Number(tx.amount || 0).toLocaleString('vi')} $</div>
+                            <div class="tx-balance">Số dư: ${Number(tx.balance_after || 0).toLocaleString('vi')} $</div>
                         </div>`;
                     list.appendChild(el);
                 });
@@ -515,6 +535,7 @@
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
     <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>

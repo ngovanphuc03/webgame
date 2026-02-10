@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="taixiu.css">
 </head>
 
-<body>
+<body class="ppz-fullscreen">
     <noscript>
         <div
             style="background:#1a0a0a;color:#fff;padding:40px;text-align:center;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;">
@@ -197,6 +197,7 @@
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
     <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
 
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
     <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>

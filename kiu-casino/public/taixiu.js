@@ -168,7 +168,7 @@ function jumpTo(percent) {
 }
 
 function formatMoney(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return Number(num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 // --- 2. LOGIC GAME & SOCKET ---
@@ -221,9 +221,12 @@ function resetBowlPosition() {
 }
 
 socket.on('balance_update', (d) => {
-    currentBalance = d.new_balance;
-    document.getElementById('balance').innerText = formatMoney(currentBalance);
-    updateSliderMax();
+    const bal = d.new_balance !== undefined ? d.new_balance : d.balance;
+    if (bal !== undefined && bal !== null) {
+        currentBalance = Number(bal);
+        document.getElementById('balance').innerText = formatMoney(currentBalance);
+        updateSliderMax();
+    }
 });
 
 socket.on('tx_win_notify', (d) => {

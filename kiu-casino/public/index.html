@@ -22,6 +22,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
@@ -83,8 +84,14 @@
             min-height: 100vh;
             color: #fff;
             overflow-x: hidden;
-            cursor: none;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom cursor only on desktop (hover-capable devices) */
+        @media (hover: hover) and (pointer: fine) {
+            body {
+                cursor: none;
+            }
         }
 
         /* ═══ LOADING SCREEN ═══ */
@@ -240,9 +247,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 30px;
-            height: 64px;
-            background: rgba(3, 0, 20, 0.7);
+            padding: 0 24px;
+            height: 56px;
+            background: rgba(3, 0, 20, 0.85);
             backdrop-filter: blur(20px) saturate(1.5);
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             transition: all .4s;
@@ -1622,6 +1629,23 @@
             </div>
         </div>
 
+        <!-- Transfer card -->
+        <div class="game-card c-lb" style="--c1:#00ff9d;--c2:#00c9ff" onclick="enterGame('/transfer')">
+            <div class="card-banner banner-lb" style="background:linear-gradient(135deg,#041a12,#0a1628)"><span
+                    class="card-icon">💸</span></div>
+            <div class="card-content">
+                <div class="card-status"><span style="color:#00ff9d">✦</span> NEW</div>
+                <div class="card-title">CHUYỂN TIỀN</div>
+                <div class="card-desc">Gửi tiền cho bạn bè nhanh chóng, an toàn. Tìm kiếm theo tên hoặc ID.</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>💸</i> Instant</div>
+                    <div class="meta-item"><i>🔒</i> Secure</div>
+                </div>
+                <button class="btn-play" style="background:linear-gradient(135deg,#00ff9d,#00c9ff);color:#030014">CHUYỂN
+                    NGAY ▸</button>
+            </div>
+        </div>
+
         <!-- Admin card: hidden by default, shown only for admins -->
         <div class="game-card c-lb" id="admin-card" style="display:none" onclick="enterGame('/admin')">
             <div class="card-banner banner-lb" style="background:linear-gradient(135deg,#2d0a0a,#1a0530)"><span
@@ -1766,7 +1790,7 @@
                     heroName.textContent = sn;
                     userArea.innerHTML = `
         <div class="user-panel">
-          <div class="balance-chip">💰 <span>${Number(u.balance).toLocaleString()} $</span></div>
+          <div class="balance-chip">💰 <span>${Number(u.balance || 0).toLocaleString()} $</span></div>
           <div id="ppz-toolbar"></div>
           <a href="/profile" class="user-avatar-wrap" title="Xem hồ sơ">
             <img src="${u.avatar || '/images/ui/default-avatar.svg'}" class="avatar" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
@@ -1820,6 +1844,7 @@
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/chat-system.js"></script>
+    <script src="/js/live-feed.js"></script>
     <script>
         // PWA Service Worker registration
         if ('serviceWorker' in navigator) {

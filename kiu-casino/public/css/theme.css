@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════
+ *  PIXEL PLAYZONE — Shared Theme System
+ *  Include on every page: <link rel="stylesheet" href="css/theme.css">
+ *  Provides consistent colors, nav, buttons, cards, typography
+ * ═══════════════════════════════════════════════════════ */
+
+/* ═══ CSS VARIABLES (Global Design Tokens) ═══ */
+:root {
+    /* Core palette */
+    --ppz-bg: #030014;
+    --ppz-surface: rgba(12, 6, 30, .95);
+    --ppz-surface2: rgba(20, 10, 45, .88);
+    --ppz-border: rgba(139, 92, 246, .15);
+    --ppz-glass: rgba(255, 255, 255, .03);
+    --ppz-glass-border: rgba(255, 255, 255, .06);
+
+    /* Neon accent colors */
+    --ppz-purple: #8b5cf6;
+    --ppz-cyan: #00f0ff;
+    --ppz-green: #00ff9d;
+    --ppz-red: #ff3355;
+    --ppz-gold: #ffd700;
+    --ppz-orange: #ff8c00;
+    --ppz-magenta: #ff00aa;
+    --ppz-blue: #3b82f6;
+
+    /* Typography */
+    --ppz-font: 'DearPix', 'Orbitron', sans-serif;
+    --ppz-font-body: 'DearPix', 'Rajdhani', sans-serif;
+    --ppz-radius: 14px;
+    --ppz-radius-lg: 20px;
+    --ppz-radius-pill: 50px;
+}
+
+/* ═══ SHARED NAV BAR ═══ */
+.ppz-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 56px;
+    background: rgba(3, 0, 20, .85);
+    backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid rgba(255, 255, 255, .04);
+    font-family: var(--ppz-font);
+}
+
+.ppz-nav-back {
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .08);
+    transition: all .3s ease;
+    letter-spacing: .5px;
+    font-family: var(--ppz-font);
+}
+
+.ppz-nav-back:hover {
+    background: rgba(139, 92, 246, .15);
+    border-color: rgba(139, 92, 246, .3);
+    color: #fff;
+}
+
+.ppz-nav-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ppz-purple);
+    font-family: var(--ppz-font);
+    letter-spacing: 1px;
+}
+
+.ppz-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ═══ BALANCE PILL (Shared) ═══ */
+.ppz-bal {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, .1), rgba(255, 215, 0, .03));
+    border: 1px solid rgba(255, 215, 0, .25);
+    border-radius: var(--ppz-radius-pill);
+    padding: 7px 18px;
+    font-family: var(--ppz-font);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ppz-gold);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ppz-bal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, .08), transparent);
+    animation: ppzBalShine 3s ease infinite;
+}
+
+@keyframes ppzBalShine {
+    0% {
+        left: -100%
+    }
+
+    100% {
+        left: 200%
+    }
+}
+
+/* ═══ SHARED CARD ═══ */
+.ppz-card {
+    background: var(--ppz-surface);
+    border: 1px solid var(--ppz-border);
+    border-radius: var(--ppz-radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ppz-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ppz-purple), var(--ppz-cyan), var(--ppz-purple));
+    opacity: .6;
+}
+
+/* ═══ SHARED BUTTON ═══ */
+.ppz-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border: none;
+    border-radius: var(--ppz-radius);
+    font-family: var(--ppz-font);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .3s ease;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: .5px;
+}
+
+.ppz-btn-primary {
+    background: linear-gradient(135deg, var(--ppz-purple), var(--ppz-magenta));
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, .3);
+}
+
+.ppz-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(139, 92, 246, .45);
+}
+
+.ppz-btn-success {
+    background: linear-gradient(135deg, var(--ppz-green), #00c9ff);
+    color: #000;
+    font-weight: 800;
+    box-shadow: 0 4px 16px rgba(0, 255, 157, .3);
+}
+
+.ppz-btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 255, 157, .45);
+}
+
+.ppz-btn-gold {
+    background: linear-gradient(135deg, var(--ppz-gold), #ffa500);
+    color: #000;
+    font-weight: 800;
+    box-shadow: 0 4px 16px rgba(255, 215, 0, .3);
+}
+
+.ppz-btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(255, 215, 0, .45);
+}
+
+.ppz-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ═══ SHARED MODAL ═══ */
+.ppz-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .6);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: ppzFadeIn .3s ease;
+}
+
+.ppz-modal {
+    background: var(--ppz-surface);
+    border: 1px solid var(--ppz-border);
+    border-radius: var(--ppz-radius-lg);
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    animation: ppzSlideUp .3s ease;
+}
+
+.ppz-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ppz-purple), var(--ppz-cyan), var(--ppz-purple));
+}
+
+@keyframes ppzFadeIn {
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
+}
+
+@keyframes ppzSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px)
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0)
+    }
+}
+
+/* ═══ AMBIENT BACKGROUND (shared) ═══ */
+.ppz-bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, .08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(0, 240, 255, .06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 0, 170, .04) 0%, transparent 60%);
+}
+
+/* ═══ SHARED EMPTY STATE ═══ */
+.ppz-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, .3);
+    font-size: 14px;
+    font-family: var(--ppz-font);
+}
+
+.ppz-empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    display: block;
+    opacity: .5;
+}
+
+/* ═══ RESPONSIVE HELPERS ═══ */
+@media (max-width: 480px) {
+    .ppz-nav {
+        padding: 0 12px;
+        height: 50px;
+    }
+
+    .ppz-nav-back {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .ppz-nav-title {
+        font-size: 13px;
+    }
+
+    .ppz-bal {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+
+    .ppz-modal {
+        padding: 20px;
+        border-radius: 16px;
+    }
+}
+
+/* ═══ SCROLLBAR STYLING ═══ */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, .2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, .4);
+}
+
+/* ═══ SELECTION ═══ */
+::selection {
+    background: rgba(139, 92, 246, .3);
+    color: #fff;
+}
