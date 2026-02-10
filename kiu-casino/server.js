@@ -83,7 +83,7 @@ const discordAuthLimiter = rateLimit({
 });
 
 // --- CẤU HÌNH ---
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, 'public')));
 const COOKIE_SECRET = process.env.COOKIE_SECRET || crypto.randomBytes(32).toString('hex');
 app.use(cookieParser(COOKIE_SECRET));
 app.use(express.json());
@@ -1480,8 +1480,9 @@ app.get('/api/admin/transactions', requireAuth, async (req, res) => {
         }
 
         if (type) {
-            query += ' AND type=?';
-            params.push(type);
+            // Support prefix matching: 'mines' matches 'mines_bet', 'mines_win', etc.
+            query += ' AND type LIKE ?';
+            params.push(type + '%');
         }
 
         query += ' ORDER BY created_at DESC';
@@ -1563,7 +1564,7 @@ app.get('/api/admin/stats', requireAuth, async (req, res) => {
             poker: ['poker_bet', 'poker_win'],
             taixiu: ['taixiu_bet', 'taixiu_win'],
             flappy: ['flappy_reward'],
-            daily: ['daily_reward', 'daily_spin']
+            daily: ['daily_claim']
         };
         const gameStats = {};
         for (const [game, types] of Object.entries(gameGroups)) {
@@ -1870,6 +1871,17 @@ app.get('/profile', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
+// Serve Flappy Bird page
+app.get('/flappybird', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'flappybird.html'));
+});
+
+// Serve History page
+app.get('/history', (req, res) => {
+    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'history.html'));
+});
 
 
 // --- HEALTH CHECK ---
