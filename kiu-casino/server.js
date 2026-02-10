@@ -83,7 +83,7 @@ const discordAuthLimiter = rateLimit({
 });
 
 // --- CẤU HÌNH ---
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 const COOKIE_SECRET = process.env.COOKIE_SECRET || crypto.randomBytes(32).toString('hex');
 app.use(cookieParser(COOKIE_SECRET));
 app.use(express.json());
