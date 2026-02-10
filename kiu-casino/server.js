@@ -1820,28 +1820,32 @@ const PORT = process.env.PORT || 3000;
 // LEGACY REDIRECT
 app.get('/lobby.html', (req, res) => res.redirect('/'));
 
+// Helper: get user_id from signed or unsigned cookies
+function getPageUserId(req) {
+    return (req.signedCookies && req.signedCookies.user_id) || (req.cookies && req.cookies.user_id);
+}
+
 // Admin Dashboard (friendly route)
 app.get('/admin', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Serve Taixiu page (friendly route without .html)
 app.get('/taixiu', (req, res) => {
-    // require login to enter table; if not logged-in redirect to root
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'taixiu.html'));
 });
 
 // Serve Poker page
 app.get('/poker', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'poker.html'));
 });
 
 // Serve Mines game page
 app.get('/mines', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'mines.html'));
 });
 // Legacy redirect
@@ -1849,39 +1853,40 @@ app.get('/slot', (req, res) => res.redirect('/mines'));
 
 // Serve Crash game page
 app.get('/crash', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'crash.html'));
 });
 
 // Serve Daily Reward page
 app.get('/daily', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'daily.html'));
 });
 
 // Serve Leaderboard page
 app.get('/leaderboard', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'leaderboard.html'));
 });
 
 // Serve Profile page
 app.get('/profile', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
 // Serve Flappy Bird page
 app.get('/flappybird', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'flappybird.html'));
 });
 
 // Serve History page
 app.get('/history', (req, res) => {
-    if (!req.cookies || !req.cookies.user_id) return res.redirect('/');
+    if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'history.html'));
 });
+
 
 
 // --- HEALTH CHECK ---
