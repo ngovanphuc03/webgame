@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════
 //  PIXEL PLAYZONE — Service Worker (PWA Offline + Cache)
 // ═══════════════════════════════════════════════════════
-const CACHE_NAME = 'playzone-v2';
+const CACHE_NAME = 'playzone-v4';
 const STATIC_ASSETS = [
     '/',
     '/css/fonts.css',
@@ -14,13 +14,17 @@ const STATIC_ASSETS = [
     '/sounds/bet.mp3'
 ];
 
-// Install: cache essential assets
+// Install: cache essential assets (individually to skip 206 partial responses)
 self.addEventListener('install', e => {
     e.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(STATIC_ASSETS).catch(err => {
-                console.warn('[SW] Some assets failed to cache:', err);
-            });
+            return Promise.all(
+                STATIC_ASSETS.map(url =>
+                    fetch(url).then(resp => {
+                        if (resp.ok && resp.status === 200) return cache.put(url, resp);
+                    }).catch(err => console.warn('[SW] Failed to cache:', url, err))
+                )
+            );
         })
     );
     self.skipWaiting();
@@ -55,9 +59,9 @@ self.addEventListener('fetch', e => {
             caches.match(e.request).then(cached => {
                 if (cached) return cached;
                 return fetch(e.request).then(resp => {
-                    if (resp.ok) {
+                    if (resp.ok && resp.status === 200 && resp.type !== 'opaque') {
                         const clone = resp.clone();
-                        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+                        caches.open(CACHE_NAME).then(c => c.put(e.request, clone)).catch(() => { });
                     }
                     return resp;
                 }).catch(() => cached || new Response('Offline', { status: 503 }));
@@ -69,9 +73,9 @@ self.addEventListener('fetch', e => {
     // Network-first for HTML pages
     e.respondWith(
         fetch(e.request).then(resp => {
-            if (resp.ok && url.origin === self.location.origin) {
+            if (resp.ok && resp.status === 200 && url.origin === self.location.origin) {
                 const clone = resp.clone();
-                caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+                caches.open(CACHE_NAME).then(c => c.put(e.request, clone)).catch(() => { });
             }
             return resp;
         }).catch(() => caches.match(e.request).then(r => r || new Response('Offline', { status: 503 })))
