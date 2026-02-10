@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════
 //  PIXEL PLAYZONE — Service Worker (PWA Offline + Cache)
 // ═══════════════════════════════════════════════════════
-const CACHE_NAME = 'playzone-v1';
+const CACHE_NAME = 'playzone-v2';
 const STATIC_ASSETS = [
     '/',
     '/css/fonts.css',
@@ -46,6 +46,9 @@ self.addEventListener('fetch', e => {
     if (url.pathname.startsWith('/auth')) return;
     if (url.pathname.startsWith('/api')) return;
 
+    // Skip cross-origin requests (Google Fonts, CDNs, etc.) — let browser handle them directly
+    if (url.origin !== self.location.origin) return;
+
     // Cache-first for static assets (fonts, images, sounds, css)
     if (/\.(ttf|woff2?|png|jpg|webp|svg|mp3|ogg|wav|css|js)$/i.test(url.pathname)) {
         e.respondWith(
@@ -57,7 +60,7 @@ self.addEventListener('fetch', e => {
                         caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
                     }
                     return resp;
-                }).catch(() => cached);
+                }).catch(() => cached || new Response('Offline', { status: 503 }));
             })
         );
         return;
@@ -71,7 +74,7 @@ self.addEventListener('fetch', e => {
                 caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
             }
             return resp;
-        }).catch(() => caches.match(e.request))
+        }).catch(() => caches.match(e.request).then(r => r || new Response('Offline', { status: 503 })))
     );
 });
 

@@ -56,7 +56,7 @@ app.use((req, res, next) => {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data:",
-        "connect-src 'self' ws: wss:",
+        "connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com",
         "frame-ancestors 'none'"
     ].join('; '));
     next();
