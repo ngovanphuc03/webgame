@@ -75,11 +75,11 @@ app.use(limiter);
 // 4. Strict Rate Limiter for Discord OAuth (prevent 429 errors)
 const discordAuthLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 3, // Only 3 login attempts per minute per IP
+    max: 10, // 10 requests per minute per IP (each login = 2 requests)
     message: 'Bạn đang đăng nhập quá nhanh! Vui lòng đợi 1 phút.',
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: false,
+    skipSuccessfulRequests: true, // Don't count successful logins against the limit
 });
 
 // --- CẤU HÌNH ---
