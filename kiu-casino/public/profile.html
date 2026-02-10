@@ -34,6 +34,7 @@
             --neon-green: #00ff9d;
             --neon-red: #ff3355;
             --neon-gold: #ffd700;
+            --neon-magenta: #ff00aa;
             --text: #fff;
             --muted: rgba(255, 255, 255, .5);
             --radius: 16px;
@@ -104,7 +105,7 @@
         /* ═══ PROFILE HEADER ═══ */
         .profile-header {
             text-align: center;
-            padding: 40px 20px 30px;
+            padding: 40px 20px 20px;
             position: relative
         }
 
@@ -157,12 +158,6 @@
             margin-bottom: 4px
         }
 
-        .profile-id {
-            font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 16px
-        }
-
         .profile-balance {
             display: inline-flex;
             align-items: center;
@@ -174,6 +169,190 @@
             font-size: 20px;
             font-weight: 700;
             color: var(--neon-gold)
+        }
+
+        /* ═══ RANK BADGE ═══ */
+        .rank-badge-wrap {
+            margin-top: 10px;
+            margin-bottom: 12px
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 2px solid;
+            animation: rankPulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes rankPulse {
+            0% {
+                box-shadow: 0 0 8px currentColor
+            }
+
+            100% {
+                box-shadow: 0 0 20px currentColor, 0 0 40px rgba(255, 255, 255, .05)
+            }
+        }
+
+        .rank-icon {
+            font-size: 18px
+        }
+
+        /* ═══ DISCORD LEVEL CARD ═══ */
+        .discord-card {
+            margin: 20px auto 0;
+            max-width: 800px;
+            padding: 0 20px
+        }
+
+        .dc-inner {
+            background: linear-gradient(135deg, rgba(88, 101, 242, .12), rgba(0, 240, 255, .06));
+            border: 1px solid rgba(88, 101, 242, .2);
+            border-radius: var(--radius);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dc-inner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #5865F2, var(--accent2), transparent);
+        }
+
+        .dc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .dc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #5865F2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dc-position {
+            font-size: 11px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, .05);
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        .dc-level-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px
+        }
+
+        .dc-level-num {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #5865F2, var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .dc-level-info {
+            flex: 1
+        }
+
+        .dc-xp-text {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px
+        }
+
+        .dc-xp-text span {
+            color: var(--accent2);
+            font-weight: 700
+        }
+
+        .dc-xp-bar {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, .06);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dc-xp-fill {
+            height: 100%;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #5865F2, var(--accent2));
+            transition: width 1s cubic-bezier(.25, .46, .45, .94);
+            position: relative;
+        }
+
+        .dc-xp-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .3));
+            animation: xpShine 2s ease-in-out infinite;
+        }
+
+        @keyframes xpShine {
+
+            0%,
+            100% {
+                opacity: 0
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        .dc-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 14px
+        }
+
+        .dc-stat {
+            text-align: center;
+            padding: 10px 6px;
+            background: rgba(255, 255, 255, .03);
+            border-radius: 10px;
+        }
+
+        .dc-stat-icon {
+            font-size: 18px;
+            margin-bottom: 4px
+        }
+
+        .dc-stat-val {
+            font-size: 16px;
+            font-weight: 700
+        }
+
+        .dc-stat-label {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .5px
         }
 
         /* ═══ STATS GRID ═══ */
@@ -245,6 +424,155 @@
 
         .stat-value.cyan {
             color: var(--accent2)
+        }
+
+        /* ═══ CHART SECTION ═══ */
+        .chart-section {
+            margin-top: 14px
+        }
+
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 120px;
+            position: relative;
+        }
+
+        .chart-bar-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .chart-bar-wrap:hover .chart-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+
+        .chart-bar {
+            width: 100%;
+            min-width: 4px;
+            border-radius: 3px 3px 0 0;
+            transition: height .6s cubic-bezier(.25, .46, .45, .94);
+        }
+
+        .chart-bar.positive {
+            background: linear-gradient(180deg, var(--neon-green), rgba(0, 255, 157, .3))
+        }
+
+        .chart-bar.negative {
+            background: linear-gradient(0deg, var(--neon-red), rgba(255, 51, 85, .3))
+        }
+
+        .chart-bar.zero {
+            background: rgba(255, 255, 255, .1);
+            min-height: 2px
+        }
+
+        .chart-date {
+            font-size: 8px;
+            color: var(--muted);
+            margin-top: 4px;
+            transform: rotate(-45deg);
+            white-space: nowrap;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: rgba(0, 0, 0, .9);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: .2s;
+            z-index: 10;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .chart-legend-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        .chart-zero-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, .1);
+        }
+
+        /* ═══ STREAK & FUN STATS ═══ */
+        .fun-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 14px
+        }
+
+        .fun-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            text-align: center;
+            transition: .3s;
+        }
+
+        .fun-card:hover {
+            border-color: rgba(139, 92, 246, .3);
+            transform: translateY(-2px)
+        }
+
+        .fun-icon {
+            font-size: 24px;
+            margin-bottom: 6px
+        }
+
+        .fun-val {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 2px
+        }
+
+        .fun-label {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .5px
         }
 
         /* ═══ GAME BREAKDOWN ═══ */
@@ -450,6 +778,32 @@
                 font-size: 18px;
                 padding: 10px 22px
             }
+
+            .dc-level-num {
+                font-size: 28px
+            }
+
+            .dc-stats-row {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px
+            }
+
+            .fun-stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px
+            }
+
+            .fun-card {
+                padding: 10px 6px
+            }
+
+            .fun-val {
+                font-size: 14px
+            }
+
+            .chart-bars {
+                height: 90px
+            }
         }
     </style>
 </head>
@@ -488,10 +842,16 @@
                 flappy_reward: '🐦', daily_reward: '🎁',
                 daily_spin: '🎁', crash_cancel: '↩️'
             };
+            const GAME_NAMES = {
+                mines: 'Mines', crash: 'Crash', poker: 'Poker',
+                taixiu: 'Tài Xỉu', flappy: 'Flappy Bird', daily: 'Daily'
+            };
+            const GAME_ICONS_MAP = {
+                mines: '💣', crash: '🚀', poker: '🃏',
+                taixiu: '🎲', flappy: '🐦', daily: '🎁'
+            };
 
-            function formatNum(n) {
-                return Number(n).toLocaleString('vi-VN');
-            }
+            function fmt(n) { return Number(n).toLocaleString('vi-VN'); }
             function timeAgo(ts) {
                 const d = Date.now() - new Date(ts).getTime();
                 if (d < 60000) return 'Vừa xong';
@@ -499,28 +859,27 @@
                 if (d < 86400000) return Math.floor(d / 3600000) + 'h trước';
                 return Math.floor(d / 86400000) + ' ngày trước';
             }
-
-            function calcLevel(totalBet) {
-                // Levels: mỗi 50,000 bet = 1 level, max 99
-                return Math.min(99, Math.floor(totalBet / 50000) + 1);
-            }
+            function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
             async function loadProfile() {
                 try {
-                    const [meRes, txRes, achRes] = await Promise.all([
+                    const [meRes, txRes, achRes, lvlRes, chartRes] = await Promise.all([
                         fetch('/api/me'),
                         fetch('/api/profile/stats'),
-                        fetch('/api/achievements')
+                        fetch('/api/achievements'),
+                        fetch('/api/leveling/profile'),
+                        fetch('/api/stats/chart')
                     ]);
 
                     if (!meRes.ok) { location.href = '/'; return; }
                     const me = await meRes.json();
                     const stats = txRes.ok ? await txRes.json() : null;
                     const achData = achRes.ok ? await achRes.json() : { allBadges: [], newBadges: [] };
+                    const lvl = lvlRes.ok ? await lvlRes.json() : { found: false };
+                    const chart = chartRes.ok ? await chartRes.json() : null;
 
-                    render(me, stats, achData);
+                    render(me, stats, achData, lvl, chart);
 
-                    // Show notification for newly unlocked badges
                     if (achData.newBadges && achData.newBadges.length > 0 && window.PPZNotify) {
                         for (const b of achData.newBadges) {
                             PPZNotify.show(`${b.icon} Mở khóa: ${b.name}!`, 'success');
@@ -533,40 +892,94 @@
                 }
             }
 
-            function render(me, stats, achData) {
+            function render(me, stats, achData, lvl, chart) {
                 const s = stats || {};
                 const totalBet = s.totalBet || 0;
-                const totalWin = s.totalWin || 0;
                 const profit = s.profit || 0;
                 const totalGames = s.totalGames || 0;
                 const winRate = s.winRate || 0;
-                const level = calcLevel(totalBet);
                 const games = s.breakdown || {};
                 const recent = s.recent || [];
-
-                // Achievements from server
                 const achievements = (achData && achData.allBadges) ? achData.allBadges : [];
+
+                // Discord level data
+                const dcLevel = lvl.found ? lvl.level : 0;
+                const dcXp = lvl.found ? lvl.xp : 0;
+                const dcXpForNext = lvl.found ? lvl.xpForNext : 100;
+                const dcXpProgress = lvl.found ? lvl.xpProgress : 0;
+                const dcTotalXp = lvl.found ? lvl.totalXp : 0;
+                const dcRank = lvl.found ? lvl.rank : { name: 'Chưa xếp hạng', color: '#555', icon: '❓', tier: 0 };
+                const dcPosition = lvl.found ? lvl.position : null;
+                const dcTotalMembers = lvl.found ? lvl.totalMembers : 0;
+
+                // Chart data
+                const chartData = chart ? chart.dailyChart || [] : [];
+                const streak = chart ? chart.currentStreak : { count: 0, type: 'none' };
+                const maxStreak = chart ? chart.maxWinStreak : 0;
+                const favGame = chart ? chart.favoriteGame : { name: 'none', count: 0 };
+                const luckyHours = chart ? (chart.luckyHours || []) : [];
 
                 document.getElementById('content').innerHTML = `
                 <div class="profile-header">
                     <div class="avatar-wrap">
                         <div class="avatar-ring">
                             <img class="avatar-img" src="${me.avatar || '/images/ui/default-avatar.svg'}"
-                                alt=""
-                                onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
+                                alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
                         </div>
-                        <span class="level-badge">Lv.${level}</span>
+                        <span class="level-badge">Lv.${dcLevel}</span>
                     </div>
                     <div class="profile-name">${escHtml(me.username)}</div>
-                    <div class="profile-balance">💰 ${formatNum(me.balance)} $</div>
+                    <div class="rank-badge-wrap">
+                        <span class="rank-badge" style="color:${dcRank.color};border-color:${dcRank.color};background:${dcRank.color}15">
+                            <span class="rank-icon">${dcRank.icon}</span> ${dcRank.name}
+                        </span>
+                    </div>
+                    <div class="profile-balance">💰 ${fmt(me.balance)} $</div>
+                </div>
+
+                <!-- DISCORD LEVEL CARD -->
+                <div class="discord-card">
+                    <div class="dc-inner">
+                        <div class="dc-header">
+                            <div class="dc-title">🎮 Discord Level</div>
+                            <div class="dc-position">${dcPosition ? '#' + dcPosition + ' / ' + dcTotalMembers : 'Chưa có dữ liệu'}</div>
+                        </div>
+                        <div class="dc-level-row">
+                            <div class="dc-level-num">${dcLevel}</div>
+                            <div class="dc-level-info">
+                                <div class="dc-xp-text"><span>${fmt(dcXp)}</span> / ${fmt(dcXpForNext)} XP</div>
+                                <div class="dc-xp-bar">
+                                    <div class="dc-xp-fill" style="width:${dcXpProgress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dc-stats-row">
+                            <div class="dc-stat">
+                                <div class="dc-stat-icon">📊</div>
+                                <div class="dc-stat-val" style="color:var(--accent2)">${fmt(dcTotalXp)}</div>
+                                <div class="dc-stat-label">Tổng XP</div>
+                            </div>
+                            <div class="dc-stat">
+                                <div class="dc-stat-icon">💬</div>
+                                <div class="dc-stat-val" style="color:var(--neon-green)">${lvl.lastMessage ? timeAgo(lvl.lastMessage) : '—'}</div>
+                                <div class="dc-stat-label">Tin nhắn gần nhất</div>
+                            </div>
+                            <div class="dc-stat">
+                                <div class="dc-stat-icon">🎤</div>
+                                <div class="dc-stat-val" style="color:var(--neon-magenta)">${lvl.lastVoice ? timeAgo(lvl.lastVoice) : '—'}</div>
+                                <div class="dc-stat-label">Voice gần nhất</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="stats-section">
-                    <div class="section-title">📊 Tổng Quan</div>
+                    <!-- GAME OVERVIEW -->
+                    <div class="section-title">📊 Tổng Quan Game</div>
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon">🎮</div>
-                            <div class="stat-value cyan">${formatNum(totalGames)}</div>
+                            <div class="stat-value cyan">${fmt(totalGames)}</div>
                             <div class="stat-label">Tổng Ván</div>
                         </div>
                         <div class="stat-card">
@@ -576,16 +989,49 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon">📈</div>
-                            <div class="stat-value ${profit >= 0 ? 'green' : 'red'}">${profit >= 0 ? '+' : ''}${formatNum(profit)} $</div>
+                            <div class="stat-value ${profit >= 0 ? 'green' : 'red'}">${profit >= 0 ? '+' : ''}${fmt(profit)} $</div>
                             <div class="stat-label">Lợi Nhuận</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon">💵</div>
-                            <div class="stat-value gold">${formatNum(totalBet)} $</div>
+                            <div class="stat-value gold">${fmt(totalBet)} $</div>
                             <div class="stat-label">Tổng Cược</div>
                         </div>
                     </div>
 
+                    <!-- CHART: 30-DAY PROFIT -->
+                    <div class="section-title">📈 Biểu Đồ 30 Ngày</div>
+                    <div class="chart-section">
+                        <div class="chart-container">
+                            ${renderChart(chartData)}
+                            <div class="chart-legend">
+                                <span><span class="chart-legend-dot" style="background:var(--neon-green)"></span>Lời</span>
+                                <span><span class="chart-legend-dot" style="background:var(--neon-red)"></span>Lỗ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FUN STATS -->
+                    <div class="section-title">🔥 Thống Kê Thú Vị</div>
+                    <div class="fun-stats">
+                        <div class="fun-card">
+                            <div class="fun-icon">${streak.type === 'win' ? '🔥' : streak.type === 'lose' ? '❄️' : '➖'}</div>
+                            <div class="fun-val" style="color:${streak.type === 'win' ? 'var(--neon-green)' : streak.type === 'lose' ? 'var(--neon-red)' : 'var(--muted)'}">${streak.count} ngày</div>
+                            <div class="fun-label">${streak.type === 'win' ? 'Streak Thắng' : streak.type === 'lose' ? 'Streak Thua' : 'Streak'}</div>
+                        </div>
+                        <div class="fun-card">
+                            <div class="fun-icon">${GAME_ICONS_MAP[favGame.name] || '🎮'}</div>
+                            <div class="fun-val" style="color:var(--accent2)">${GAME_NAMES[favGame.name] || '—'}</div>
+                            <div class="fun-label">Game Yêu Thích</div>
+                        </div>
+                        <div class="fun-card">
+                            <div class="fun-icon">⏰</div>
+                            <div class="fun-val" style="color:var(--neon-gold)">${luckyHours.length > 0 && luckyHours[0].profit > 0 ? luckyHours[0].hour + 'h' : '—'}</div>
+                            <div class="fun-label">Giờ May Mắn</div>
+                        </div>
+                    </div>
+
+                    <!-- PER GAME -->
                     <div class="section-title">🎮 Theo Game</div>
                     <div class="game-stats">
                         ${renderGameRow('🎲', 'Tài Xỉu', games.taixiu)}
@@ -595,6 +1041,7 @@
                         ${renderGameRow('🐦', 'Flappy Bird', games.flappy)}
                     </div>
 
+                    <!-- ACHIEVEMENTS -->
                     <div class="section-title">🏆 Thành Tựu (${achievements.filter(a => a.unlocked).length}/${achievements.length})</div>
                     <div class="ach-grid">
                         ${achievements.map(a => `
@@ -606,6 +1053,7 @@
                         `).join('')}
                     </div>
 
+                    <!-- RECENT ACTIVITY -->
                     <div class="section-title">📜 Hoạt Động Gần Đây</div>
                     <div class="activity-list">
                         ${recent.length === 0 ? '<div class="activity-item"><span class="activity-text" style="text-align:center;width:100%">Chưa có hoạt động</span></div>' : ''}
@@ -615,7 +1063,7 @@
                     return `<div class="activity-item">
                                 <span class="activity-icon">${icon}</span>
                                 <span class="activity-text">${formatTxType(tx.type)}</span>
-                                <span class="activity-amount ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${formatNum(tx.amount)} $</span>
+                                <span class="activity-amount ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${fmt(tx.amount)} $</span>
                                 <span class="activity-time">${timeAgo(tx.time)}</span>
                             </div>`;
                 }).join('')}
@@ -627,20 +1075,46 @@
                 </div>`;
             }
 
+            function renderChart(data) {
+                if (!data || data.length === 0) {
+                    return '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Chưa có dữ liệu 30 ngày</div>';
+                }
+                const maxAbs = Math.max(1, ...data.map(d => Math.abs(d.profit)));
+                const maxH = 50; // half height (bars go up/down from center)
+                let html = '<div class="chart-bars">';
+                html += '<div class="chart-zero-line" style="top:50%"></div>';
+                for (let i = 0; i < data.length; i++) {
+                    const d = data[i];
+                    const pct = Math.abs(d.profit) / maxAbs;
+                    const h = Math.max(2, Math.round(pct * maxH));
+                    const cls = d.profit > 0 ? 'positive' : d.profit < 0 ? 'negative' : 'zero';
+                    const dayLabel = d.day.slice(5);
+                    const showLabel = data.length <= 15 || i % Math.ceil(data.length / 10) === 0;
+                    html += `<div class="chart-bar-wrap">
+                        <div class="chart-tooltip">${d.day}<br>${d.profit >= 0 ? '+' : ''}${fmt(d.profit)} $</div>
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:${d.profit >= 0 ? 'flex-end' : 'flex-start'};height:50%;${d.profit >= 0 ? 'align-self:flex-end;order:0' : 'align-self:flex-start;order:1'}">
+                            <div class="chart-bar ${cls}" style="height:${h}px"></div>
+                        </div>
+                    </div>`;
+                }
+                html += '</div>';
+                return html;
+            }
+
             function renderGameRow(icon, name, data) {
                 const d = data || { games: 0, wins: 0, profit: 0 };
                 const profit = d.profit || 0;
-                const games = d.games || 0;
+                const gms = d.games || 0;
                 const wins = d.wins || 0;
-                const wr = games > 0 ? (wins / games * 100).toFixed(0) : '—';
+                const wr = gms > 0 ? (wins / gms * 100).toFixed(0) : '—';
                 return `<div class="game-row">
-                <span class="game-icon">${icon}</span>
-                <div class="game-info">
-                    <div class="game-name">${name}</div>
-                    <div class="game-detail">${games} ván · ${wins} thắng · WR ${wr}%</div>
-                </div>
-                <span class="game-profit ${profit >= 0 ? 'pos' : 'neg'}">${profit >= 0 ? '+' : ''}${formatNum(profit)} $</span>
-            </div>`;
+                    <span class="game-icon">${icon}</span>
+                    <div class="game-info">
+                        <div class="game-name">${name}</div>
+                        <div class="game-detail">${gms} ván · ${wins} thắng · WR ${wr}%</div>
+                    </div>
+                    <span class="game-profit ${profit >= 0 ? 'pos' : 'neg'}">${profit >= 0 ? '+' : ''}${fmt(profit)} $</span>
+                </div>`;
             }
 
             function formatTxType(type) {
@@ -655,8 +1129,6 @@
                 return map[type] || type;
             }
 
-            function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
             loadProfile();
         })();
     </script>
@@ -664,7 +1136,6 @@
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/chat-system.js"></script>
-
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
 </body>
 

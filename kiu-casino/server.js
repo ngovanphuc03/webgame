@@ -1167,6 +1167,226 @@ app.post('/api/daily/claim', requireAuth, async (req, res) => {
 });
 
 // ============================================================
+// DISCORD LEVELING INTEGRATION (reads from shared MySQL)
+// ============================================================
+const LEVEL_ROLES = {
+    80: { name: 'Ông Trùm', color: '#ffd700', icon: '👑', tier: 6 },
+    40: { name: 'Lão Làng', color: '#8b5cf6', icon: '🐉', tier: 5 },
+    20: { name: 'Đàn Anh', color: '#ff00aa', icon: '⚔️', tier: 4 },
+    10: { name: 'Tay Chơi', color: '#00f0ff', icon: '🎯', tier: 3 },
+    5: { name: 'Lính Mới', color: '#00ff88', icon: '🛡️', tier: 2 },
+    1: { name: 'Người Qua Đường', color: '#888', icon: '👤', tier: 1 },
+};
+function getRankRole(level) {
+    const thresholds = [80, 40, 20, 10, 5, 1];
+    for (const t of thresholds) { if (level >= t) return { level: t, ...LEVEL_ROLES[t] }; }
+    return { level: 0, name: 'Chưa xếp hạng', color: '#555', icon: '❓', tier: 0 };
+}
+// XP formula matching bot: xp_for_next_level(L) = 5*L² + 50*L + 100
+function xpForNextLevel(level) { return 5 * level * level + 50 * level + 100; }
+function totalXpForLevel(L) {
+    if (L <= 0) return 0;
+    // Sum of xpForNextLevel(0..L-1) = 5*(L-1)*L*(2L-1)/6 + 50*(L-1)*L/2 + 100*L
+    return Math.floor(5 * (L - 1) * L * (2 * L - 1) / 6 + 50 * (L - 1) * L / 2 + 100 * L);
+}
+
+// --- Leveling profile for current user or any user ---
+app.get('/api/leveling/profile', requireAuth, async (req, res) => {
+    const uid = req.query.user_id || req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            'SELECT xp, level, last_message_ts, last_voice_ts FROM leveling WHERE guild_id=? AND user_id=?',
+            [TARGET_GUILD_ID, uid]
+        );
+        if (rows.length === 0) {
+            return res.json({ found: false, level: 0, xp: 0, rank: getRankRole(0), xpForNext: xpForNextLevel(0), xpProgress: 0, totalXp: 0 });
+        }
+        const row = rows[0];
+        const level = Number(row.level) || 0;
+        const xp = Number(row.xp) || 0;
+        const xpNeeded = xpForNextLevel(level);
+        const totalXp = totalXpForLevel(level) + xp;
+        const rank = getRankRole(level);
+
+        // Get user's rank position among all members
+        const [rankRows] = await dbPool.execute(
+            'SELECT COUNT(*) as cnt FROM leveling WHERE guild_id=? AND (level > ? OR (level = ? AND xp > ?))',
+            [TARGET_GUILD_ID, level, level, xp]
+        );
+        const position = Number(rankRows[0].cnt) + 1;
+
+        // Get total members count
+        const [totalRows] = await dbPool.execute(
+            'SELECT COUNT(*) as cnt FROM leveling WHERE guild_id=?',
+            [TARGET_GUILD_ID]
+        );
+
+        res.json({
+            found: true,
+            level,
+            xp,
+            xpForNext: xpNeeded,
+            xpProgress: xpNeeded > 0 ? Math.round((xp / xpNeeded) * 100) : 0,
+            totalXp,
+            rank,
+            position,
+            totalMembers: Number(totalRows[0].cnt),
+            lastMessage: row.last_message_ts,
+            lastVoice: row.last_voice_ts
+        });
+    } catch (e) {
+        console.error('Leveling Profile Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// --- Multi-dimension leaderboard ---
+app.get('/api/leaderboard/level', requireAuth, async (req, res) => {
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT l.user_id, l.level, l.xp, w.username, w.avatar
+             FROM leveling l LEFT JOIN wallet w ON l.guild_id=w.guild_id AND l.user_id=w.user_id
+             WHERE l.guild_id=? ORDER BY l.level DESC, l.xp DESC LIMIT 50`,
+            [TARGET_GUILD_ID]
+        );
+        const uid = req.cookies.user_id;
+        // Find my rank
+        const [myRow] = await dbPool.execute(
+            'SELECT level, xp FROM leveling WHERE guild_id=? AND user_id=?', [TARGET_GUILD_ID, uid]
+        );
+        let myRank = null;
+        if (myRow.length) {
+            const [r] = await dbPool.execute(
+                'SELECT COUNT(*) as cnt FROM leveling WHERE guild_id=? AND (level > ? OR (level = ? AND xp > ?))',
+                [TARGET_GUILD_ID, myRow[0].level, myRow[0].level, myRow[0].xp]
+            );
+            myRank = Number(r[0].cnt) + 1;
+        }
+        const leaderboard = rows.map(r => ({
+            user_id: r.user_id,
+            level: Number(r.level),
+            xp: Number(r.xp),
+            totalXp: totalXpForLevel(Number(r.level)) + Number(r.xp),
+            rank: getRankRole(Number(r.level)),
+            username: r.username || ('User_' + String(r.user_id).slice(-4)),
+            avatar: `/api/avatar/${r.user_id}`
+        }));
+        res.json({ leaderboard, my_user_id: uid, my_rank: myRank });
+    } catch (e) {
+        console.error('Level Leaderboard Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+app.get('/api/leaderboard/xp', requireAuth, async (req, res) => {
+    try {
+        // Total XP = sum formula + current xp
+        const [rows] = await dbPool.execute(
+            `SELECT l.user_id, l.level, l.xp, w.username, w.avatar
+             FROM leveling l LEFT JOIN wallet w ON l.guild_id=w.guild_id AND l.user_id=w.user_id
+             WHERE l.guild_id=? ORDER BY l.level DESC, l.xp DESC LIMIT 50`,
+            [TARGET_GUILD_ID]
+        );
+        const uid = req.cookies.user_id;
+        const leaderboard = rows.map(r => ({
+            user_id: r.user_id,
+            level: Number(r.level),
+            xp: Number(r.xp),
+            totalXp: totalXpForLevel(Number(r.level)) + Number(r.xp),
+            username: r.username || ('User_' + String(r.user_id).slice(-4)),
+            avatar: `/api/avatar/${r.user_id}`
+        }));
+        // Sort by totalXp descending (already mostly correct since level dominates)
+        leaderboard.sort((a, b) => b.totalXp - a.totalXp);
+
+        let myRank = null;
+        const myIdx = leaderboard.findIndex(l => l.user_id === uid);
+        if (myIdx >= 0) myRank = myIdx + 1;
+
+        res.json({ leaderboard, my_user_id: uid, my_rank: myRank });
+    } catch (e) {
+        console.error('XP Leaderboard Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// --- Statistics API: daily win/loss chart, streaks, favorite game ---
+app.get('/api/stats/chart', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        // Last 30 days of transactions grouped by day
+        const [rows] = await dbPool.execute(
+            `SELECT DATE(created_at) as day, type, SUM(amount) as total, COUNT(*) as cnt
+             FROM transactions WHERE user_id=? AND guild_id=? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+             GROUP BY DATE(created_at), type ORDER BY day ASC`,
+            [uid, TARGET_GUILD_ID]
+        );
+
+        // Build daily data
+        const dailyMap = {};
+        for (const r of rows) {
+            const day = r.day instanceof Date ? r.day.toISOString().slice(0, 10) : String(r.day);
+            if (!dailyMap[day]) dailyMap[day] = { day, wins: 0, losses: 0, profit: 0, games: 0 };
+            const amt = Number(r.total);
+            if (amt > 0) dailyMap[day].wins += amt;
+            else dailyMap[day].losses += Math.abs(amt);
+            dailyMap[day].profit += amt;
+            dailyMap[day].games += Number(r.cnt);
+        }
+        const dailyChart = Object.values(dailyMap).sort((a, b) => a.day.localeCompare(b.day));
+
+        // Streak calculation: consecutive winning days
+        let currentStreak = 0, maxStreak = 0, streakType = 'none';
+        for (let i = dailyChart.length - 1; i >= 0; i--) {
+            if (i === dailyChart.length - 1) {
+                if (dailyChart[i].profit > 0) { currentStreak = 1; streakType = 'win'; }
+                else if (dailyChart[i].profit < 0) { currentStreak = 1; streakType = 'lose'; }
+                else { currentStreak = 0; break; }
+            } else {
+                if (streakType === 'win' && dailyChart[i].profit > 0) currentStreak++;
+                else if (streakType === 'lose' && dailyChart[i].profit < 0) currentStreak++;
+                else break;
+            }
+        }
+        // Max win streak over all time
+        let tempStreak = 0;
+        for (const d of dailyChart) {
+            if (d.profit > 0) { tempStreak++; maxStreak = Math.max(maxStreak, tempStreak); }
+            else tempStreak = 0;
+        }
+
+        // Favorite game (most played)
+        const gameMap = {};
+        for (const r of rows) {
+            const game = r.type.split('_')[0]; // mines_bet → mines
+            if (!gameMap[game]) gameMap[game] = 0;
+            gameMap[game] += Number(r.cnt);
+        }
+        const favoriteGame = Object.entries(gameMap).sort((a, b) => b[1] - a[1])[0] || ['none', 0];
+
+        // Lucky hours (best time to play)
+        const [hourRows] = await dbPool.execute(
+            `SELECT HOUR(created_at) as h, SUM(amount) as total
+             FROM transactions WHERE user_id=? AND guild_id=? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+             GROUP BY HOUR(created_at) ORDER BY total DESC LIMIT 3`,
+            [uid, TARGET_GUILD_ID]
+        );
+        const luckyHours = hourRows.map(r => ({ hour: r.h, profit: Number(r.total) }));
+
+        res.json({
+            dailyChart,
+            currentStreak: { count: currentStreak, type: streakType },
+            maxWinStreak: maxStreak,
+            favoriteGame: { name: favoriteGame[0], count: favoriteGame[1] },
+            luckyHours
+        });
+    } catch (e) {
+        console.error('Stats Chart Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// ============================================================
 // LEADERBOARD API
 // ============================================================
 app.get('/api/leaderboard', requireAuth, async (req, res) => {

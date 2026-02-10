@@ -22,8 +22,6 @@
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
-        /* DearPix: primary pixel font for the entire site */
-
         @property --ring-angle {
             syntax: '<angle>';
             initial-value: 0deg;
@@ -44,9 +42,9 @@
             --neon-gold: #ffd700;
             --neon-red: #ff3366;
             --bg: #030014;
-            --surface: rgba(15, 15, 35, 0.8);
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.06);
+            --surface: rgba(15, 15, 35, .8);
+            --glass: rgba(255, 255, 255, .03);
+            --glass-border: rgba(255, 255, 255, .06);
             --font-display: 'DearPix', 'Orbitron', sans-serif;
             --font-body: 'DearPix', 'Rajdhani', sans-serif;
             --font-pixel: 'DearPix', monospace;
@@ -70,7 +68,6 @@
             align-items: center;
         }
 
-        /* ═══ CANVAS BG ═══ */
         #bgCanvas {
             position: fixed;
             inset: 0;
@@ -78,19 +75,17 @@
             pointer-events: none
         }
 
-        /* Mesh gradient */
         .bg-mesh {
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(ellipse 60% 50% at 20% 10%, rgba(255, 215, 0, 0.06) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 60% at 80% 90%, rgba(0, 240, 255, 0.04) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
+                radial-gradient(ellipse 60% 50% at 20% 10%, rgba(255, 215, 0, .06) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 60% at 80% 90%, rgba(0, 240, 255, .04) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139, 92, 246, .05) 0%, transparent 60%);
         }
 
-        /* Hex grid overlay */
         .hex-grid {
             position: fixed;
             inset: 0;
@@ -100,7 +95,6 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23ffd700' stroke-width='0.5'/%3E%3C/svg%3E");
         }
 
-        /* ═══ CONTENT ═══ */
         .content {
             position: relative;
             z-index: 1;
@@ -112,7 +106,6 @@
             padding: 0 16px
         }
 
-        /* ═══ TOP BAR ═══ */
         .top-bar {
             width: 100vw;
             display: flex;
@@ -120,9 +113,9 @@
             align-items: center;
             padding: 0 24px;
             height: 58px;
-            background: rgba(3, 0, 20, 0.7);
+            background: rgba(3, 0, 20, .7);
             backdrop-filter: blur(20px) saturate(1.5);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
             position: sticky;
             top: 0;
             z-index: 50;
@@ -132,9 +125,9 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 2px solid rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, .04);
+            border: 2px solid rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .7);
             padding: 7px 16px;
             border-radius: 3px;
             cursor: pointer;
@@ -145,21 +138,21 @@
             text-decoration: none;
             transition: .3s;
             image-rendering: pixelated;
-            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, .3);
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, .08);
             color: #fff;
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.15)
+            box-shadow: 0 0 15px rgba(139, 92, 246, .15)
         }
 
         .balance-pill {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02));
-            border: 1px solid rgba(255, 215, 0, 0.2);
+            background: linear-gradient(135deg, rgba(255, 215, 0, .08), rgba(255, 215, 0, .02));
+            border: 1px solid rgba(255, 215, 0, .2);
             border-radius: 50px;
             padding: 6px 16px;
             font-family: var(--font-display);
@@ -177,7 +170,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.08), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, .08), transparent);
             animation: pillShine 3s ease infinite;
         }
 
@@ -201,7 +194,7 @@
         .trophy-icon {
             font-size: 44px;
             display: inline-block;
-            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, .4));
             animation: trophyBob 3s ease-in-out infinite;
         }
 
@@ -229,7 +222,6 @@
             -webkit-text-fill-color: transparent;
             animation: goldShift 3s ease infinite;
             image-rendering: pixelated;
-            text-shadow: none;
         }
 
         @keyframes goldShift {
@@ -249,7 +241,7 @@
             height: 3px;
             margin: 8px auto 0;
             border-radius: 0;
-            background: linear-gradient(90deg, transparent, var(--neon-gold), rgba(255, 215, 0, 0.3), var(--neon-gold), transparent);
+            background: linear-gradient(90deg, transparent, var(--neon-gold), rgba(255, 215, 0, .3), var(--neon-gold), transparent);
             animation: lineGlow 3s ease-in-out infinite;
             image-rendering: pixelated;
         }
@@ -269,17 +261,15 @@
         }
 
         .page-sub {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 11px;
+            color: rgba(255, 255, 255, .3);
+            font-size: 13px;
             margin-top: 10px;
             font-family: var(--font-pixel-en);
             letter-spacing: 3px;
             font-weight: 500;
-            font-size: 13px;
             image-rendering: pixelated;
         }
 
-        /* ═══ LIVE BADGE ═══ */
         .live-badge {
             display: inline-flex;
             align-items: center;
@@ -287,15 +277,15 @@
             margin-top: 10px;
             padding: 5px 14px;
             border-radius: 3px;
-            background: rgba(0, 255, 136, 0.06);
-            border: 2px solid rgba(0, 255, 136, 0.15);
+            background: rgba(0, 255, 136, .06);
+            border: 2px solid rgba(0, 255, 136, .15);
             font-family: var(--font-pixel-en);
             font-size: 12px;
             font-weight: 700;
             color: var(--neon-green);
             letter-spacing: 1px;
             image-rendering: pixelated;
-            box-shadow: 2px 2px 0 rgba(0, 255, 136, 0.08);
+            box-shadow: 2px 2px 0 rgba(0, 255, 136, .08);
         }
 
         .live-dot {
@@ -320,12 +310,71 @@
             }
         }
 
+        /* ═══ TAB BAR ═══ */
+        .tab-bar {
+            margin-top: 20px;
+            width: 100%;
+            display: flex;
+            background: rgba(8, 8, 24, .7);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .04);
+            padding: 4px;
+            backdrop-filter: blur(12px);
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255, 255, 255, .4);
+            font-family: var(--font-pixel-en);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: .3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            image-rendering: pixelated;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: rgba(255, 255, 255, .6);
+            background: rgba(255, 255, 255, .03)
+        }
+
+        .tab-btn.active {
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(139, 92, 246, .2);
+        }
+
+        .tab-btn.active[data-tab="balance"] {
+            background: linear-gradient(135deg, rgba(255, 215, 0, .15), rgba(255, 215, 0, .05));
+            color: var(--neon-gold)
+        }
+
+        .tab-btn.active[data-tab="level"] {
+            background: linear-gradient(135deg, rgba(88, 101, 242, .15), rgba(88, 101, 242, .05));
+            color: #5865F2
+        }
+
+        .tab-btn.active[data-tab="xp"] {
+            background: linear-gradient(135deg, rgba(0, 240, 255, .15), rgba(0, 240, 255, .05));
+            color: var(--neon-cyan)
+        }
+
         /* ═══ MY RANK CARD ═══ */
         .my-rank {
             margin-top: 20px;
             width: 100%;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(0, 240, 255, 0.04));
-            border: 1px solid rgba(139, 92, 246, 0.15);
+            background: linear-gradient(135deg, rgba(139, 92, 246, .08), rgba(0, 240, 255, .04));
+            border: 1px solid rgba(139, 92, 246, .15);
             border-radius: 16px;
             padding: 16px 20px;
             display: flex;
@@ -339,15 +388,14 @@
 
         @keyframes myRankGlow {
             0% {
-                box-shadow: 0 0 15px rgba(139, 92, 246, 0.05)
+                box-shadow: 0 0 15px rgba(139, 92, 246, .05)
             }
 
             100% {
-                box-shadow: 0 0 40px rgba(139, 92, 246, 0.12)
+                box-shadow: 0 0 40px rgba(139, 92, 246, .12)
             }
         }
 
-        /* Animated border */
         .my-rank::before {
             content: '';
             position: absolute;
@@ -376,7 +424,7 @@
             color: var(--neon-gold);
             min-width: 50px;
             text-align: center;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            text-shadow: 0 0 15px rgba(255, 215, 0, .3);
         }
 
         .my-rank-avatar {
@@ -385,7 +433,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--neon-purple);
-            box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 12px rgba(139, 92, 246, .3);
         }
 
         .my-rank-info {
@@ -396,7 +444,7 @@
             font-family: var(--font-pixel-en);
             font-size: 10px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, .25);
             letter-spacing: 3px;
             text-transform: uppercase;
             image-rendering: pixelated;
@@ -413,6 +461,48 @@
             font-weight: 700;
             font-size: 13px;
             font-family: var(--font-display)
+        }
+
+        .my-rank-info {
+            position: relative
+        }
+
+        .my-rank-info::before {
+            content: '▸';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            font-family: 'DearPix', monospace;
+            font-size: 16px;
+            color: var(--neon-purple);
+            opacity: .2;
+            animation: pixelBlink 1.2s step-end infinite;
+        }
+
+        @keyframes pixelBlink {
+
+            0%,
+            49% {
+                opacity: .25
+            }
+
+            50%,
+            100% {
+                opacity: 0
+            }
+        }
+
+        /* ═══ RANK BADGE (in leaderboard rows) ═══ */
+        .lb-rank-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+            margin-left: 4px;
+            border: 1px solid;
+            vertical-align: middle;
         }
 
         /* ═══ PODIUM ═══ */
@@ -471,7 +561,7 @@
             height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, .1);
             position: relative;
             z-index: 1;
             transition: .4s;
@@ -481,12 +571,11 @@
             transform: scale(1.1)
         }
 
-        /* #1 avatar */
         .p-1 .podium-avatar {
             width: 72px;
             height: 72px;
             border-color: var(--neon-gold);
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.35), 0 0 60px rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 25px rgba(255, 215, 0, .35), 0 0 60px rgba(255, 215, 0, .1);
         }
 
         .p-1 .podium-avatar-wrap::before {
@@ -497,7 +586,7 @@
             transform: translateX(-50%);
             font-size: 22px;
             z-index: 2;
-            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, .6));
             animation: trophyBob 2.5s ease-in-out infinite;
         }
 
@@ -512,10 +601,9 @@
             opacity: .5;
         }
 
-        /* #2 avatar */
         .p-2 .podium-avatar {
             border-color: #c0c0c0;
-            box-shadow: 0 0 15px rgba(192, 192, 192, 0.2)
+            box-shadow: 0 0 15px rgba(192, 192, 192, .2)
         }
 
         .p-2 .podium-avatar-wrap::after {
@@ -529,10 +617,9 @@
             opacity: .35;
         }
 
-        /* #3 avatar */
         .p-3 .podium-avatar {
             border-color: #cd7f32;
-            box-shadow: 0 0 15px rgba(205, 127, 50, 0.2)
+            box-shadow: 0 0 15px rgba(205, 127, 50, .2)
         }
 
         .p-3 .podium-avatar-wrap::after {
@@ -548,7 +635,7 @@
 
         .podium-medal {
             font-size: 26px;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3))
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, .3))
         }
 
         .podium-name {
@@ -566,10 +653,9 @@
             font-size: 10px;
             font-weight: 700;
             color: var(--neon-gold);
-            text-shadow: 0 0 6px rgba(255, 215, 0, 0.2);
+            text-shadow: 0 0 6px rgba(255, 215, 0, .2);
         }
 
-        /* Podium bars */
         .podium-bar {
             width: 80px;
             border-radius: 12px 12px 0 0;
@@ -579,10 +665,10 @@
             font-family: var(--font-display);
             font-weight: 900;
             font-size: 18px;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(255, 255, 255, .85);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, .3);
         }
 
         .podium-bar::after {
@@ -592,7 +678,7 @@
             left: -100%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, .15), transparent);
             animation: barShimmer 2.5s linear infinite;
         }
 
@@ -606,10 +692,21 @@
             }
         }
 
+        .podium-bar::before {
+            content: '▄▄▄';
+            position: absolute;
+            top: 8px;
+            font-family: 'DearPix', monospace;
+            font-size: 5px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, .2);
+            z-index: 2;
+        }
+
         .p-1 .podium-bar {
             height: 110px;
             background: linear-gradient(180deg, #ffd700, #e8a000, #b8860b);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2)
+            box-shadow: 0 0 30px rgba(255, 215, 0, .2)
         }
 
         .p-2 .podium-bar {
@@ -626,7 +723,7 @@
             width: 280px;
             height: 4px;
             margin: 0 auto;
-            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), rgba(192, 192, 192, 0.15), rgba(205, 127, 50, 0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, .2), rgba(192, 192, 192, .15), rgba(205, 127, 50, .15), transparent);
             border-radius: 2px;
         }
 
@@ -634,17 +731,16 @@
         .lb-container {
             margin-top: 22px;
             width: 100%;
-            background: rgba(8, 8, 24, 0.7);
+            background: rgba(8, 8, 24, .7);
             border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, .04);
             backdrop-filter: blur(12px);
             overflow: hidden;
-            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 50px rgba(0, 0, 0, .3);
             position: relative;
             margin-bottom: 16px;
         }
 
-        /* Top glow line */
         .lb-container::before {
             content: '';
             position: absolute;
@@ -652,7 +748,18 @@
             left: 10%;
             right: 10%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), rgba(139, 92, 246, 0.3), rgba(0, 240, 255, 0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, .3), rgba(139, 92, 246, .3), rgba(0, 240, 255, .3), transparent);
+        }
+
+        .lb-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: .03;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, .1) 2px, rgba(255, 255, 255, .1) 4px);
+            border-radius: 18px;
         }
 
         .lb-inner {
@@ -665,10 +772,10 @@
             font-family: var(--font-pixel-en);
             font-size: 12px;
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, .2);
             letter-spacing: 2px;
             text-transform: uppercase;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 2px solid rgba(255, 255, 255, .04);
             image-rendering: pixelated;
         }
 
@@ -709,14 +816,13 @@
         }
 
         .lb-row:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, .04);
             transform: translateX(4px)
         }
 
-        /* Rank-specific styles */
         .lb-row.top-1 {
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.01), transparent);
-            border: 1px solid rgba(255, 215, 0, 0.1);
+            background: linear-gradient(90deg, rgba(255, 215, 0, .08), rgba(255, 215, 0, .01), transparent);
+            border: 1px solid rgba(255, 215, 0, .1)
         }
 
         .lb-row.top-1::before {
@@ -724,7 +830,7 @@
             position: absolute;
             inset: 0;
             border-radius: 10px;
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.04), transparent);
+            background: linear-gradient(90deg, rgba(255, 215, 0, .04), transparent);
             animation: goldPulse 3s ease-in-out infinite;
         }
 
@@ -741,19 +847,19 @@
         }
 
         .lb-row.top-2 {
-            background: linear-gradient(90deg, rgba(192, 192, 192, 0.06), transparent);
-            border: 1px solid rgba(192, 192, 192, 0.06)
+            background: linear-gradient(90deg, rgba(192, 192, 192, .06), transparent);
+            border: 1px solid rgba(192, 192, 192, .06)
         }
 
         .lb-row.top-3 {
-            background: linear-gradient(90deg, rgba(205, 127, 50, 0.06), transparent);
-            border: 1px solid rgba(205, 127, 50, 0.06)
+            background: linear-gradient(90deg, rgba(205, 127, 50, .06), transparent);
+            border: 1px solid rgba(205, 127, 50, .06)
         }
 
         .lb-row.is-me {
-            background: linear-gradient(90deg, rgba(139, 92, 246, 0.1), rgba(0, 240, 255, 0.03), transparent);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
+            background: linear-gradient(90deg, rgba(139, 92, 246, .1), rgba(0, 240, 255, .03), transparent);
+            border: 1px solid rgba(139, 92, 246, .2);
+            box-shadow: 0 0 20px rgba(139, 92, 246, .08);
         }
 
         .lb-rank {
@@ -766,17 +872,17 @@
 
         .rank-1 {
             color: var(--neon-gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4)
+            text-shadow: 0 0 10px rgba(255, 215, 0, .4)
         }
 
         .rank-2 {
             color: #c0c0c0;
-            text-shadow: 0 0 8px rgba(192, 192, 192, 0.3)
+            text-shadow: 0 0 8px rgba(192, 192, 192, .3)
         }
 
         .rank-3 {
             color: #cd7f32;
-            text-shadow: 0 0 8px rgba(205, 127, 50, 0.3)
+            text-shadow: 0 0 8px rgba(205, 127, 50, .3)
         }
 
         .lb-user {
@@ -791,24 +897,24 @@
             height: 34px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, .08);
             flex-shrink: 0;
         }
 
         .lb-row.top-1 .lb-avatar {
-            border-color: rgba(255, 215, 0, 0.4)
+            border-color: rgba(255, 215, 0, .4)
         }
 
         .lb-row.top-2 .lb-avatar {
-            border-color: rgba(192, 192, 192, 0.3)
+            border-color: rgba(192, 192, 192, .3)
         }
 
         .lb-row.top-3 .lb-avatar {
-            border-color: rgba(205, 127, 50, 0.3)
+            border-color: rgba(205, 127, 50, .3)
         }
 
         .lb-row.is-me .lb-avatar {
-            border-color: rgba(139, 92, 246, 0.4)
+            border-color: rgba(139, 92, 246, .4)
         }
 
         .lb-name {
@@ -816,7 +922,8 @@
             font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 6px
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .lb-me-tag {
@@ -824,12 +931,12 @@
             font-size: 10px;
             font-weight: 700;
             color: var(--neon-purple);
-            background: rgba(139, 92, 246, 0.15);
+            background: rgba(139, 92, 246, .15);
             padding: 2px 6px;
             border-radius: 2px;
             letter-spacing: 1px;
             image-rendering: pixelated;
-            box-shadow: 1px 1px 0 rgba(139, 92, 246, 0.2);
+            box-shadow: 1px 1px 0 rgba(139, 92, 246, .2);
         }
 
         .lb-balance {
@@ -839,18 +946,17 @@
             font-weight: 800;
             color: var(--neon-gold);
             font-size: 12px;
-            text-shadow: 0 0 6px rgba(255, 215, 0, 0.15);
+            text-shadow: 0 0 6px rgba(255, 215, 0, .15);
         }
 
-        /* ═══ REFRESH BUTTON ═══ */
         .refresh-btn {
             margin: 4px 0 30px;
             padding: 10px 24px;
             border: none;
             border-radius: 3px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(0, 240, 255, 0.06));
-            border: 2px solid rgba(139, 92, 246, 0.15);
-            color: rgba(255, 255, 255, 0.7);
+            background: linear-gradient(135deg, rgba(139, 92, 246, .12), rgba(0, 240, 255, .06));
+            border: 2px solid rgba(139, 92, 246, .15);
+            color: rgba(255, 255, 255, .7);
             font-family: var(--font-pixel-en);
             font-size: 13px;
             font-weight: 700;
@@ -860,7 +966,7 @@
             position: relative;
             overflow: hidden;
             image-rendering: pixelated;
-            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, .3);
         }
 
         .refresh-btn::after {
@@ -870,7 +976,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .06), transparent);
             transition: .5s;
         }
 
@@ -880,7 +986,7 @@
 
         .refresh-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.15);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, .15);
             color: #fff
         }
 
@@ -904,11 +1010,10 @@
         }
 
         .loading-text {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, .3);
             font-size: 14px
         }
 
-        /* ═══ FLOATING ELEMENTS ═══ */
         .coin {
             position: fixed;
             font-size: 14px;
@@ -938,7 +1043,6 @@
             }
         }
 
-        /* ═══ SCROLL REVEAL ═══ */
         .reveal {
             opacity: 0;
             transform: translateY(20px);
@@ -950,7 +1054,19 @@
             transform: translateY(0)
         }
 
-        /* ═══ RESPONSIVE ═══ */
+        .header::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: .04;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(255, 215, 0, .2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, .2) 1px, transparent 1px);
+            background-size: 4px 4px;
+            image-rendering: pixelated;
+        }
+
         @media(max-width:500px) {
             .p-1 .podium-avatar {
                 width: 58px;
@@ -986,77 +1102,12 @@
             .my-rank {
                 padding: 12px 14px
             }
-        }
 
-        /* ═══ PIXEL ART DECORATIONS ═══ */
-        /* Pixel grid overlay on header */
-        .header::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            opacity: .04;
-            pointer-events: none;
-            background-image:
-                linear-gradient(rgba(255, 215, 0, .2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 215, 0, .2) 1px, transparent 1px);
-            background-size: 4px 4px;
-            image-rendering: pixelated;
-        }
-
-        /* Pixel corners on my-rank card */
-        .my-rank .my-rank-info::before {
-            content: '▸';
-            position: absolute;
-            top: 50%;
-            right: 16px;
-            transform: translateY(-50%);
-            font-family: 'DearPix', monospace;
-            font-size: 16px;
-            color: var(--neon-purple);
-            opacity: .2;
-            animation: pixelBlink 1.2s step-end infinite;
-        }
-
-        @keyframes pixelBlink {
-
-            0%,
-            49% {
-                opacity: .25
+            .tab-btn {
+                font-size: 10px;
+                padding: 8px 4px;
+                gap: 3px
             }
-
-            50%,
-            100% {
-                opacity: 0
-            }
-        }
-
-        /* Pixel scanline on lb-container */
-        .lb-container::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            opacity: .03;
-            background: repeating-linear-gradient(0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(255, 255, 255, .1) 2px,
-                    rgba(255, 255, 255, .1) 4px);
-            border-radius: 18px;
-        }
-
-        /* Pixel dot decorators on podium bars */
-        .podium-bar::before {
-            content: '▄▄▄';
-            position: absolute;
-            top: 8px;
-            font-family: 'DearPix', monospace;
-            font-size: 5px;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.2);
-            z-index: 2;
         }
     </style>
 </head>
@@ -1105,6 +1156,13 @@
             </div>
         </div>
 
+        <!-- TAB BAR -->
+        <div class="tab-bar reveal">
+            <button class="tab-btn active" data-tab="balance" onclick="switchTab('balance')">💰 Balance</button>
+            <button class="tab-btn" data-tab="level" onclick="switchTab('level')">⭐ Level</button>
+            <button class="tab-btn" data-tab="xp" onclick="switchTab('xp')">📊 Total XP</button>
+        </div>
+
         <div class="my-rank reveal" id="myRankCard" style="display:none">
             <div class="my-rank-pos" id="myRankPos">#?</div>
             <img class="my-rank-avatar" id="myRankAvatar" src="/images/ui/default-avatar.svg" alt="">
@@ -1125,7 +1183,7 @@
                 <div class="lb-header">
                     <div class="col-rank">#</div>
                     <div class="col-user">PLAYER</div>
-                    <div class="col-bal">BALANCE</div>
+                    <div class="col-bal" id="colBalLabel">BALANCE</div>
                 </div>
                 <div id="lbBody">
                     <p class="loading-text" style="text-align:center;padding:30px">⏳ Loading...</p>
@@ -1143,10 +1201,8 @@
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
         let particles = [], mouseX = -1, mouseY = -1;
-
         function resizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight }
         addEventListener('resize', resizeCanvas); resizeCanvas();
-
         class Particle {
             constructor() { this.reset() }
             reset() {
@@ -1163,44 +1219,23 @@
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
                 this.cAlpha = this.alpha * (.6 + .4 * Math.sin(t * this.pulseSpeed + this.phase));
-                if (mouseX > 0) {
-                    const dx = this.x - mouseX, dy = this.y - mouseY, d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < 130) { const f = (130 - d) / 130 * .4; this.x += dx / d * f; this.y += dy / d * f }
-                }
+                if (mouseX > 0) { const dx = this.x - mouseX, dy = this.y - mouseY, d = Math.sqrt(dx * dx + dy * dy); if (d < 130) { const f = (130 - d) / 130 * .4; this.x += dx / d * f; this.y += dy / d * f } }
             }
             draw() {
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fillStyle = `hsla(${this.hue},60%,60%,${this.cAlpha})`; ctx.fill();
-                if (this.size > 1.2) {
-                    ctx.shadowBlur = this.size * 6;
-                    ctx.shadowColor = `hsla(${this.hue},60%,60%,${this.cAlpha * .4})`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size * .5, 0, Math.PI * 2); ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
+                if (this.size > 1.2) { ctx.shadowBlur = this.size * 6; ctx.shadowColor = `hsla(${this.hue},60%,60%,${this.cAlpha * .4})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size * .5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0 }
             }
         }
-        for (let i = 0; i < 60; i++)particles.push(new Particle());
-
+        for (let i = 0; i < 60; i++) particles.push(new Particle());
         let frame = 0;
         function animate() {
-            frame++;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Central glow
+            frame++; ctx.clearRect(0, 0, canvas.width, canvas.height);
             const g = ctx.createRadialGradient(canvas.width / 2, canvas.height * .3, 0, canvas.width / 2, canvas.height * .3, canvas.width * .6);
             g.addColorStop(0, 'rgba(25,10,60,0.1)'); g.addColorStop(1, 'rgba(3,0,14,0)');
             ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             particles.forEach(p => { p.update(frame); p.draw() });
-            // Connection lines
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < 100) {
-                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(255,215,0,${(1 - d / 100) * .04})`; ctx.lineWidth = .5; ctx.stroke();
-                    }
-                }
-            }
+            for (let i = 0; i < particles.length; i++) { for (let j = i + 1; j < particles.length; j++) { const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, d = Math.sqrt(dx * dx + dy * dy); if (d < 100) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(255,215,0,${(1 - d / 100) * .04})`; ctx.lineWidth = .5; ctx.stroke() } } }
             requestAnimationFrame(animate);
         }
         animate();
@@ -1210,75 +1245,124 @@
         // ═══ FLOATING COINS ═══
         (function () {
             const emojis = ['💰', '🪙', '💎', '⭐', '🏆'];
-            for (let i = 0; i < 6; i++) {
-                const c = document.createElement('div'); c.className = 'coin';
-                c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                c.style.left = Math.random() * 100 + '%';
-                c.style.fontSize = (10 + Math.random() * 12) + 'px';
-                c.style.animationDuration = (12 + Math.random() * 15) + 's';
-                c.style.animationDelay = Math.random() * 10 + 's';
-                document.body.appendChild(c);
-            }
+            for (let i = 0; i < 6; i++) { const c = document.createElement('div'); c.className = 'coin'; c.textContent = emojis[Math.floor(Math.random() * emojis.length)]; c.style.left = Math.random() * 100 + '%'; c.style.fontSize = (10 + Math.random() * 12) + 'px'; c.style.animationDuration = (12 + Math.random() * 15) + 's'; c.style.animationDelay = Math.random() * 10 + 's'; document.body.appendChild(c) }
         })();
 
         // ═══ SCROLL REVEAL ═══
-        const obs = new IntersectionObserver(entries => {
-            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') });
-        }, { threshold: .1 });
+        const obs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }) }, { threshold: .1 });
         document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
+        // ═══ LEVEL ROLES (matching bot config) ═══
+        const LEVEL_ROLES = {
+            80: { name: 'Ông Trùm', color: '#ffd700', icon: '👑' },
+            40: { name: 'Lão Làng', color: '#8b5cf6', icon: '🐉' },
+            20: { name: 'Đàn Anh', color: '#ff00aa', icon: '⚔️' },
+            10: { name: 'Tay Chơi', color: '#00f0ff', icon: '🎯' },
+            5: { name: 'Lính Mới', color: '#00ff88', icon: '🛡️' },
+            1: { name: 'Người Qua Đường', color: '#888', icon: '👤' },
+        };
+        function getRankRole(level) {
+            for (const t of [80, 40, 20, 10, 5, 1]) { if (level >= t) return LEVEL_ROLES[t]; }
+            return { name: '?', color: '#555', icon: '❓' };
+        }
+
         // ═══ MAIN LOGIC ═══
+        let currentTab = 'balance';
+        let meData = null;
+        const lbCache = {};
+
         function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML }
         function animateCounter(el, target) {
             const dur = 1000, start = performance.now();
-            function tick(now) {
-                const p = Math.min((now - start) / dur, 1);
-                const eased = 1 - Math.pow(1 - p, 3);
-                el.textContent = Math.floor(eased * target).toLocaleString();
-                if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString();
-            }
+            function tick(now) { const p = Math.min((now - start) / dur, 1); const eased = 1 - Math.pow(1 - p, 3); el.textContent = Math.floor(eased * target).toLocaleString(); if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString() }
             requestAnimationFrame(tick);
         }
 
-        async function loadLeaderboard() {
-            const lbBody = document.getElementById('lbBody');
-            try {
-                const [meRes, lbRes] = await Promise.all([fetch('/api/me'), fetch('/api/leaderboard')]);
-                if (!meRes.ok) { location.href = '/'; return }
-                const me = await meRes.json();
-                animateCounter(document.getElementById('balance'), Number(me.balance));
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.tab === tab);
+            });
+            // Update column header
+            const labels = { balance: 'BALANCE', level: 'LEVEL', xp: 'TOTAL XP' };
+            document.getElementById('colBalLabel').textContent = labels[tab] || 'BALANCE';
+            loadTab(tab);
+        }
 
+        async function loadTab(tab) {
+            const lbBody = document.getElementById('lbBody');
+            lbBody.innerHTML = '<p class="loading-text" style="text-align:center;padding:30px">⏳ Loading...</p>';
+
+            try {
+                if (!meData) {
+                    const meRes = await fetch('/api/me');
+                    if (!meRes.ok) { location.href = '/'; return; }
+                    meData = await meRes.json();
+                    animateCounter(document.getElementById('balance'), Number(meData.balance));
+                }
+
+                const apiMap = {
+                    balance: '/api/leaderboard',
+                    level: '/api/leaderboard/level',
+                    xp: '/api/leaderboard/xp'
+                };
+                const lbRes = await fetch(apiMap[tab]);
                 if (!lbRes.ok) {
                     const err = await lbRes.json().catch(() => ({}));
-                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff3366;padding:20px">❌ ${escapeHtml(err.error || 'Error')}</p>`; return;
+                    lbBody.innerHTML = `<p class="loading-text" style="text-align:center;color:#ff3366;padding:20px">❌ ${escapeHtml(err.error || 'Error')}</p>`;
+                    return;
                 }
                 const lb = await lbRes.json();
+                lbCache[tab] = lb;
+
                 if (!lb || !lb.leaderboard || !lb.leaderboard.length) {
                     document.getElementById('podium').innerHTML = '';
-                    lbBody.innerHTML = '<p class="loading-text" style="text-align:center;padding:20px">📭 No data yet</p>'; return;
+                    lbBody.innerHTML = '<p class="loading-text" style="text-align:center;padding:20px">📭 No data yet</p>';
+                    document.getElementById('myRankCard').style.display = 'none';
+                    document.getElementById('playerCount').textContent = '0';
+                    return;
                 }
 
                 const list = lb.leaderboard;
                 document.getElementById('playerCount').textContent = list.length;
 
+                // My rank card
                 if (lb.my_rank) {
                     const card = document.getElementById('myRankCard'); card.style.display = 'flex';
                     document.getElementById('myRankPos').textContent = '#' + lb.my_rank;
-                    document.getElementById('myRankName').textContent = me.username;
-                    document.getElementById('myRankAvatar').src = me.avatar || '/images/ui/default-avatar.svg';
-                    document.getElementById('myRankBalance').textContent = Number(me.balance).toLocaleString() + ' $';
+                    document.getElementById('myRankName').textContent = meData.username;
+                    document.getElementById('myRankAvatar').src = meData.avatar || '/images/ui/default-avatar.svg';
+                    // Balance display varies by tab
+                    if (tab === 'balance') {
+                        document.getElementById('myRankBalance').textContent = Number(meData.balance).toLocaleString() + ' $';
+                    } else if (tab === 'level') {
+                        const myEntry = list.find(l => l.user_id === lb.my_user_id);
+                        document.getElementById('myRankBalance').textContent = myEntry ? 'Lv.' + myEntry.level : '';
+                    } else if (tab === 'xp') {
+                        const myEntry = list.find(l => l.user_id === lb.my_user_id);
+                        document.getElementById('myRankBalance').textContent = myEntry ? myEntry.totalXp.toLocaleString() + ' XP' : '';
+                    }
+                } else {
+                    document.getElementById('myRankCard').style.display = 'none';
                 }
 
-                if (list.length >= 3) renderPodium(list.slice(0, 3));
+                if (list.length >= 3) renderPodium(list.slice(0, 3), tab);
                 else document.getElementById('podium').innerHTML = '';
-                renderList(list, lb.my_user_id);
+                renderList(list, lb.my_user_id, tab);
             } catch (e) {
                 console.error(e);
                 lbBody.innerHTML = '<p class="loading-text" style="text-align:center;color:#ff3366;padding:20px">❌ Connection error</p>';
             }
         }
 
-        function renderPodium(top3) {
+        function getValueDisplay(user, tab) {
+            if (tab === 'balance') return Number(user.balance).toLocaleString() + ' $';
+            if (tab === 'level') return 'Lv.' + user.level;
+            if (tab === 'xp') return user.totalXp.toLocaleString() + ' XP';
+            return '';
+        }
+
+        function renderPodium(top3, tab) {
             const podium = document.getElementById('podium');
             if (top3.length < 3) { podium.innerHTML = ''; return }
             const order = [top3[1], top3[0], top3[2]];
@@ -1291,12 +1375,12 @@
         <img class="podium-avatar" src="${u.avatar || '/images/ui/default-avatar.svg'}" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
       </div>
       <div class="podium-name">${escapeHtml(u.username || 'User')}</div>
-      <div class="podium-balance">${Number(u.balance).toLocaleString()} $</div>
+      <div class="podium-balance">${getValueDisplay(u, tab)}</div>
       <div class="podium-bar">${i === 1 ? '1' : (i === 0 ? '2' : '3')}</div>
     </div>`).join('');
         }
 
-        function renderList(list, myId) {
+        function renderList(list, myId, tab) {
             const body = document.getElementById('lbBody');
             if (!list.length) { body.innerHTML = '<p class="loading-text" style="text-align:center">No data</p>'; return }
             body.innerHTML = list.map((u, i) => {
@@ -1305,14 +1389,26 @@
                 const isMe = u.user_id === myId;
                 const rankColor = rank <= 3 ? `rank-${rank}` : '';
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                const val = getValueDisplay(u, tab);
+
+                // Rank badge for level/xp tabs
+                let rankBadge = '';
+                if ((tab === 'level' || tab === 'xp') && u.rank) {
+                    const r = u.rank;
+                    rankBadge = `<span class="lb-rank-badge" style="color:${r.color};border-color:${r.color};background:${r.color}15">${r.icon} ${r.name}</span>`;
+                } else if ((tab === 'level' || tab === 'xp') && u.level !== undefined) {
+                    const r = getRankRole(u.level);
+                    rankBadge = `<span class="lb-rank-badge" style="color:${r.color};border-color:${r.color};background:${r.color}15">${r.icon} ${r.name}</span>`;
+                }
+
                 return `
       <div class="lb-row ${rc} ${isMe ? 'is-me' : ''}" style="animation-delay:${i * .04}s">
         <div class="lb-rank ${rankColor}">${medal}</div>
         <div class="lb-user">
           <img class="lb-avatar" src="${u.avatar || '/images/ui/default-avatar.svg'}" alt="" onerror="this.onerror=null;this.src='/images/ui/default-avatar.svg';">
-          <span class="lb-name">${escapeHtml(u.username || 'User')}${isMe ? ' <span class="lb-me-tag">YOU</span>' : ''}</span>
+          <span class="lb-name">${escapeHtml(u.username || 'User')}${isMe ? ' <span class="lb-me-tag">YOU</span>' : ''}${rankBadge}</span>
         </div>
-        <div class="lb-balance">${Number(u.balance).toLocaleString()} $</div>
+        <div class="lb-balance" style="color:${tab === 'level' ? '#5865F2' : tab === 'xp' ? 'var(--neon-cyan)' : 'var(--neon-gold)'}">${val}</div>
       </div>`;
             }).join('');
         }
@@ -1320,17 +1416,18 @@
         function refreshClicked() {
             const btn = document.querySelector('.refresh-btn');
             btn.classList.add('spinning');
-            loadLeaderboard().finally(() => setTimeout(() => btn.classList.remove('spinning'), 800));
+            meData = null; // force re-fetch
+            loadTab(currentTab).finally(() => setTimeout(() => btn.classList.remove('spinning'), 800));
         }
 
-        loadLeaderboard();
+        // Initial load
+        loadTab('balance');
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
     <script src="/js/chat-system.js"></script>
-
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { });</script>
     <script>window.addEventListener('load', () => { const l = document.getElementById('ppz-loading'); if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500) } })</script>
 </body>
