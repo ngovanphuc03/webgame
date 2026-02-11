@@ -228,6 +228,125 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
 let lastSyncTime = 0;
 const SYNC_COOLDOWN = 5 * 60 * 1000; // 5 phút cooldown giữa các lần sync
 
+// --- DISCORD ROLE DETECTION: Fetch real Discord roles for users ---
+const RANK_ROLE_NAMES = {
+    'Ông Trùm': { name: 'Ông Trùm', color: '#ffd700', icon: '👑', tier: 6 },
+    'Lão Làng': { name: 'Lão Làng', color: '#8b5cf6', icon: '🐉', tier: 5 },
+    'Đàn Anh': { name: 'Đàn Anh', color: '#ff00aa', icon: '⚔️', tier: 4 },
+    'Tay Chơi': { name: 'Tay Chơi', color: '#00f0ff', icon: '🎯', tier: 3 },
+    'Lính Mới': { name: 'Lính Mới', color: '#00ff88', icon: '🛡️', tier: 2 },
+    'Người Qua Đường': { name: 'Người Qua Đường', color: '#888', icon: '👤', tier: 1 },
+};
+// Cache guild roles list (role id → role name) - refresh every 30 min
+let guildRolesCache = null;
+let guildRolesCacheTime = 0;
+const GUILD_ROLES_CACHE_TTL = 30 * 60 * 1000;
+
+// Cache member roles (userId → { rank, fetchedAt })
+const memberRankCache = new Map();
+const MEMBER_RANK_CACHE_TTL = 10 * 60 * 1000; // 10 min
+
+async function fetchGuildRoles() {
+    if (!BOT_TOKEN) return null;
+    const now = Date.now();
+    if (guildRolesCache && (now - guildRolesCacheTime) < GUILD_ROLES_CACHE_TTL) return guildRolesCache;
+    try {
+        const res = await axios.get(`https://discord.com/api/v10/guilds/${TARGET_GUILD_ID}/roles`, {
+            headers: { Authorization: `Bot ${BOT_TOKEN}`, 'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)' }
+        });
+        // Map role id → role name
+        const roleMap = {};
+        for (const role of res.data) {
+            roleMap[role.id] = role.name;
+        }
+        guildRolesCache = roleMap;
+        guildRolesCacheTime = now;
+        console.log(`[Discord] Fetched ${Object.keys(roleMap).length} guild roles`);
+        return roleMap;
+    } catch (e) {
+        console.error('[Discord] Failed to fetch guild roles:', e.message);
+        return guildRolesCache; // return stale cache if available
+    }
+}
+
+async function fetchMemberDiscordRank(userId) {
+    if (!BOT_TOKEN) return null;
+    // Check cache
+    const now = Date.now();
+    const cached = memberRankCache.get(userId);
+    if (cached && (now - cached.fetchedAt) < MEMBER_RANK_CACHE_TTL) return cached.rank;
+
+    try {
+        const guildRoles = await fetchGuildRoles();
+        if (!guildRoles) return null;
+
+        const res = await axios.get(`https://discord.com/api/v10/guilds/${TARGET_GUILD_ID}/members/${userId}`, {
+            headers: { Authorization: `Bot ${BOT_TOKEN}`, 'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)' }
+        });
+        const memberRoleIds = res.data.roles || [];
+        // Find highest-tier rank role this member has
+        let bestRank = null;
+        for (const roleId of memberRoleIds) {
+            const roleName = guildRoles[roleId];
+            if (roleName && RANK_ROLE_NAMES[roleName]) {
+                const candidate = RANK_ROLE_NAMES[roleName];
+                if (!bestRank || candidate.tier > bestRank.tier) {
+                    bestRank = candidate;
+                }
+            }
+        }
+        // Cache result (even null = no rank role)
+        memberRankCache.set(userId, { rank: bestRank, fetchedAt: now });
+        return bestRank;
+    } catch (e) {
+        if (e.response && e.response.status === 429) {
+            console.warn(`[Discord] Rate limited fetching member ${userId}, retry after ${e.response.data.retry_after}s`);
+        } else if (e.response && e.response.status === 404) {
+            // Member not in guild
+            memberRankCache.set(userId, { rank: null, fetchedAt: now });
+        }
+        // Return cached if available, otherwise null
+        return cached ? cached.rank : null;
+    }
+}
+
+// Batch fetch Discord ranks for multiple users (with rate limit protection)
+async function batchFetchDiscordRanks(userIds) {
+    if (!BOT_TOKEN || !userIds.length) return {};
+    const results = {};
+    const toFetch = [];
+    const now = Date.now();
+
+    // Check cache first
+    for (const uid of userIds) {
+        const cached = memberRankCache.get(uid);
+        if (cached && (now - cached.fetchedAt) < MEMBER_RANK_CACHE_TTL) {
+            results[uid] = cached.rank;
+        } else {
+            toFetch.push(uid);
+        }
+    }
+
+    // Fetch guild roles once
+    if (toFetch.length > 0) {
+        await fetchGuildRoles();
+    }
+
+    // Fetch missing members (with 200ms delay between to avoid rate limit)
+    for (const uid of toFetch) {
+        try {
+            const rank = await fetchMemberDiscordRank(uid);
+            results[uid] = rank;
+        } catch (e) {
+            results[uid] = null;
+        }
+        if (toFetch.indexOf(uid) < toFetch.length - 1) {
+            await new Promise(r => setTimeout(r, 200));
+        }
+    }
+    return results;
+}
+
 async function fetchDiscordUser(userId) {
     if (!BOT_TOKEN) return null;
     try {
@@ -301,32 +420,169 @@ setTimeout(() => {
 }, 5000);
 
 // --- AUTH ---
+// OAuth state store for CSRF protection & prevent code reuse
+const oauthStates = new Map(); // state → { createdAt }
+setInterval(() => { // cleanup expired states every 5 min
+    const now = Date.now();
+    for (const [s, v] of oauthStates) {
+        if (now - v.createdAt > 300000) oauthStates.delete(s); // 5 min TTL
+    }
+}, 300000);
+
+// Helper: render styled error/info page with auto-redirect
+function renderAuthPage({ title, icon, message, color, redirectUrl, redirectSec }) {
+    const rSec = redirectSec || 5;
+    const rUrl = redirectUrl || '/';
+    const metaRefresh = `<meta http-equiv="refresh" content="${rSec};url=${rUrl}">`;
+    return `
+        <html><head>${metaRefresh}<style>
+            @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
+            body { background: #1a1a2e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+            .box { text-align: center; padding: 40px; background: #16213e; border-radius: 15px; box-shadow: 0 0 30px ${color || 'rgba(255,100,100,0.3)'}; max-width: 500px; }
+            h2 { color: ${color === 'rgba(0,200,255,0.3)' ? '#4ecdc4' : '#ff6b6b'}; } a { color: #4ecdc4; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+            .countdown { color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 12px; }
+        </style></head><body><div class="box">
+            <h2>${icon} ${title}</h2>
+            <p>${message}</p>
+            <p style="margin-top:20px"><a href="${rUrl}">← Quay về trang chủ</a></p>
+            <p class="countdown">Tự động chuyển hướng sau ${rSec} giây...</p>
+        </div></body></html>
+    `;
+}
+
 // Discord OAuth routes (enabled when env is configured)
 app.get('/auth/discord', discordAuthLimiter, (req, res) => {
     if (!isDiscordConfigured) return res.status(503).send('Discord OAuth is not configured.');
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+    // Generate CSRF state token
+    const state = crypto.randomBytes(16).toString('hex');
+    oauthStates.set(state, { createdAt: Date.now() });
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}&prompt=consent`;
     res.redirect(url);
 });
 
 app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
-    const { code } = req.query;
-    if (!code) return res.send('Lỗi: Không có code!');
+    const { code, error, error_description, state } = req.query;
+
+    // 1. User cancelled on Discord's authorization page
+    if (error === 'access_denied' || error === 'consent_required') {
+        console.log('[Auth] User cancelled Discord authorization');
+        return res.send(renderAuthPage({
+            title: 'Đăng nhập đã huỷ',
+            icon: '↩️',
+            message: 'Bạn đã huỷ đăng nhập Discord. Bấm nút bên dưới để thử lại.',
+            color: 'rgba(0,200,255,0.3)',
+            redirectUrl: '/',
+            redirectSec: 3
+        }));
+    }
+
+    // 2. Other Discord errors (e.g. server_error, temporarily_unavailable)
+    if (error) {
+        console.error('[Auth] Discord OAuth error:', error, error_description);
+        return res.send(renderAuthPage({
+            title: 'Lỗi từ Discord',
+            icon: '⚠️',
+            message: error_description || `Discord trả về lỗi: ${error}`,
+            redirectSec: 5
+        }));
+    }
+
+    // 3. No code received at all
+    if (!code) {
+        return res.send(renderAuthPage({
+            title: 'Lỗi đăng nhập',
+            icon: '❌',
+            message: 'Không nhận được mã xác thực từ Discord. Vui lòng thử lại.',
+            redirectSec: 3
+        }));
+    }
+
+    // 4. Validate CSRF state
+    if (state && !oauthStates.has(state)) {
+        // State was already used (page refresh) or expired — just redirect home silently
+        console.log('[Auth] Stale/reused OAuth state detected, redirecting to /');
+        return res.redirect('/');
+    }
+    // Delete state immediately to prevent code reuse on page refresh
+    if (state) oauthStates.delete(state);
+
     try {
         const headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)'
         };
 
-        const tRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-            client_id: process.env.DISCORD_CLIENT_ID, client_secret: process.env.DISCORD_CLIENT_SECRET,
-            code, grant_type: 'authorization_code', redirect_uri: process.env.DISCORD_REDIRECT_URI, scope: 'identify'
-        }), { headers });
+        // Exchange code for access token
+        let tRes;
+        try {
+            tRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+                client_id: process.env.DISCORD_CLIENT_ID,
+                client_secret: process.env.DISCORD_CLIENT_SECRET,
+                code,
+                grant_type: 'authorization_code',
+                redirect_uri: process.env.DISCORD_REDIRECT_URI,
+                scope: 'identify'
+            }), { headers, timeout: 10000 });
+        } catch (tokenErr) {
+            // Handle specific Discord token exchange errors
+            if (tokenErr.response) {
+                const errData = tokenErr.response.data;
+                const errCode = errData?.error || '';
+                const status = tokenErr.response.status;
 
+                // invalid_grant: code already used or expired (e.g. user refreshed the callback page)
+                if (errCode === 'invalid_grant' || (status === 400 && String(errData).includes('invalid'))) {
+                    console.log('[Auth] Invalid grant (code reused/expired), redirecting to /');
+                    return res.redirect('/');
+                }
+
+                // invalid_client: wrong client_id or client_secret
+                if (errCode === 'invalid_client') {
+                    console.error('[Auth] CRITICAL: Invalid client credentials! Check DISCORD_CLIENT_ID & DISCORD_CLIENT_SECRET in .env');
+                    return res.send(renderAuthPage({
+                        title: 'Lỗi cấu hình server',
+                        icon: '🔧',
+                        message: 'Thông tin xác thực Discord không hợp lệ. Vui lòng liên hệ admin.',
+                        redirectSec: 10
+                    }));
+                }
+
+                // Rate limit
+                if (status === 429) {
+                    const retryAfter = errData?.retry_after || 60;
+                    console.error(`[Auth] Discord Rate Limited! Retry after ${retryAfter}s`);
+                    return res.send(renderAuthPage({
+                        title: 'Discord đang bận!',
+                        icon: '⏳',
+                        message: `Có quá nhiều yêu cầu đăng nhập. Vui lòng đợi <strong>${Math.ceil(retryAfter)}</strong> giây rồi thử lại.`,
+                        color: 'rgba(0,200,255,0.3)',
+                        redirectSec: Math.ceil(retryAfter)
+                    }));
+                }
+
+                // redirect_uri mismatch
+                if (errCode === 'redirect_uri_mismatch' || String(JSON.stringify(errData)).includes('redirect_uri')) {
+                    console.error('[Auth] CRITICAL: Redirect URI mismatch! .env DISCORD_REDIRECT_URI does not match Discord Developer Portal.');
+                    return res.send(renderAuthPage({
+                        title: 'Lỗi cấu hình Redirect URI',
+                        icon: '🔧',
+                        message: 'Redirect URI không khớp. Vui lòng liên hệ admin để kiểm tra cấu hình.',
+                        redirectSec: 10
+                    }));
+                }
+            }
+            // Re-throw for generic handler
+            throw tokenErr;
+        }
+
+        // Fetch user info
         const uRes = await axios.get('https://discord.com/api/users/@me', {
             headers: {
                 Authorization: `Bearer ${tRes.data.access_token}`,
-                ...headers
-            }
+                'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)'
+            },
+            timeout: 10000
         });
         const { id, username, avatar } = uRes.data;
 
@@ -343,8 +599,10 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
             }
         }
 
+        // Save to DB (with proper connection release in finally)
+        let conn;
         try {
-            const conn = await dbPool.getConnection();
+            conn = await dbPool.getConnection();
             await conn.beginTransaction();
             const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, id]);
             if (rows.length === 0) {
@@ -354,46 +612,49 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
                 await conn.execute('UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?', [username, avatarUrl, TARGET_GUILD_ID, id]);
             }
             await conn.commit();
-            conn.release();
-        } catch (e) { console.error("Lỗi DB:", e.message); }
+        } catch (dbErr) {
+            if (conn) await conn.rollback().catch(() => { });
+            console.error("[Auth] DB Error:", dbErr.message);
+            // Don't block login — user can still play, DB will sync later
+        } finally {
+            if (conn) conn.release();
+        }
 
+        // Set cookies and redirect
         res.cookie('user_id', id, COOKIE_OPTS);
-
         const info = JSON.stringify({ username: encodeURIComponent(username), avatar: avatarUrl });
         res.cookie('user_info', info, COOKIE_OPTS_CLIENT);
         res.redirect('/');
     } catch (e) {
-        // Handle Discord 429 rate limit error
+        // Handle Discord 429 rate limit
         if (e.response && e.response.status === 429) {
-            const retryAfter = e.response.data.retry_after || 60;
-            console.error(`Discord Rate Limited! Retry after ${retryAfter}s`);
-            return res.send(`
-                <html><head><style>
-                    @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
-                    body { background: #1a1a2e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                    .box { text-align: center; padding: 40px; background: #16213e; border-radius: 15px; box-shadow: 0 0 30px rgba(0,200,255,0.3); }
-                    h2 { color: #ff6b6b; } a { color: #4ecdc4; }
-                </style></head><body><div class="box">
-                    <h2>⏳ Discord đang bận!</h2>
-                    <p>Vui lòng đợi <strong>${Math.ceil(retryAfter)}</strong> giây rồi thử lại.</p>
-                    <p><a href="/">← Quay về trang chủ</a></p>
-                </div></body></html>
-            `);
+            const retryAfter = e.response.data?.retry_after || 60;
+            console.error(`[Auth] Discord Rate Limited! Retry after ${retryAfter}s`);
+            return res.send(renderAuthPage({
+                title: 'Discord đang bận!',
+                icon: '⏳',
+                message: `Vui lòng đợi <strong>${Math.ceil(retryAfter)}</strong> giây rồi thử lại.`,
+                color: 'rgba(0,200,255,0.3)',
+                redirectSec: Math.ceil(retryAfter)
+            }));
         }
-        console.error('Login Error:', e.response ? e.response.data : e.message);
-        const safeMsg = (e.message || 'Unknown error').replace(/[<>"'&]/g, c => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' }[c]));
-        res.send(`
-            <html><head><style>
-                @font-face { font-family: 'DearPix'; src: url('/fonts/dearpix-1-94.ttf') format('truetype'); font-display: swap; }
-                body { background: #1a1a2e; color: #fff; font-family: 'DearPix', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                .box { text-align: center; padding: 40px; background: #16213e; border-radius: 15px; box-shadow: 0 0 30px rgba(255,100,100,0.3); max-width: 500px; }
-                h2 { color: #ff6b6b; } a { color: #4ecdc4; }
-            </style></head><body><div class="box">
-                <h2>❌ Lỗi đăng nhập</h2>
-                <p>${safeMsg}</p>
-                <p style="margin-top:20px"><a href="/">← Quay về trang chủ</a></p>
-            </div></body></html>
-        `);
+        // Log full error for debugging
+        console.error('[Auth] Login Error:', e.response ? JSON.stringify(e.response.data) : e.message);
+
+        // User-friendly error message (don't expose internals)
+        let userMsg = 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.';
+        if (e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT') {
+            userMsg = 'Kết nối đến Discord bị timeout. Vui lòng thử lại sau.';
+        } else if (e.code === 'ENOTFOUND' || e.code === 'ECONNREFUSED') {
+            userMsg = 'Không thể kết nối đến Discord. Kiểm tra kết nối mạng và thử lại.';
+        }
+
+        res.send(renderAuthPage({
+            title: 'Lỗi đăng nhập',
+            icon: '❌',
+            message: userMsg,
+            redirectSec: 5
+        }));
     }
 });
 
@@ -1442,7 +1703,9 @@ app.get('/api/leveling/profile', requireAuth, async (req, res) => {
         const xp = Number(row.xp) || 0;
         const xpNeeded = xpForNextLevel(level);
         const totalXp = totalXpForLevel(level) + xp;
-        const rank = getRankRole(level);
+        // Fetch real Discord rank, fallback to level-based
+        const discordRank = await fetchMemberDiscordRank(uid);
+        const rank = discordRank || getRankRole(level);
 
         // Get user's rank position among all members
         const [rankRows] = await dbPool.execute(
@@ -1498,15 +1761,22 @@ app.get('/api/leaderboard/level', requireAuth, async (req, res) => {
             );
             myRank = Number(r[0].cnt) + 1;
         }
-        const leaderboard = rows.map(r => ({
-            user_id: r.user_id,
-            level: Number(r.level),
-            xp: Number(r.xp),
-            totalXp: totalXpForLevel(Number(r.level)) + Number(r.xp),
-            rank: getRankRole(Number(r.level)),
-            username: r.username || ('User_' + String(r.user_id).slice(-4)),
-            avatar: `/api/avatar/${r.user_id}`
-        }));
+        // Fetch real Discord roles for all users in leaderboard
+        const userIds = rows.map(r => r.user_id);
+        const discordRanks = await batchFetchDiscordRanks(userIds);
+
+        const leaderboard = rows.map(r => {
+            const discordRank = discordRanks[r.user_id];
+            return {
+                user_id: r.user_id,
+                level: Number(r.level),
+                xp: Number(r.xp),
+                totalXp: totalXpForLevel(Number(r.level)) + Number(r.xp),
+                rank: discordRank || getRankRole(Number(r.level)),
+                username: r.username || ('User_' + String(r.user_id).slice(-4)),
+                avatar: `/api/avatar/${r.user_id}`
+            };
+        });
         res.json({ leaderboard, my_user_id: uid, my_rank: myRank });
     } catch (e) {
         console.error('Level Leaderboard Error:', e.message);
@@ -1524,14 +1794,23 @@ app.get('/api/leaderboard/xp', requireAuth, async (req, res) => {
             [TARGET_GUILD_ID]
         );
         const uid = req.cookies.user_id;
-        const leaderboard = rows.map(r => ({
-            user_id: r.user_id,
-            level: Number(r.level),
-            xp: Number(r.xp),
-            totalXp: totalXpForLevel(Number(r.level)) + Number(r.xp),
-            username: r.username || ('User_' + String(r.user_id).slice(-4)),
-            avatar: `/api/avatar/${r.user_id}`
-        }));
+
+        // Fetch real Discord roles for all users in leaderboard
+        const userIds = rows.map(r => r.user_id);
+        const discordRanks = await batchFetchDiscordRanks(userIds);
+
+        const leaderboard = rows.map(r => {
+            const discordRank = discordRanks[r.user_id];
+            return {
+                user_id: r.user_id,
+                level: Number(r.level),
+                xp: Number(r.xp),
+                totalXp: totalXpForLevel(Number(r.level)) + Number(r.xp),
+                rank: discordRank || getRankRole(Number(r.level)),
+                username: r.username || ('User_' + String(r.user_id).slice(-4)),
+                avatar: `/api/avatar/${r.user_id}`
+            };
+        });
         // Sort by totalXp descending (already mostly correct since level dominates)
         leaderboard.sort((a, b) => b.totalXp - a.totalXp);
 
@@ -2367,12 +2646,6 @@ app.get('/profile', (req, res) => {
 app.get('/flappybird', (req, res) => {
     if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'flappybird.html'));
-});
-
-// Serve History page
-app.get('/history', (req, res) => {
-    if (!getPageUserId(req)) return res.redirect('/');
-    res.sendFile(path.join(__dirname, 'public', 'history.html'));
 });
 
 // Serve Transfer page

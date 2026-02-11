@@ -1392,10 +1392,10 @@
 
                 // Rank badge for level/xp tabs
                 let rankBadge = '';
-                if ((tab === 'level' || tab === 'xp') && u.rank) {
+                if ((tab === 'level' || tab === 'xp') && u.rank && u.rank.tier > 0) {
                     const r = u.rank;
                     rankBadge = `<span class="lb-rank-badge" style="color:${r.color};border-color:${r.color};background:${r.color}15">${r.icon} ${r.name}</span>`;
-                } else if ((tab === 'level' || tab === 'xp') && u.level !== undefined) {
+                } else if ((tab === 'level' || tab === 'xp') && u.level !== undefined && u.level > 0) {
                     const r = getRankRole(u.level);
                     rankBadge = `<span class="lb-rank-badge" style="color:${r.color};border-color:${r.color};background:${r.color}15">${r.icon} ${r.name}</span>`;
                 }
