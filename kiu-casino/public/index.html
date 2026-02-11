@@ -330,11 +330,13 @@
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.02));
             border: 1px solid rgba(255, 215, 0, 0.2);
             font-family: var(--font-display);
-            font-size: 13px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--neon-gold);
             position: relative;
             overflow: hidden;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.5px;
         }
 
         .balance-chip::before {
@@ -383,8 +385,9 @@
 
         .username {
             font-weight: 700;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.8)
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.5px;
         }
 
         .btn-exit {
@@ -394,11 +397,12 @@
             background: rgba(255, 51, 102, 0.08);
             color: var(--neon-red);
             font-family: var(--font-display);
-            font-size: 10px;
+            font-size: 14px;
             font-weight: 700;
             letter-spacing: 2px;
             cursor: pointer;
             transition: .3s;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .btn-exit:hover {
@@ -443,7 +447,7 @@
             cursor: pointer;
             background: linear-gradient(135deg, var(--neon-purple), var(--neon-magenta));
             font-family: var(--font-display);
-            font-size: 11px;
+            font-size: 14px;
             font-weight: 700;
             color: #fff;
             letter-spacing: 2px;
@@ -524,7 +528,7 @@
             background: rgba(139, 92, 246, 0.1);
             border: 2px solid rgba(139, 92, 246, 0.25);
             font-family: var(--font-pixel-en);
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 600;
             letter-spacing: 3px;
             color: var(--neon-purple);
@@ -625,12 +629,13 @@
 
         .hero-sub {
             font-family: var(--font-pixel);
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.45);
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.6);
             margin-bottom: 30px;
             font-weight: 400;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             animation: subIn .8s ease-out .15s both;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
         }
 
         @keyframes subIn {
@@ -674,11 +679,12 @@
             border: 2px solid var(--glass-border);
             backdrop-filter: blur(10px);
             font-family: var(--font-pixel);
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 400;
             transition: all .3s;
             image-rendering: pixelated;
             box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
         }
 
         .chip:hover {
@@ -767,14 +773,14 @@
             align-items: center;
             gap: 10px;
             font-family: var(--font-pixel-en);
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             letter-spacing: 5px;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.8);
             position: relative;
             padding: 0 20px;
             image-rendering: pixelated;
-            text-shadow: 2px 2px 0 rgba(139, 92, 246, 0.2);
+            text-shadow: 2px 2px 0 rgba(139, 92, 246, 0.25);
         }
 
         .section-tag::before,
@@ -1045,7 +1051,7 @@
             padding: 4px 10px;
             border-radius: 2px;
             font-family: var(--font-pixel-en);
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 700;
             letter-spacing: 1px;
             backdrop-filter: blur(10px);
@@ -1079,29 +1085,31 @@
 
         .card-title {
             font-family: var(--font-pixel);
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 400;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
             margin-bottom: 6px;
             image-rendering: pixelated;
-            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
         }
 
         .card-desc {
             font-family: var(--font-pixel);
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.45);
-            line-height: 1.5;
-            margin-bottom: 14px
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 14px;
+            letter-spacing: 0.5px;
         }
 
         .card-meta {
             display: flex;
             gap: 12px;
             margin-bottom: 16px;
-            font-size: 11px;
+            font-size: 15px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.5px;
         }
 
         .meta-item {
@@ -1122,7 +1130,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-family: var(--font-pixel);
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 400;
             letter-spacing: 3px;
             color: #fff;
@@ -1131,7 +1139,7 @@
             transition: all .3s;
             image-rendering: pixelated;
             box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
-            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
         }
 
         .btn-play::after {
@@ -1249,9 +1257,10 @@
 
         .modal-box p {
             margin-bottom: 22px;
-            color: rgba(255, 255, 255, 0.5);
-            line-height: 1.5;
-            font-size: 14px
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            font-size: 16px;
+            letter-spacing: 0.5px;
         }
 
         /* ═══ FOOTER ═══ */
@@ -1260,11 +1269,11 @@
             padding: 30px 20px;
             position: relative;
             z-index: 1;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.25);
             border-top: 1px solid rgba(255, 255, 255, 0.03);
             font-family: var(--font-pixel);
-            font-size: 14px;
+            font-size: 15px;
+            letter-spacing: 0.5px;
         }
 
         .footer span {
@@ -1273,7 +1282,7 @@
             -webkit-text-fill-color: transparent;
             font-weight: 400;
             font-family: var(--font-pixel-en);
-            font-size: 14px;
+            font-size: 15px;
         }
 
         /* ═══ PIXEL ART DECORATIONS ═══ */
@@ -1412,11 +1421,11 @@
 
             .balance-chip {
                 padding: 4px 10px;
-                font-size: 11px
+                font-size: 13px
             }
 
             .section-tag {
-                font-size: 12px;
+                font-size: 14px;
                 letter-spacing: 3px
             }
         }
@@ -1432,7 +1441,7 @@
 
             .chip {
                 padding: 6px 12px;
-                font-size: 11px
+                font-size: 13px
             }
 
             .avatar {
@@ -1441,7 +1450,7 @@
             }
 
             .username {
-                font-size: 11px
+                font-size: 13px
             }
         }
     </style>

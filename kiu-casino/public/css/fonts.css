@@ -19,3 +19,35 @@ select,
 textarea {
     font-family: inherit;
 }
+
+/* ═══ GLOBAL TEXT READABILITY ENHANCEMENTS ═══ */
+/* Pixel fonts need extra care for legibility */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+}
+
+/* Ensure headings and labels get extra spacing for pixel clarity */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+th,
+caption {
+    letter-spacing: 1px;
+    line-height: 1.3;
+}
+
+/* Improve small text readability globally */
+small,
+.small,
+sub,
+sup {
+    letter-spacing: 0.8px;
+}
