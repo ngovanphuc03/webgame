@@ -7,6 +7,7 @@ const mysql = require('mysql2/promise');
 const axios = require('axios');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const compression = require('compression');
 
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
@@ -42,6 +43,9 @@ app.use(cors({
     credentials: !!ALLOWED_ORIGIN
 }));
 
+// 2.1 Compression (gzip/deflate) — reduces response size by 60-80%
+app.use(compression({ level: 6, threshold: 1024 }));
+
 // 2.5 Security Headers (helmet-lite)
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -65,7 +69,7 @@ app.use((req, res, next) => {
 // 3. Rate Limiter (DDOS Protection)
 const limiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 300, // Limit each IP to 300 requests per windowMs (game apps need high limit)
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -83,7 +87,11 @@ const discordAuthLimiter = rateLimit({
 });
 
 // --- CẤU HÌNH ---
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: '1d',      // Cache static files for 1 day
+    etag: true,        // Enable ETag for conditional requests
+    lastModified: true // Enable Last-Modified header
+}));
 const COOKIE_SECRET = process.env.COOKIE_SECRET || crypto.randomBytes(32).toString('hex');
 app.use(cookieParser(COOKIE_SECRET));
 app.use(express.json());
@@ -668,9 +676,29 @@ app.get('/auth/logout', (req, res) => {
 });
 
 // --- AVATAR PROXY (bypass CSP/referrer/CORS issues with Discord CDN) ---
+// In-memory avatar buffer cache (avoid re-fetching from Discord CDN every time)
+const avatarCache = new Map(); // userId → { buffer, contentType, cachedAt }
+const AVATAR_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
+// Cleanup expired avatar cache entries every 30 min
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of avatarCache) {
+        if (now - v.cachedAt > AVATAR_CACHE_TTL) avatarCache.delete(k);
+    }
+}, 30 * 60 * 1000);
+
 app.get('/api/avatar/:userId', async (req, res) => {
     const userId = req.params.userId;
     if (!/^\d{17,20}$/.test(userId)) return res.status(400).send('Invalid user ID');
+
+    // Check in-memory cache first
+    const cached = avatarCache.get(userId);
+    if (cached && (Date.now() - cached.cachedAt < AVATAR_CACHE_TTL)) {
+        res.set('Content-Type', cached.contentType);
+        res.set('Cache-Control', 'public, max-age=7200'); // browser cache 2h
+        return res.send(cached.buffer);
+    }
+
     try {
         // Get avatar URL from DB
         const [rows] = await dbPool.execute(
@@ -691,9 +719,14 @@ app.get('/api/avatar/:userId', async (req, res) => {
             headers: { 'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)' }
         });
         const contentType = imgRes.headers['content-type'] || 'image/png';
+        const buffer = Buffer.from(imgRes.data);
+
+        // Store in cache
+        avatarCache.set(userId, { buffer, contentType, cachedAt: Date.now() });
+
         res.set('Content-Type', contentType);
-        res.set('Cache-Control', 'public, max-age=3600'); // cache 1h
-        res.send(Buffer.from(imgRes.data));
+        res.set('Cache-Control', 'public, max-age=7200'); // browser cache 2h
+        res.send(buffer);
     } catch (e) {
         // Fallback: serve local default avatar
         res.redirect('/images/ui/default-avatar.svg');
@@ -1907,8 +1940,7 @@ app.get('/api/stats/chart', requireAuth, async (req, res) => {
 app.get('/api/leaderboard', requireAuth, async (req, res) => {
     const uid = req.cookies.user_id;
     try {
-        // Background sync: nếu có bot token, tự động cập nhật user thiếu info
-        syncMissingUsers().catch(() => { });
+        // syncMissingUsers() removed from hot path — runs on startup and via /api/sync-users only
 
         // Try with username/avatar columns first, fallback to basic query
         let rows;
