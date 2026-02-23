@@ -128,11 +128,16 @@ function requireAuth(req, res, next) {
 
 // Flappy anti-cheat: server-side session tokens
 const flappySessions = new Map(); // userId -> { token, startTime }
+// Block Blast anti-cheat: server-side session tokens
+const blockblastSessions = new Map(); // userId -> { token, startTime, claimed }
 // Periodic cleanup: remove stale sessions older than 10 minutes
 setInterval(() => {
     const now = Date.now();
     for (const [uid, session] of flappySessions) {
         if (now - session.startTime > 600000) flappySessions.delete(uid);
+    }
+    for (const [uid, session] of blockblastSessions) {
+        if (now - session.startTime > 3600000) blockblastSessions.delete(uid); // 1 hour for block blast (longer games)
     }
 }, 60000);
 
@@ -839,6 +844,84 @@ app.post('/api/flappy/reward', requireAuth, flappyRewardLimiter, async (req, res
     }
 });
 
+
+// ============================================================
+// BLOCK BLAST GAME API
+// ============================================================
+
+// Block Blast: Rate limiter for reward claims
+const blockblastRewardLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { error: 'Bạn đang gửi điểm quá nhanh!' }
+});
+
+// Block Blast: Start game session (anti-cheat token)
+app.post('/api/blockblast/start', requireAuth, (req, res) => {
+    const uid = req.cookies.user_id;
+    const token = crypto.randomBytes(16).toString('hex');
+    blockblastSessions.set(uid, { token, startTime: Date.now(), claimed: false });
+    res.json({ token });
+});
+
+// Block Blast: Claim reward (score × 5 gold)
+app.post('/api/blockblast/reward', requireAuth, blockblastRewardLimiter, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { score, token, moves } = req.body;
+
+    if (!score || score <= 0 || !Number.isInteger(score)) return res.status(400).json({ error: 'Điểm không hợp lệ' });
+
+    // Anti-cheat: validate session token
+    const session = blockblastSessions.get(uid);
+    if (!session || session.token !== token || session.claimed) {
+        return res.status(400).json({ error: 'Phiên game không hợp lệ' });
+    }
+
+    // Check minimum play time (at least 2 seconds per move)
+    const elapsed = Date.now() - session.startTime;
+    const minTime = Math.min((moves || 1) * 1500, 300000); // ~1.5s per move, max 5 min check
+    if (elapsed < minTime) {
+        return res.status(400).json({ error: 'Thời gian chơi quá ngắn' });
+    }
+
+    // Mark session as claimed
+    session.claimed = true;
+    blockblastSessions.delete(uid);
+
+    if (score > 50000) return res.status(400).json({ error: 'Điểm quá cao bất thường' });
+
+    const goldReward = score * 5;
+    const conn = await dbPool.getConnection();
+
+    try {
+        await conn.beginTransaction();
+
+        const [rows] = await conn.execute(
+            'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE',
+            [TARGET_GUILD_ID, uid]
+        );
+        if (!rows.length) {
+            await conn.rollback(); conn.release();
+            return res.status(400).json({ error: 'Lỗi: Không tìm thấy ví tiền' });
+        }
+
+        const balBefore = Number(rows[0].balance);
+        await conn.execute('UPDATE wallet SET balance = balance + ? WHERE guild_id=? AND user_id=?', [goldReward, TARGET_GUILD_ID, uid]);
+        const balAfter = balBefore + goldReward;
+
+        await logTx(conn, uid, 'blockblast_reward', goldReward, balBefore, balAfter, { score, moves });
+        await conn.commit();
+        conn.release();
+
+        console.log(`[BlockBlast] User ${uid} score ${score} -> +${goldReward} gold. New Balance: ${balAfter}`);
+        res.json({ success: true, addedGold: goldReward, newBalance: balAfter });
+    } catch (e) {
+        await conn.rollback().catch(() => { });
+        conn.release();
+        console.error('BlockBlast Reward Error:', e);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
 
 // ============================================================
 // CRASH GAME API
@@ -2678,6 +2761,12 @@ app.get('/profile', (req, res) => {
 app.get('/flappybird', (req, res) => {
     if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'flappybird.html'));
+});
+
+// Serve Block Blast page
+app.get('/blockblast', (req, res) => {
+    if (!getPageUserId(req)) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'blockblast.html'));
 });
 
 // Serve Transfer page
