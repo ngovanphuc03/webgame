@@ -715,6 +715,8 @@
     /* ═══════════ SOUND ═══════════ */
     const ac = typeof AudioContext !== 'undefined' ? new AudioContext() : null;
     function sfx(ty) {
+    // Use SFX engine for premium sounds
+    if (window.SFX && window.SFX.play) { try { window.SFX.play(n); return; } catch(e) {} }
         if (!ac) return;
         try {
             if (ac.state === 'suspended') ac.resume();

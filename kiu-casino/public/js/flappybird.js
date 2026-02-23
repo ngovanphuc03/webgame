@@ -11,7 +11,7 @@ const assets = {
     currBgId: 'bg-day'
 };
 
-// Sound Effects
+// Sound Effects — SFX engine with wav fallback
 const sounds = {
     wing: new Audio('sounds/flappy/wing.wav'),
     hit: new Audio('sounds/flappy/hit.wav'),
@@ -19,6 +19,7 @@ const sounds = {
     point: new Audio('sounds/flappy/point.wav'),
     swoosh: new Audio('sounds/flappy/swoosh.wav')
 };
+Object.values(sounds).forEach(a => { a.preload = 'auto'; a.volume = 0.5; });
 
 // --- GAME CONSTANTS ---
 // We keep LOGICAL_WIDTH as a reference for spacing, but height is now dynamic.
@@ -77,6 +78,16 @@ resizeCanvas();
 
 // --- LOGIC HELPERS ---
 function playSound(s) {
+    // Respect global sound settings
+    if (window.PPZSound) {
+        const st = window.PPZSound.getSettings();
+        if (!st.sfxOn) return;
+    }
+    // Try synthesized sound first (flappy_ prefix)
+    if (window.SFX && window.SFX.play) {
+        try { window.SFX.play('flappy_' + s); return; } catch (e) { }
+    }
+    // Fallback to wav
     if (sounds[s]) {
         if (s === 'wing' || s === 'point') {
             const soundClone = sounds[s].cloneNode();

@@ -67,6 +67,11 @@ const SoundManager = {
     },
 
     play(name) {
+        // Try SFX engine first
+        if (window.SFX && window.SFX.play) {
+            try { window.SFX.play(name); return; } catch (e) { }
+        }
+        // Fallback to mp3
         // Respect global sound settings
         if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
         const sound = this.getSound(name);

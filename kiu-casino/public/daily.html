@@ -680,6 +680,12 @@
         Object.values(SFX).forEach(a => { a.volume = 0.5; a.preload = 'auto'; });
         SFX.win.volume = 0.7; SFX.spinTick.volume = 0.3;
         function playSound(n) {
+            // Try SFX engine first
+            if (window.SFX && window.SFX.play) {
+                const nameMap = { spin: 'daily_spin', spinTick: 'daily_spin_tick', reveal: 'daily_reveal', win: 'daily_win', click: 'click', tick: 'tick' };
+                try { window.SFX.play(nameMap[name] || name); return; } catch (e) { }
+            }
+            // Fallback to mp3
             // Respect global sound settings
             if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
             try {
@@ -888,6 +894,7 @@
         })();
     </script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/ppz-sfx-engine.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>

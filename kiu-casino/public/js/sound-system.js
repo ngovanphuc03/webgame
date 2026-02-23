@@ -56,9 +56,14 @@
         return pools[name];
     }
 
-    // Play SFX
+    // Play SFX — routes through Web Audio engine first, mp3 fallback
     function playSFX(name) {
         if (!settings.sfxOn) return;
+        // Try synthesized sound first
+        if (window.SFX && window.SFX.play) {
+            try { window.SFX.play(name); return; } catch (e) { }
+        }
+        // Fallback to mp3
         const pool = getPool(name);
         for (const a of pool) {
             if (a.paused || a.ended) {

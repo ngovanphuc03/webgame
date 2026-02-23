@@ -1153,6 +1153,8 @@
                 }
             }
             function play(name) {
+                // Try SFX engine first
+                if (window.SFX && window.SFX.play) { try { window.SFX.play(name); return; } catch(e) {} }
                 // Respect global sound settings
                 if (window.PPZSound) { const gs = window.PPZSound.getSettings(); if (!gs.sfxOn) return; }
                 const pool = audioPool[name]; if (!pool) return;
@@ -1734,6 +1736,7 @@
 
         })();
     </script>
+    <script src="/js/ppz-sfx-engine.js"></script>
     <script src="/js/sound-system.js"></script>
     <script src="/js/notify-system.js"></script>
     <script src="/js/tutorial-system.js"></script>
