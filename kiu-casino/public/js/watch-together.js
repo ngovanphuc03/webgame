@@ -8,10 +8,32 @@
     'use strict';
 
     // ═══ CONFIG ═══
+    // STUN + TURN servers for cross-network NAT traversal
+    // TURN relays media when direct P2P (STUN) fails (different networks/symmetric NAT)
     const ICE_SERVERS = [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
+        // Free TURN relay servers (Metered.ca Open Relay)
+        {
+            urls: 'turn:a.relay.metered.ca:80',
+            username: 'e8dd65b92aad045862a29820',
+            credential: 'dVs8MnJzqHgirnkr'
+        },
+        {
+            urls: 'turn:a.relay.metered.ca:80?transport=tcp',
+            username: 'e8dd65b92aad045862a29820',
+            credential: 'dVs8MnJzqHgirnkr'
+        },
+        {
+            urls: 'turn:a.relay.metered.ca:443',
+            username: 'e8dd65b92aad045862a29820',
+            credential: 'dVs8MnJzqHgirnkr'
+        },
+        {
+            urls: 'turns:a.relay.metered.ca:443?transport=tcp',
+            username: 'e8dd65b92aad045862a29820',
+            credential: 'dVs8MnJzqHgirnkr'
+        }
     ];
     const MAX_RECONNECT = 3;
     const REACTIONS = ['🔥', '❤️', '😂', '👏', '🎉', '😮'];
@@ -375,6 +397,7 @@
 
     function updateRoomBadge() {
         $$('.room-code-text').forEach(el => el.textContent = roomId);
+        $$('.wt-room-badge').forEach(el => el.style.display = '');
     }
 
     function updateHostUI() {
@@ -664,41 +687,71 @@
 
     function createPeerConnection(peerId) {
         if (peerConnections[peerId]) {
-            peerConnections[peerId].close();
+            try { peerConnections[peerId].close(); } catch (e) { }
         }
 
-        const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+        const pc = new RTCPeerConnection({
+            iceServers: ICE_SERVERS,
+            iceCandidatePoolSize: 10,  // Pre-gather ICE candidates for faster connection
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require'
+        });
         peerConnections[peerId] = pc;
 
-        // ICE candidates
+        // ICE candidates — send each candidate as it's gathered
         pc.onicecandidate = (e) => {
             if (e.candidate) {
                 socket.emit('wt_ice', { to: peerId, candidate: e.candidate });
             }
         };
 
+        // ICE gathering state (debug)
+        pc.onicegatheringstatechange = () => {
+            console.log(`[ICE] Gathering state for ${peerId}: ${pc.iceGatheringState}`);
+        };
+
+        // ICE connection state (more granular than connectionState)
+        pc.oniceconnectionstatechange = () => {
+            const state = pc.iceConnectionState;
+            console.log(`[ICE] Connection state for ${peerId}: ${state}`);
+            if (state === 'connected' || state === 'completed') {
+                showToast('Đã kết nối stream!', 'success');
+            }
+        };
+
         // Incoming stream (viewer side)
         pc.ontrack = (e) => {
+            console.log(`[WebRTC] Received track from ${peerId}:`, e.track.kind);
             const video = $('#wt-video');
             if (video && e.streams[0]) {
                 video.srcObject = e.streams[0];
+                video.muted = false;
                 video.play().catch(() => { });
                 hidePlaceholder();
             }
         };
 
-        // Connection state
+        // Connection state — auto-reconnect with exponential backoff
+        let retryCount = 0;
         pc.onconnectionstatechange = () => {
-            if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-                console.warn('Peer', peerId, 'connection:', pc.connectionState);
-                // Auto-reconnect
-                if (isHost && localStream) {
+            const state = pc.connectionState;
+            console.log(`[WebRTC] Peer ${peerId} state: ${state}`);
+            if (state === 'connected') {
+                retryCount = 0;
+            } else if (state === 'failed') {
+                // Only attempt reconnect if we're the host actively sharing
+                if (isHost && isSharing && localStream && retryCount < MAX_RECONNECT) {
+                    retryCount++;
+                    console.log(`[WebRTC] Peer ${peerId} failed, retry ${retryCount}/${MAX_RECONNECT}`);
+                    showToast(`Đang kết nối lại... (${retryCount}/${MAX_RECONNECT})`, 'info');
                     setTimeout(() => {
-                        if (peerConnections[peerId]?.connectionState !== 'connected') {
+                        if (peerConnections[peerId] && peerConnections[peerId].connectionState !== 'connected') {
                             closePeer(peerId);
                             createPeerAndOffer(peerId);
                         }
-                    }, 2000);
+                    }, 2000 * retryCount);
+                } else if (retryCount >= MAX_RECONNECT) {
+                    showToast('Không thể kết nối peer. Thử chia sẻ lại.', 'error');
                 }
             }
         };

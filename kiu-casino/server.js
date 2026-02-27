@@ -52,15 +52,16 @@ app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-    // CSP: Allow inline styles/scripts (required by inline HTML pages), Google Fonts, Discord CDN, Socket.IO
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=(), display-capture=(self)');
+    // CSP: Allow inline styles/scripts (required by inline HTML pages), Google Fonts, Discord CDN, Socket.IO, HLS.js CDN
     res.setHeader('Content-Security-Policy', [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: https://cdn.discordapp.com",
-        "connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+        "media-src 'self' blob: data: https: http:",
+        "connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
         "frame-ancestors 'none'"
     ].join('; '));
     next();
