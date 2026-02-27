@@ -34,7 +34,8 @@ const io = new Server(server, {
         origin: ALLOWED_ORIGIN || '*',
         methods: ["GET", "POST"],
         credentials: !!ALLOWED_ORIGIN
-    }
+    },
+    maxHttpBufferSize: 5e6 // 5MB for screen share relay frames
 });
 
 // 2. Express CORS
@@ -52,7 +53,7 @@ app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=(), display-capture=(self)');
+    res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), display-capture=(self)');
     // CSP: Allow inline styles/scripts (required by inline HTML pages), Google Fonts, Discord CDN, Socket.IO, HLS.js CDN
     res.setHeader('Content-Security-Policy', [
         "default-src 'self'",
@@ -61,6 +62,7 @@ app.use((req, res, next) => {
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: https://cdn.discordapp.com",
         "media-src 'self' blob: data: https: http:",
+        "worker-src 'self' blob:",
         "connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
         "frame-ancestors 'none'"
     ].join('; '));
@@ -2774,20 +2776,14 @@ io.on('connection', (socket) => {
         socket.to('wt_' + rid).emit('wt_reaction', { emoji: data.emoji, username: userInfo.username });
     });
 
-    // WebRTC signaling relay
-    socket.on('wt_offer', (data) => {
-        if (!data.to || !data.offer) return;
-        io.to(data.to).emit('wt_offer', { from: socket.id, offer: data.offer });
-    });
-
-    socket.on('wt_answer', (data) => {
-        if (!data.to || !data.answer) return;
-        io.to(data.to).emit('wt_answer', { from: socket.id, answer: data.answer });
-    });
-
-    socket.on('wt_ice', (data) => {
-        if (!data.to || !data.candidate) return;
-        io.to(data.to).emit('wt_ice', { from: socket.id, candidate: data.candidate });
+    // Server-Relay: Broadcast screen share frames (replaces WebRTC P2P)
+    socket.on('wt_stream_frame', (frameData) => {
+        const rid = socket._wtRoom;
+        if (!rid) return;
+        const room = watchRooms.get(rid);
+        if (!room || room.hostSocket !== socket.id) return;
+        // Use volatile emit — drops frames if receiver is slow (no buffering)
+        socket.volatile.to('wt_' + rid).emit('wt_stream_frame', frameData);
     });
 
     socket.on('wt_screen_started', () => {
@@ -2931,6 +2927,32 @@ app.get('/blockblast', (req, res) => {
 });
 
 // Serve Transfer page
+// TURN server config API for Watch Together WebRTC
+app.get('/api/turn-config', (req, res) => {
+    const iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+    ];
+    // Add TURN servers from .env if configured
+    const turnUrl = process.env.TURN_URL;
+    const turnUser = process.env.TURN_USERNAME;
+    const turnCred = process.env.TURN_CREDENTIAL;
+    if (turnUrl && turnUser && turnCred) {
+        // Support multiple TURN URLs separated by comma
+        const urls = turnUrl.split(',').map(u => u.trim());
+        iceServers.push({ urls, username: turnUser, credential: turnCred });
+    } else {
+        // Free public TURN relay fallback (Metered.ca Open Relay)
+        iceServers.push(
+            { urls: 'turn:a.relay.metered.ca:80', username: 'e8dd65b92aad045862a29820', credential: 'dVs8MnJzqHgirnkr' },
+            { urls: 'turn:a.relay.metered.ca:80?transport=tcp', username: 'e8dd65b92aad045862a29820', credential: 'dVs8MnJzqHgirnkr' },
+            { urls: 'turn:a.relay.metered.ca:443', username: 'e8dd65b92aad045862a29820', credential: 'dVs8MnJzqHgirnkr' },
+            { urls: 'turns:a.relay.metered.ca:443?transport=tcp', username: 'e8dd65b92aad045862a29820', credential: 'dVs8MnJzqHgirnkr' }
+        );
+    }
+    res.json({ iceServers });
+});
+
 // Serve Watch Together page
 app.get('/watch', (req, res) => {
     if (!getPageUserId(req)) return res.redirect('/');

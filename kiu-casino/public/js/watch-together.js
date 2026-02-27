@@ -1,43 +1,19 @@
 /**
  * ═══════════════════════════════════════════════════════
  *  PIXEL PLAYZONE — Watch Together Client
- *  WebRTC P2P screen/audio share + Socket.IO video sync
+ *  Server-Relay screen share + Socket.IO video sync
+ *  No TURN server needed — streams via server relay
  * ═══════════════════════════════════════════════════════
  */
 (function () {
     'use strict';
 
     // ═══ CONFIG ═══
-    // STUN + TURN servers for cross-network NAT traversal
-    // TURN relays media when direct P2P (STUN) fails (different networks/symmetric NAT)
-    const ICE_SERVERS = [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        // Free TURN relay servers (Metered.ca Open Relay)
-        {
-            urls: 'turn:a.relay.metered.ca:80',
-            username: 'e8dd65b92aad045862a29820',
-            credential: 'dVs8MnJzqHgirnkr'
-        },
-        {
-            urls: 'turn:a.relay.metered.ca:80?transport=tcp',
-            username: 'e8dd65b92aad045862a29820',
-            credential: 'dVs8MnJzqHgirnkr'
-        },
-        {
-            urls: 'turn:a.relay.metered.ca:443',
-            username: 'e8dd65b92aad045862a29820',
-            credential: 'dVs8MnJzqHgirnkr'
-        },
-        {
-            urls: 'turns:a.relay.metered.ca:443?transport=tcp',
-            username: 'e8dd65b92aad045862a29820',
-            credential: 'dVs8MnJzqHgirnkr'
-        }
-    ];
     const MAX_RECONNECT = 3;
     const REACTIONS = ['🔥', '❤️', '😂', '👏', '🎉', '😮'];
     const SYNC_THRESHOLD = 2; // seconds drift before force-sync
+    const STREAM_INTERVAL = 100; // ms between stream chunks (10fps ~= good quality, low bandwidth)
+    const STREAM_QUALITY = 0.6; // JPEG quality (0-1), lower = less bandwidth
 
     // ═══ STATE ═══
     let socket = null;
@@ -47,7 +23,6 @@
     let username = 'Khách';
     let avatar = '';
     let members = [];
-    let peerConnections = {}; // peerId -> RTCPeerConnection
     let localStream = null;  // screen share stream
     let isSharing = false;
     let isTheaterMode = false;
@@ -55,6 +30,10 @@
     let hlsInstance = null;
     let syncInterval = null;
     let toastTimer = null;
+    let streamCanvas = null;
+    let streamCtx = null;
+    let streamTimer = null;
+    let streamVideo = null; // hidden video element for capturing frames
 
     // ═══ DOM REFS ═══
     const $ = (s) => document.querySelector(s);
@@ -62,7 +41,7 @@
 
     // ═══ INIT ═══
     function init() {
-        socket = io();
+        socket = io({ maxHttpBufferSize: 5e6 }); // 5MB buffer for stream chunks
         bindSocketEvents();
         bindUIEvents();
         fetchUserInfo();
@@ -77,7 +56,6 @@
                 userId = u.user_id;
                 username = u.username || 'Khách';
                 avatar = u.avatar || '/images/ui/default-avatar.svg';
-                // Update nav
                 const balEl = $('#wt-balance');
                 if (balEl) balEl.textContent = Number(u.balance || 0).toLocaleString() + ' $';
             }
@@ -116,7 +94,6 @@
             showCinema();
             updateRoomBadge();
             showToast('Đã vào phòng ' + roomId, 'success');
-            // Load video if already set
             if (data.videoUrl) {
                 $('#wt-url-input').value = data.videoUrl;
                 loadVideo(data.videoUrl, false);
@@ -161,7 +138,6 @@
             } else if (data.action === 'seek') {
                 video.currentTime = data.time;
             } else if (data.action === 'timeupdate') {
-                // Periodic sync
                 if (Math.abs(video.currentTime - data.time) > SYNC_THRESHOLD) {
                     video.currentTime = data.time;
                 }
@@ -192,25 +168,14 @@
             }
         });
 
-        // WebRTC signaling
-        socket.on('wt_offer', async (data) => {
-            await handleOffer(data.from, data.offer);
+        // ═══ SERVER-RELAY SCREEN SHARE ═══
+        // Receive stream frame from host (via server relay)
+        socket.on('wt_stream_frame', (frameData) => {
+            if (isHost) return; // Host sees their own stream directly
+            displayStreamFrame(frameData);
         });
 
-        socket.on('wt_answer', async (data) => {
-            await handleAnswer(data.from, data.answer);
-        });
-
-        socket.on('wt_ice', async (data) => {
-            await handleIceCandidate(data.from, data.candidate);
-        });
-
-        // Peer left — cleanup
-        socket.on('wt_peer_left', (data) => {
-            closePeer(data.peerId);
-        });
-
-        // Screen share started by host
+        // Host started sharing
         socket.on('wt_screen_started', () => {
             if (!isHost) {
                 showToast('Host đang chia sẻ màn hình', 'info');
@@ -218,11 +183,13 @@
             }
         });
 
-        // Screen share stopped
+        // Host stopped sharing
         socket.on('wt_screen_stopped', () => {
             if (!isHost) {
                 const video = $('#wt-video');
-                if (video) { video.srcObject = null; video.src = ''; }
+                const img = $('#wt-stream-img');
+                if (video) { video.srcObject = null; video.src = ''; video.style.display = ''; }
+                if (img) { img.style.display = 'none'; img.src = ''; }
                 showPlaceholder();
                 showToast('Host đã dừng chia sẻ', 'info');
             }
@@ -248,7 +215,6 @@
             socket.emit('wt_join', { roomId: code, password: pw, username, avatar });
         });
 
-        // Enter key for join
         $('#join-room-input')?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') $('#btn-join-room')?.click();
         });
@@ -262,7 +228,6 @@
             socket.emit('wt_video_url', { url });
         });
 
-        // Enter key for URL input
         $('#wt-url-input')?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') $('#btn-load-url')?.click();
         });
@@ -323,7 +288,6 @@
                 $('#btn-play-pause').textContent = '▶';
             });
 
-            // Seek bar drag tracking
             const seek = $('#wt-seek');
             if (seek) {
                 seek.addEventListener('mousedown', () => seek._dragging = true);
@@ -401,12 +365,10 @@
     }
 
     function updateHostUI() {
-        // Show/hide host-only controls
         const hostEls = $$('.host-only');
         hostEls.forEach(el => {
             el.style.display = isHost ? '' : 'none';
         });
-        // Disable URL input for non-hosts
         const urlInput = $('#wt-url-input');
         if (urlInput) {
             urlInput.disabled = !isHost;
@@ -420,7 +382,6 @@
         navigator.clipboard.writeText(url).then(() => {
             showToast('Đã copy link phòng!', 'success');
         }).catch(() => {
-            // Fallback
             const inp = document.createElement('input');
             inp.value = url;
             document.body.appendChild(inp);
@@ -436,20 +397,18 @@
         const video = $('#wt-video');
         if (!video) return;
 
-        // Cleanup HLS
         if (hlsInstance) {
             hlsInstance.destroy();
             hlsInstance = null;
         }
-
-        // Remove screen share stream
         video.srcObject = null;
+        video.style.display = '';
+        const img = $('#wt-stream-img');
+        if (img) img.style.display = 'none';
 
         if (!url) return;
-
         hidePlaceholder();
 
-        // HLS support
         if (url.includes('.m3u8')) {
             if (typeof Hls !== 'undefined' && Hls.isSupported()) {
                 hlsInstance = new Hls({
@@ -467,14 +426,12 @@
                     if (data.fatal) showToast('Lỗi phát HLS stream!', 'error');
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Native HLS (Safari/iOS)
                 video.src = url;
                 if (isHost) video.play().catch(() => { });
             } else {
                 showToast('Trình duyệt không hỗ trợ HLS!', 'error');
             }
         } else {
-            // Regular video (mp4, webm)
             video.src = url;
             video.load();
             if (isHost) {
@@ -487,33 +444,22 @@
         const video = $('#wt-video');
         if (!video) return;
         if (!isHost) { showToast('Chỉ Host điều khiển!', 'error'); return; }
-        if (video.paused) {
-            video.play().catch(() => { });
-        } else {
-            video.pause();
-        }
+        if (video.paused) video.play().catch(() => { });
+        else video.pause();
     }
 
     function toggleFullscreen() {
         const area = $('.wt-video-area');
         if (!area) return;
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            area.requestFullscreen().catch(() => { });
-        }
+        if (document.fullscreenElement) document.exitFullscreen();
+        else area.requestFullscreen().catch(() => { });
     }
 
     function togglePiP() {
         const video = $('#wt-video');
         if (!video) return;
-        if (document.pictureInPictureElement) {
-            document.exitPictureInPicture().catch(() => { });
-        } else {
-            video.requestPictureInPicture().catch(() => {
-                showToast('PiP không hỗ trợ', 'error');
-            });
-        }
+        if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => { });
+        else video.requestPictureInPicture().catch(() => showToast('PiP không hỗ trợ', 'error'));
     }
 
     function toggleTheater() {
@@ -564,13 +510,14 @@
         }
     }
 
-    // ═══ SCREEN SHARE (WebRTC) ═══
+    // ═══ SERVER-RELAY SCREEN SHARE ═══
+    // Instead of WebRTC P2P which requires TURN servers for cross-network,
+    // we capture frames → JPEG → send to server → broadcast to viewers.
+    // This works across ALL networks with zero extra infrastructure.
+
     async function toggleScreenShare() {
-        if (isSharing) {
-            stopScreenShare();
-        } else {
-            await startScreenShare();
-        }
+        if (isSharing) stopScreenShare();
+        else await startScreenShare();
     }
 
     async function startScreenShare() {
@@ -581,46 +528,44 @@
 
         try {
             localStream = await navigator.mediaDevices.getDisplayMedia({
-                video: { cursor: 'always', width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } },
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true
-                }
+                video: {
+                    cursor: 'always',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 15, max: 30 }
+                },
+                audio: true
             });
 
-            // Show on own video
+            // Show on host's own video element
             const video = $('#wt-video');
             if (video) {
                 video.srcObject = localStream;
                 video.muted = true; // Mute self to avoid echo
+                video.style.display = '';
                 video.play().catch(() => { });
             }
 
+            // Hide stream image (used for relay), show video element for host
+            const img = $('#wt-stream-img');
+            if (img) img.style.display = 'none';
+
             hidePlaceholder();
             isSharing = true;
+
             const btn = $('#btn-screen-share');
-            if (btn) {
-                btn.classList.add('active');
-                btn.textContent = '🔴';
-            }
+            if (btn) { btn.classList.add('active'); btn.textContent = '🔴'; }
             const btnTop = $('#btn-share-top');
-            if (btnTop) {
-                btnTop.textContent = 'DỪNG CHIA SẺ';
-                btnTop.classList.add('sharing');
-            }
+            if (btnTop) { btnTop.textContent = 'DỪNG CHIA SẺ'; btnTop.classList.add('sharing'); }
 
-            // Notify server
+            // Notify server & viewers
             socket.emit('wt_screen_started');
+            showToast('Đang chia sẻ màn hình qua Server Relay', 'success');
 
-            // Create peer connections for all current viewers
-            for (const m of members) {
-                if (m.socketId !== socket.id) {
-                    await createPeerAndOffer(m.socketId);
-                }
-            }
+            // Start capturing frames and sending to server
+            startStreamRelay();
 
-            // Handle stream end (user clicks "Stop sharing" in browser UI)
+            // Handle browser's native "Stop sharing" button
             localStream.getVideoTracks()[0].addEventListener('ended', () => {
                 stopScreenShare();
             });
@@ -635,179 +580,95 @@
     }
 
     function stopScreenShare() {
+        stopStreamRelay();
+
         if (localStream) {
             localStream.getTracks().forEach(t => t.stop());
             localStream = null;
         }
 
-        // Close all peer connections
-        Object.keys(peerConnections).forEach(closePeer);
-
         isSharing = false;
         const btn = $('#btn-screen-share');
-        if (btn) {
-            btn.classList.remove('active');
-            btn.textContent = '📺';
-        }
+        if (btn) { btn.classList.remove('active'); btn.textContent = '📺'; }
         const btnTop = $('#btn-share-top');
-        if (btnTop) {
-            btnTop.textContent = 'CHIA SẺ MÀN HÌNH';
-            btnTop.classList.remove('sharing');
-        }
+        if (btnTop) { btnTop.textContent = 'CHIA SẺ MÀN HÌNH'; btnTop.classList.remove('sharing'); }
 
         const video = $('#wt-video');
-        if (video) {
-            video.srcObject = null;
-            video.muted = false;
-        }
+        if (video) { video.srcObject = null; video.muted = false; }
         showPlaceholder();
 
         socket.emit('wt_screen_stopped');
     }
 
-    async function createPeerAndOffer(peerId) {
-        const pc = createPeerConnection(peerId);
+    // ═══ FRAME CAPTURE & RELAY ═══
+    function startStreamRelay() {
+        // Create hidden video + canvas for frame capture
+        if (!streamVideo) {
+            streamVideo = document.createElement('video');
+            streamVideo.muted = true;
+            streamVideo.playsInline = true;
+        }
+        streamVideo.srcObject = localStream;
+        streamVideo.play().catch(() => { });
 
-        // Add tracks
-        if (localStream) {
-            localStream.getTracks().forEach(track => {
-                pc.addTrack(track, localStream);
-            });
+        if (!streamCanvas) {
+            streamCanvas = document.createElement('canvas');
+            streamCtx = streamCanvas.getContext('2d');
         }
 
-        // Create offer
-        try {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            socket.emit('wt_offer', { to: peerId, offer: pc.localDescription });
-        } catch (err) {
-            console.error('Create offer error:', err);
+        // Wait for video to be ready, then start capturing
+        streamVideo.addEventListener('loadedmetadata', () => {
+            // Scale down for bandwidth efficiency (max 1280x720)
+            const vw = streamVideo.videoWidth;
+            const vh = streamVideo.videoHeight;
+            const scale = Math.min(1, 1280 / vw, 720 / vh);
+            streamCanvas.width = Math.round(vw * scale);
+            streamCanvas.height = Math.round(vh * scale);
+
+            console.log(`[Relay] Streaming at ${streamCanvas.width}x${streamCanvas.height}`);
+
+            // Start frame loop
+            captureAndSend();
+        }, { once: true });
+    }
+
+    function captureAndSend() {
+        if (!isSharing || !localStream || !streamVideo) return;
+
+        streamCtx.drawImage(streamVideo, 0, 0, streamCanvas.width, streamCanvas.height);
+
+        // Convert to JPEG data URL (much smaller than PNG)
+        const frameData = streamCanvas.toDataURL('image/jpeg', STREAM_QUALITY);
+
+        // Send to server for relay to all viewers
+        socket.volatile.emit('wt_stream_frame', frameData);
+
+        // Schedule next frame
+        streamTimer = setTimeout(captureAndSend, STREAM_INTERVAL);
+    }
+
+    function stopStreamRelay() {
+        if (streamTimer) {
+            clearTimeout(streamTimer);
+            streamTimer = null;
+        }
+        if (streamVideo) {
+            streamVideo.pause();
+            streamVideo.srcObject = null;
         }
     }
 
-    function createPeerConnection(peerId) {
-        if (peerConnections[peerId]) {
-            try { peerConnections[peerId].close(); } catch (e) { }
-        }
+    // ═══ DISPLAY RECEIVED STREAM (viewer side) ═══
+    function displayStreamFrame(frameData) {
+        const video = $('#wt-video');
+        const img = $('#wt-stream-img');
+        if (!img) return;
 
-        const pc = new RTCPeerConnection({
-            iceServers: ICE_SERVERS,
-            iceCandidatePoolSize: 10,  // Pre-gather ICE candidates for faster connection
-            bundlePolicy: 'max-bundle',
-            rtcpMuxPolicy: 'require'
-        });
-        peerConnections[peerId] = pc;
-
-        // ICE candidates — send each candidate as it's gathered
-        pc.onicecandidate = (e) => {
-            if (e.candidate) {
-                socket.emit('wt_ice', { to: peerId, candidate: e.candidate });
-            }
-        };
-
-        // ICE gathering state (debug)
-        pc.onicegatheringstatechange = () => {
-            console.log(`[ICE] Gathering state for ${peerId}: ${pc.iceGatheringState}`);
-        };
-
-        // ICE connection state (more granular than connectionState)
-        pc.oniceconnectionstatechange = () => {
-            const state = pc.iceConnectionState;
-            console.log(`[ICE] Connection state for ${peerId}: ${state}`);
-            if (state === 'connected' || state === 'completed') {
-                showToast('Đã kết nối stream!', 'success');
-            }
-        };
-
-        // Incoming stream (viewer side)
-        pc.ontrack = (e) => {
-            console.log(`[WebRTC] Received track from ${peerId}:`, e.track.kind);
-            const video = $('#wt-video');
-            if (video && e.streams[0]) {
-                video.srcObject = e.streams[0];
-                video.muted = false;
-                video.play().catch(() => { });
-                hidePlaceholder();
-            }
-        };
-
-        // Connection state — auto-reconnect with exponential backoff
-        let retryCount = 0;
-        pc.onconnectionstatechange = () => {
-            const state = pc.connectionState;
-            console.log(`[WebRTC] Peer ${peerId} state: ${state}`);
-            if (state === 'connected') {
-                retryCount = 0;
-            } else if (state === 'failed') {
-                // Only attempt reconnect if we're the host actively sharing
-                if (isHost && isSharing && localStream && retryCount < MAX_RECONNECT) {
-                    retryCount++;
-                    console.log(`[WebRTC] Peer ${peerId} failed, retry ${retryCount}/${MAX_RECONNECT}`);
-                    showToast(`Đang kết nối lại... (${retryCount}/${MAX_RECONNECT})`, 'info');
-                    setTimeout(() => {
-                        if (peerConnections[peerId] && peerConnections[peerId].connectionState !== 'connected') {
-                            closePeer(peerId);
-                            createPeerAndOffer(peerId);
-                        }
-                    }, 2000 * retryCount);
-                } else if (retryCount >= MAX_RECONNECT) {
-                    showToast('Không thể kết nối peer. Thử chia sẻ lại.', 'error');
-                }
-            }
-        };
-
-        return pc;
-    }
-
-    async function handleOffer(from, offer) {
-        const pc = createPeerConnection(from);
-
-        try {
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            socket.emit('wt_answer', { to: from, answer: pc.localDescription });
-        } catch (err) {
-            console.error('Handle offer error:', err);
-        }
-    }
-
-    async function handleAnswer(from, answer) {
-        const pc = peerConnections[from];
-        if (!pc) return;
-        try {
-            await pc.setRemoteDescription(new RTCSessionDescription(answer));
-        } catch (err) {
-            console.error('Handle answer error:', err);
-        }
-    }
-
-    async function handleIceCandidate(from, candidate) {
-        const pc = peerConnections[from];
-        if (!pc) return;
-        try {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (err) {
-            console.error('ICE candidate error:', err);
-        }
-    }
-
-    function closePeer(peerId) {
-        if (peerConnections[peerId]) {
-            peerConnections[peerId].close();
-            delete peerConnections[peerId];
-        }
-    }
-
-    // When a new viewer joins and host is sharing, create offer for them
-    // This is triggered by wt_members update
-    function checkNewViewersForStream() {
-        if (!isHost || !isSharing || !localStream) return;
-        for (const m of members) {
-            if (m.socketId !== socket.id && !peerConnections[m.socketId]) {
-                createPeerAndOffer(m.socketId);
-            }
-        }
+        // Hide video element, show image element for relay stream
+        if (video) video.style.display = 'none';
+        img.style.display = 'block';
+        img.src = frameData;
+        hidePlaceholder();
     }
 
     // ═══ CHAT ═══
@@ -823,7 +684,6 @@
     function addChatMessage(name, text, ts) {
         const container = $('#wt-chat-messages');
         if (!container) return;
-
         const msg = document.createElement('div');
         msg.className = 'wt-chat-msg';
         const time = ts ? new Date(ts).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
@@ -852,7 +712,6 @@
     function renderMembers() {
         const list = $('#wt-members-list');
         if (!list) return;
-
         list.innerHTML = '';
         for (const m of members) {
             const el = document.createElement('div');
@@ -865,30 +724,22 @@
                     <div class="wt-member-name">${escapeHtml(m.username)}</div>
                     <div class="wt-member-role ${roleClass}">${roleText}</div>
                 </div>
-                <span class="wt-member-quality"><span class="wt-quality-dot good"></span></span>
             `;
             list.appendChild(el);
         }
-
-        // Update member count
         $$('.member-count').forEach(el => el.textContent = members.length);
-
-        // Check for new viewers that need stream
-        checkNewViewersForStream();
     }
 
     // ═══ REACTIONS ═══
     function spawnReaction(emoji) {
         const wrapper = $('.wt-video-wrapper');
         if (!wrapper) return;
-
         const el = document.createElement('div');
         el.className = 'wt-reaction-float';
         el.textContent = emoji;
         el.style.left = (20 + Math.random() * 60) + '%';
         el.style.bottom = '10%';
         wrapper.appendChild(el);
-
         setTimeout(() => el.remove(), 2200);
     }
 
@@ -910,9 +761,7 @@
         toast.textContent = msg;
         toast.className = 'wt-toast ' + type + ' show';
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     // ═══ BOOT ═══
