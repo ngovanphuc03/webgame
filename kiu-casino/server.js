@@ -2459,6 +2459,37 @@ const pokerGame = new PokerManager(io, dbPool);
 // txGame / taixiu-core integration (enabled if module present)
 let txGame; try { txGame = new (require('./taixiu-core'))(io, dbPool, TARGET_GUILD_ID); txGame.onWin = broadcastWin; console.log('taixiu-core loaded'); } catch (e) { console.error('taixiu-core not loaded:', e?.message || e); }
 
+// ============================================================
+// WATCH TOGETHER — Room Store
+// ============================================================
+const watchRooms = new Map(); // roomId -> { id, hostId, hostSocket, password, members[], videoUrl, playing, currentTime, createdAt }
+function generateRoomId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let id = '';
+    for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+    return watchRooms.has(id) ? generateRoomId() : id;
+}
+function broadcastRoomMembers(roomId) {
+    const room = watchRooms.get(roomId);
+    if (!room) return;
+    const memberData = room.members.map(m => ({
+        socketId: m.socketId,
+        username: m.username,
+        avatar: m.avatar,
+        isHost: m.socketId === room.hostSocket
+    }));
+    io.to('wt_' + roomId).emit('wt_members', { members: memberData, hostId: room.hostSocket });
+}
+// Auto-cleanup empty rooms every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [id, room] of watchRooms) {
+        if (room.members.length === 0 && now - room.createdAt > 300000) {
+            watchRooms.delete(id);
+        }
+    }
+}, 300000);
+
 // Socket.IO authentication middleware
 io.use((socket, next) => {
     const cookieStr = socket.handshake.headers.cookie || '';
@@ -2668,7 +2699,136 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ═══ WATCH TOGETHER EVENTS ═══
+    socket.on('wt_create', (data) => {
+        const rid = generateRoomId();
+        const room = {
+            id: rid,
+            hostId: userId || socket.id,
+            hostSocket: socket.id,
+            password: data.password || '',
+            members: [{ socketId: socket.id, userId: userId || socket.id, username: data.username || userInfo.username, avatar: data.avatar || userInfo.avatar }],
+            videoUrl: '',
+            playing: false,
+            currentTime: 0,
+            createdAt: Date.now()
+        };
+        watchRooms.set(rid, room);
+        socket.join('wt_' + rid);
+        socket._wtRoom = rid;
+        socket.emit('wt_room_created', { roomId: rid });
+        broadcastRoomMembers(rid);
+    });
+
+    socket.on('wt_join', (data) => {
+        const rid = (data.roomId || '').toUpperCase();
+        const room = watchRooms.get(rid);
+        if (!room) { socket.emit('wt_error', { msg: 'Phòng không tồn tại!' }); return; }
+        if (room.password && room.password !== (data.password || '')) { socket.emit('wt_error', { msg: 'Sai mật khẩu!' }); return; }
+        if (room.members.find(m => m.socketId === socket.id)) { socket.emit('wt_error', { msg: 'Bạn đã trong phòng!' }); return; }
+        room.members.push({ socketId: socket.id, userId: userId || socket.id, username: data.username || userInfo.username, avatar: data.avatar || userInfo.avatar });
+        socket.join('wt_' + rid);
+        socket._wtRoom = rid;
+        socket.emit('wt_joined', { roomId: rid, isHost: room.hostSocket === socket.id, videoUrl: room.videoUrl });
+        broadcastRoomMembers(rid);
+        // Notify chat
+        io.to('wt_' + rid).emit('wt_chat', { username: '🎬 HỆ THỐNG', text: (data.username || 'Ai đó') + ' đã tham gia phòng!', ts: Date.now() });
+    });
+
+    socket.on('wt_leave', () => {
+        handleWtLeave(socket);
+    });
+
+    socket.on('wt_video_url', (data) => {
+        const rid = socket._wtRoom;
+        const room = watchRooms.get(rid);
+        if (!room || room.hostSocket !== socket.id) return;
+        room.videoUrl = data.url || '';
+        room.currentTime = 0;
+        room.playing = false;
+        socket.to('wt_' + rid).emit('wt_video_url', { url: room.videoUrl });
+    });
+
+    socket.on('wt_sync', (data) => {
+        const rid = socket._wtRoom;
+        const room = watchRooms.get(rid);
+        if (!room || room.hostSocket !== socket.id) return;
+        if (data.time !== undefined) room.currentTime = data.time;
+        if (data.action === 'play') room.playing = true;
+        if (data.action === 'pause') room.playing = false;
+        socket.to('wt_' + rid).emit('wt_sync', data);
+    });
+
+    socket.on('wt_chat', (data) => {
+        const rid = socket._wtRoom;
+        if (!rid || !data.text) return;
+        const text = String(data.text).trim().slice(0, 200);
+        if (!text) return;
+        io.to('wt_' + rid).emit('wt_chat', { username: userInfo.username, text, ts: Date.now() });
+    });
+
+    socket.on('wt_reaction', (data) => {
+        const rid = socket._wtRoom;
+        if (!rid || !data.emoji) return;
+        socket.to('wt_' + rid).emit('wt_reaction', { emoji: data.emoji, username: userInfo.username });
+    });
+
+    // WebRTC signaling relay
+    socket.on('wt_offer', (data) => {
+        if (!data.to || !data.offer) return;
+        io.to(data.to).emit('wt_offer', { from: socket.id, offer: data.offer });
+    });
+
+    socket.on('wt_answer', (data) => {
+        if (!data.to || !data.answer) return;
+        io.to(data.to).emit('wt_answer', { from: socket.id, answer: data.answer });
+    });
+
+    socket.on('wt_ice', (data) => {
+        if (!data.to || !data.candidate) return;
+        io.to(data.to).emit('wt_ice', { from: socket.id, candidate: data.candidate });
+    });
+
+    socket.on('wt_screen_started', () => {
+        const rid = socket._wtRoom;
+        if (!rid) return;
+        socket.to('wt_' + rid).emit('wt_screen_started');
+    });
+
+    socket.on('wt_screen_stopped', () => {
+        const rid = socket._wtRoom;
+        if (!rid) return;
+        socket.to('wt_' + rid).emit('wt_screen_stopped');
+    });
+
+    function handleWtLeave(sock) {
+        const rid = sock._wtRoom;
+        if (!rid) return;
+        const room = watchRooms.get(rid);
+        if (!room) return;
+        room.members = room.members.filter(m => m.socketId !== sock.id);
+        sock.leave('wt_' + rid);
+        delete sock._wtRoom;
+        // Notify peers to cleanup WebRTC
+        io.to('wt_' + rid).emit('wt_peer_left', { peerId: sock.id });
+        // Host migration
+        if (room.hostSocket === sock.id && room.members.length > 0) {
+            room.hostSocket = room.members[0].socketId;
+            room.hostId = room.members[0].userId;
+            io.to('wt_' + rid).emit('wt_host_migrate', { newHostId: room.hostSocket, newHostName: room.members[0].username });
+        }
+        // Notify chat
+        io.to('wt_' + rid).emit('wt_chat', { username: '🎬 HỆ THỐNG', text: 'Một thành viên đã rời phòng.', ts: Date.now() });
+        broadcastRoomMembers(rid);
+        // Cleanup empty room
+        if (room.members.length === 0) {
+            watchRooms.delete(rid);
+        }
+    }
+
     socket.on('disconnect', () => {
+        // Watch Together cleanup
+        handleWtLeave(socket);
         // Tier 2: Remove from online tracking
         onlineUsers.delete(socket.id);
         const uniqueOnline = new Set([...onlineUsers.values()].map(u => u.userId)).size;
@@ -2770,6 +2930,12 @@ app.get('/blockblast', (req, res) => {
 });
 
 // Serve Transfer page
+// Serve Watch Together page
+app.get('/watch', (req, res) => {
+    if (!getPageUserId(req)) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'watch-together.html'));
+});
+
 app.get('/transfer', (req, res) => {
     if (!getPageUserId(req)) return res.redirect('/');
     res.sendFile(path.join(__dirname, 'public', 'transfer.html'));

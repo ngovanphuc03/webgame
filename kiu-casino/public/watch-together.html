@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Watch Together - Xem phim chung cùng bạn bè trên Pixel PlayZone">
+    <meta name="theme-color" content="#0a0b1e">
+    <title>XEM PHIM CHUNG — PIXEL PLAYZONE</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/watch-together.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="wt-app">
+
+        <!-- ═══ NAVBAR ═══ -->
+        <nav class="ppz-nav">
+            <a href="/" class="ppz-nav-back">← LOBBY</a>
+            <span class="ppz-nav-title">🎬 XEM PHIM CHUNG</span>
+            <div class="ppz-nav-right">
+                <div class="ppz-bal">💰 <span id="wt-balance">0 $</span></div>
+                <div class="wt-room-badge" title="Click để copy link phòng" style="display:none">
+                    🏠 <span class="room-code-text">------</span>
+                    <span class="copy-icon">📋</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ═══ ROOM LOBBY ═══ -->
+        <div class="wt-lobby" id="wt-lobby">
+            <div class="wt-lobby-card">
+                <div class="wt-lobby-icon">🎬</div>
+                <div class="wt-lobby-title">WATCH TOGETHER</div>
+                <div class="wt-lobby-sub">Xem phim cùng bạn bè — Chia sẻ màn hình mượt mà</div>
+
+                <!-- Create room -->
+                <button class="wt-lobby-btn wt-btn-create" id="btn-create-room">
+                    🎥 TẠO PHÒNG MỚI
+                </button>
+                <input class="wt-lobby-pw" id="create-pw-input" type="password" placeholder="Mật khẩu (tùy chọn)">
+
+                <div class="wt-lobby-divider">HOẶC</div>
+
+                <!-- Join room -->
+                <input class="wt-lobby-input" id="join-room-input" type="text" placeholder="NHẬP MÃ PHÒNG" maxlength="6"
+                    autocomplete="off" spellcheck="false">
+                <input class="wt-lobby-pw" id="join-pw-input" type="password" placeholder="Mật khẩu (nếu có)">
+                <button class="wt-lobby-btn wt-btn-join" id="btn-join-room">
+                    🚀 THAM GIA PHÒNG
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══ CINEMA (hidden until room joined) ═══ -->
+        <div class="wt-main" style="display:none">
+
+            <!-- VIDEO AREA -->
+            <div class="wt-video-area">
+                <!-- Top bar: URL + share -->
+                <div class="wt-topbar">
+                    <input class="wt-url-input" id="wt-url-input" type="url"
+                        placeholder="Nhập URL video (mp4, webm, m3u8)..." autocomplete="off">
+                    <button class="wt-topbar-btn wt-btn-load host-only" id="btn-load-url">▶ PHÁT</button>
+                    <button class="wt-topbar-btn wt-btn-share host-only" id="btn-share-top"
+                        onclick="document.getElementById('btn-screen-share').click()">CHIA SẺ MÀN HÌNH</button>
+                    <button class="wt-ctrl-btn" id="btn-leave-room" title="Rời phòng"
+                        style="border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.1)">🚪</button>
+                </div>
+
+                <!-- Video wrapper -->
+                <div class="wt-video-wrapper">
+                    <video id="wt-video" playsinline></video>
+                    <div class="wt-video-placeholder">
+                        <span class="ph-icon">🎬</span>
+                        <span class="ph-text">Nhập URL video hoặc chia sẻ màn hình để bắt đầu</span>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="wt-controls">
+                    <button class="wt-ctrl-btn" id="btn-play-pause" title="Play/Pause">▶</button>
+                    <button class="wt-ctrl-btn host-only" id="btn-screen-share" title="Chia sẻ màn hình">📺</button>
+                    <input type="range" class="wt-seek-bar" id="wt-seek" min="0" max="1000" value="0">
+                    <span class="wt-time" id="wt-time-display">0:00 / 0:00</span>
+                    <button class="wt-ctrl-btn" id="btn-volume" title="Âm lượng">🔊</button>
+                    <input type="range" class="wt-vol-slider" id="wt-volume" min="0" max="100" value="80">
+                    <button class="wt-ctrl-btn" id="btn-pip" title="Picture-in-Picture">🖼</button>
+                    <button class="wt-ctrl-btn" id="btn-theater" title="Theater Mode">🎭</button>
+                    <button class="wt-ctrl-btn" id="btn-fullscreen" title="Toàn màn hình">⛶</button>
+                </div>
+            </div>
+
+            <!-- SIDEBAR -->
+            <div class="wt-sidebar open">
+                <!-- Room info -->
+                <div
+                    style="padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(139,92,246,.1);flex-shrink:0">
+                    <div class="wt-room-badge" title="Click để copy link phòng">
+                        🏠 <span class="room-code-text">------</span> <span class="copy-icon">📋</span>
+                    </div>
+                    <span style="font-size:12px;color:rgba(255,255,255,.3);margin-left:auto">👥 <span
+                            class="member-count">0</span></span>
+                </div>
+
+                <!-- Tabs -->
+                <div class="wt-sidebar-tabs">
+                    <button class="wt-tab active" data-panel="chat">💬 CHAT</button>
+                    <button class="wt-tab" data-panel="members">👥 MEMBERS</button>
+                </div>
+
+                <!-- Chat panel -->
+                <div class="wt-tab-panel active" id="panel-chat">
+                    <div class="wt-chat-messages" id="wt-chat-messages">
+                        <div class="wt-chat-msg system">
+                            <div class="wt-chat-msg-text">Chào mừng đến Watch Together! 🎬</div>
+                        </div>
+                    </div>
+                    <div class="wt-reaction-bar">
+                        <button class="wt-reaction-btn" data-emoji="🔥">🔥</button>
+                        <button class="wt-reaction-btn" data-emoji="❤️">❤️</button>
+                        <button class="wt-reaction-btn" data-emoji="😂">😂</button>
+                        <button class="wt-reaction-btn" data-emoji="👏">👏</button>
+                        <button class="wt-reaction-btn" data-emoji="🎉">🎉</button>
+                        <button class="wt-reaction-btn" data-emoji="😮">😮</button>
+                    </div>
+                    <div class="wt-chat-input-wrap">
+                        <input class="wt-chat-input" id="wt-chat-input" placeholder="Nhắn gì đó..." maxlength="200"
+                            autocomplete="off">
+                        <button class="wt-chat-send" id="btn-chat-send" title="Gửi">➤</button>
+                    </div>
+                </div>
+
+                <!-- Members panel -->
+                <div class="wt-tab-panel" id="panel-members">
+                    <div class="wt-members-list" id="wt-members-list"></div>
+                </div>
+            </div>
+
+            <!-- Sidebar toggle (for theater mode) -->
+            <button class="wt-sidebar-toggle" id="btn-sidebar-toggle">‹</button>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+    <script src="/js/ppz-sfx-engine.js"></script>
+    <script src="/js/sound-system.js"></script>
+    <script src="/js/watch-together.js"></script>
+</body>
+
+</html>
