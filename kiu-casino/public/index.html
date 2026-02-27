@@ -1031,6 +1031,32 @@
             overflow: hidden
         }
 
+        .c-watch {
+            --c1: #e11d48;
+            --c2: #7c3aed;
+        }
+
+        .c-watch:hover {
+            box-shadow: 0 10px 60px rgba(225, 29, 72, 0.2), 0 0 100px rgba(124, 58, 237, 0.08)
+        }
+
+        .banner-watch {
+            background: linear-gradient(135deg, #1a0512, #3a0a2e 40%, #1a0a3e);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .banner-watch::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            width: 60%;
+            height: 50%;
+            background: radial-gradient(ellipse at bottom, rgba(225, 29, 72, 0.15), transparent 70%);
+            pointer-events: none;
+        }
+
         .banner-blockblast::after {
             content: '';
             position: absolute;
@@ -1661,6 +1687,23 @@
                     <div class="meta-item"><i>📊</i> Realtime</div>
                 </div>
                 <button class="btn-play btn-cyan">XEM NGAY ▸</button>
+            </div>
+        </div>
+
+        <!-- Watch Together card -->
+        <div class="game-card c-watch" onclick="enterGame('/watch')">
+            <div class="card-status status-live">● LIVE</div>
+            <div class="card-banner banner-watch"><span class="card-icon">🎬</span></div>
+            <div class="card-content">
+                <div class="card-title">XEM PHIM CHUNG</div>
+                <div class="card-desc">Xem phim cùng bạn bè, chia sẻ màn hình + âm thanh mượt mà qua WebRTC!</div>
+                <div class="card-meta">
+                    <div class="meta-item"><i>📺</i> Screen Share</div>
+                    <div class="meta-item"><i>👥</i> Multiplayer</div>
+                </div>
+                <button class="btn-play"
+                    style="background:linear-gradient(135deg,#e11d48,#7c3aed);box-shadow:0 4px 20px rgba(225,29,72,0.3)">XEM
+                    NGAY ▸</button>
             </div>
         </div>
 
