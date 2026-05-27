@@ -217,6 +217,23 @@ const dbPool = mysql.createPool({
         `);
         console.log('✅ achievements table ready');
 
+        // --- CREATE MINI_GAME_SCORES TABLE ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS mini_game_scores (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                guild_id VARCHAR(64) NOT NULL,
+                user_id VARCHAR(64) NOT NULL,
+                game_id VARCHAR(32) NOT NULL,
+                score INT NOT NULL,
+                metadata JSON DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_guild_user_game (guild_id, user_id, game_id),
+                INDEX idx_game_score (game_id, score DESC)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+        console.log('✅ mini_game_scores table ready');
+
     } catch (e) { console.error('Auto-migrate error:', e.message); }
 })();
 
@@ -2076,6 +2093,102 @@ app.get('/api/leaderboard', requireAuth, async (req, res) => {
     }
 });
 
+// Get top scores for a specific mini-game
+app.get('/api/leaderboard/top-scores', requireAuth, async (req, res) => {
+    const game = req.query.game;
+    const limit = parseInt(req.query.limit) || 50;
+    const uid = req.cookies.user_id;
+
+    if (!game) {
+        return res.status(400).json({ error: 'Thiếu tham số game' });
+    }
+
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT s.user_id, s.score, s.metadata, s.updated_at as achieved_at, w.username, w.avatar
+             FROM mini_game_scores s
+             LEFT JOIN wallet w ON s.guild_id = w.guild_id AND s.user_id = w.user_id
+             WHERE s.guild_id = ? AND s.game_id = ?
+             ORDER BY s.score DESC, s.updated_at ASC
+             LIMIT ?`,
+            [TARGET_GUILD_ID, game, limit]
+        );
+
+        const leaderboard = rows.map((r, index) => ({
+            rank: index + 1,
+            user_id: r.user_id,
+            score: Number(r.score),
+            metadata: r.metadata ? (typeof r.metadata === 'string' ? JSON.parse(r.metadata) : r.metadata) : null,
+            achieved_at: r.achieved_at,
+            username: r.username || ('User_' + String(r.user_id).slice(-4)),
+            avatar: `/api/avatar/${r.user_id}`
+        }));
+
+        // Find my rank
+        let myRank = null;
+        let myScore = null;
+        const [myRows] = await dbPool.execute(
+            'SELECT score FROM mini_game_scores WHERE guild_id = ? AND user_id = ? AND game_id = ?',
+            [TARGET_GUILD_ID, uid, game]
+        );
+        if (myRows.length > 0) {
+            myScore = Number(myRows[0].score);
+            const [rankRows] = await dbPool.execute(
+                'SELECT COUNT(*) as cnt FROM mini_game_scores WHERE guild_id = ? AND game_id = ? AND (score > ? OR (score = ? AND updated_at < (SELECT updated_at FROM mini_game_scores WHERE guild_id = ? AND user_id = ? AND game_id = ?)))',
+                [TARGET_GUILD_ID, game, myScore, myScore, TARGET_GUILD_ID, uid, game]
+            );
+            myRank = Number(rankRows[0].cnt) + 1;
+        }
+
+        res.json({ leaderboard, my_user_id: uid, my_rank: myRank, my_score: myScore });
+    } catch (e) {
+        console.error('Game Leaderboard Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database: ' + e.message });
+    }
+});
+
+// Submit a new score for a mini-game
+app.post('/api/score/submit', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { game, score, metadata } = req.body;
+
+    if (!game || score === undefined) {
+        return res.status(400).json({ error: 'Thiếu game hoặc score' });
+    }
+
+    const scoreNum = parseInt(score);
+    if (isNaN(scoreNum) || scoreNum < 0) {
+        return res.status(400).json({ error: 'Điểm số không hợp lệ' });
+    }
+
+    try {
+        const [existing] = await dbPool.execute(
+            'SELECT score FROM mini_game_scores WHERE guild_id = ? AND user_id = ? AND game_id = ?',
+            [TARGET_GUILD_ID, uid, game]
+        );
+
+        let newRecord = false;
+        if (existing.length === 0) {
+            await dbPool.execute(
+                'INSERT INTO mini_game_scores (guild_id, user_id, game_id, score, metadata) VALUES (?, ?, ?, ?, ?)',
+                [TARGET_GUILD_ID, uid, game, scoreNum, metadata ? JSON.stringify(metadata) : null]
+            );
+            newRecord = true;
+        } else if (scoreNum > Number(existing[0].score)) {
+            await dbPool.execute(
+                'UPDATE mini_game_scores SET score = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP WHERE guild_id = ? AND user_id = ? AND game_id = ?',
+                [scoreNum, metadata ? JSON.stringify(metadata) : null, TARGET_GUILD_ID, uid, game]
+            );
+            newRecord = true;
+        }
+
+        res.json({ success: true, newRecord, currentBest: newRecord ? scoreNum : Number(existing[0].score) });
+    } catch (e) {
+        console.error('Submit Score Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database: ' + e.message });
+    }
+});
+
 // ============================================================
 // PROFILE STATS API
 // ============================================================
@@ -2294,6 +2407,160 @@ app.get('/api/achievements', requireAuth, async (req, res) => {
         });
     } catch (e) {
         console.error('Achievements Error:', e.message);
+        res.status(500).json({ error: 'Lỗi Database' });
+    }
+});
+
+// Progression summary (me + daily + achievements + leveling)
+app.get('/api/progression/summary', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        // --- Me ---
+        let username = 'User';
+        let avatar = '';
+        let balance = 0;
+        const [walletRows] = await dbPool.execute(
+            'SELECT balance, username, avatar FROM wallet WHERE guild_id=? AND user_id=?',
+            [TARGET_GUILD_ID, uid]
+        );
+        if (walletRows.length) {
+            balance = Number(walletRows[0].balance) || 0;
+            if (walletRows[0].username) username = walletRows[0].username;
+            if (walletRows[0].avatar) avatar = walletRows[0].avatar;
+        }
+        if (req.cookies.user_info) {
+            try {
+                const raw = JSON.parse(req.cookies.user_info.startsWith('j:') ? req.cookies.user_info.slice(2) : req.cookies.user_info);
+                if (raw.username) username = decodeURIComponent(raw.username);
+                if (raw.avatar) avatar = raw.avatar;
+            } catch (e) { }
+        }
+        avatar = `/api/avatar/${uid}`;
+        const me = { username, avatar, balance };
+
+        // --- Daily ---
+        const [dailyRows] = await dbPool.execute(
+            'SELECT last_claim, streak FROM daily_rewards WHERE user_id=? AND guild_id=?',
+            [uid, TARGET_GUILD_ID]
+        );
+        const now = new Date();
+        let streak = 0;
+        let claimedToday = false;
+        let nextClaimIn = null;
+        if (dailyRows.length > 0) {
+            const lastClaim = new Date(dailyRows[0].last_claim);
+            streak = dailyRows[0].streak || 0;
+
+            const lastDate = lastClaim.toISOString().split('T')[0];
+            const todayDate = now.toISOString().split('T')[0];
+
+            if (lastDate === todayDate) {
+                claimedToday = true;
+                const tomorrow = new Date(now);
+                tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+                tomorrow.setUTCHours(0, 0, 0, 0);
+                const diffMs = tomorrow - now;
+                const hours = Math.floor(diffMs / 3600000);
+                const mins = Math.floor((diffMs % 3600000) / 60000);
+                nextClaimIn = `${hours}h ${mins}m`;
+            }
+
+            const yesterday = new Date(now);
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayDate = yesterday.toISOString().split('T')[0];
+            if (lastDate !== todayDate && lastDate !== yesterdayDate) {
+                streak = 0;
+            }
+        }
+        const daily = {
+            streak: Math.min(streak, 7),
+            claimed_today: claimedToday,
+            next_claim_in: nextClaimIn
+        };
+
+        // --- Achievements ---
+        const [achRows] = await dbPool.execute(
+            'SELECT badge_key, unlocked_at FROM achievements WHERE guild_id=? AND user_id=? ORDER BY unlocked_at DESC',
+            [TARGET_GUILD_ID, uid]
+        );
+        const newBadges = await checkAndAwardBadges(uid);
+        const badges = achRows.map(r => ({
+            key: r.badge_key,
+            ...BADGE_DEFS[r.badge_key],
+            unlockedAt: r.unlocked_at
+        }));
+        for (const key of newBadges) {
+            if (!badges.find(b => b.key === key)) {
+                badges.push({ key, ...BADGE_DEFS[key], unlockedAt: new Date() });
+            }
+        }
+        const achievements = {
+            badges,
+            allBadges: Object.entries(BADGE_DEFS).map(([key, def]) => ({
+                key, ...def,
+                unlocked: badges.some(b => b.key === key)
+            })),
+            newBadges: newBadges.map(k => ({ key: k, ...BADGE_DEFS[k] }))
+        };
+
+        // --- Leveling ---
+        const [lvlRows] = await dbPool.execute(
+            'SELECT xp, level, last_message_ts, last_voice_ts FROM leveling WHERE guild_id=? AND user_id=?',
+            [TARGET_GUILD_ID, uid]
+        );
+        let leveling;
+        if (lvlRows.length === 0) {
+            leveling = {
+                found: false,
+                level: 0,
+                xp: 0,
+                rank: getRankRole(0),
+                xpForNext: xpForNextLevel(0),
+                xpProgress: 0,
+                totalXp: 0,
+                position: null,
+                totalMembers: null,
+                lastMessage: null,
+                lastVoice: null
+            };
+        } else {
+            const row = lvlRows[0];
+            const level = Number(row.level) || 0;
+            const xp = Number(row.xp) || 0;
+            const xpNeeded = xpForNextLevel(level);
+            const totalXp = totalXpForLevel(level) + xp;
+            const discordRank = await fetchMemberDiscordRank(uid);
+            const rank = discordRank || getRankRole(level);
+
+            const [rankRows] = await dbPool.execute(
+                'SELECT COUNT(*) as cnt FROM leveling WHERE guild_id=? AND (level > ? OR (level = ? AND xp > ?))',
+                [TARGET_GUILD_ID, level, level, xp]
+            );
+            const position = Number(rankRows[0].cnt) + 1;
+
+            const [totalRows] = await dbPool.execute(
+                'SELECT COUNT(*) as cnt FROM leveling WHERE guild_id=?',
+                [TARGET_GUILD_ID]
+            );
+
+            leveling = {
+                found: true,
+                level,
+                xp,
+                xpForNext: xpNeeded,
+                xpProgress: xpNeeded > 0 ? Math.round((xp / xpNeeded) * 100) : 0,
+                totalXp,
+                rank,
+                position,
+                totalMembers: Number(totalRows[0].cnt),
+                lastMessage: row.last_message_ts,
+                lastVoice: row.last_voice_ts
+            };
+        }
+
+        res.json({ me, daily, achievements, leveling });
+    } catch (e) {
+        console.error('Progression Summary Error:', e.message);
         res.status(500).json({ error: 'Lỗi Database' });
     }
 });
