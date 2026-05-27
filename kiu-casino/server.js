@@ -2104,7 +2104,7 @@ app.get('/api/leaderboard/top-scores', requireAuth, async (req, res) => {
     }
 
     try {
-        const [rows] = await dbPool.execute(
+        const [rows] = await dbPool.query(
             `SELECT s.user_id, s.score, s.metadata, s.updated_at as achieved_at, w.username, w.avatar
              FROM mini_game_scores s
              LEFT JOIN wallet w ON s.guild_id = w.guild_id AND s.user_id = w.user_id
@@ -2127,13 +2127,13 @@ app.get('/api/leaderboard/top-scores', requireAuth, async (req, res) => {
         // Find my rank
         let myRank = null;
         let myScore = null;
-        const [myRows] = await dbPool.execute(
+        const [myRows] = await dbPool.query(
             'SELECT score FROM mini_game_scores WHERE guild_id = ? AND user_id = ? AND game_id = ?',
             [TARGET_GUILD_ID, uid, game]
         );
         if (myRows.length > 0) {
             myScore = Number(myRows[0].score);
-            const [rankRows] = await dbPool.execute(
+            const [rankRows] = await dbPool.query(
                 'SELECT COUNT(*) as cnt FROM mini_game_scores WHERE guild_id = ? AND game_id = ? AND (score > ? OR (score = ? AND updated_at < (SELECT updated_at FROM mini_game_scores WHERE guild_id = ? AND user_id = ? AND game_id = ?)))',
                 [TARGET_GUILD_ID, game, myScore, myScore, TARGET_GUILD_ID, uid, game]
             );
