@@ -2107,7 +2107,11 @@ app.get('/api/leaderboard/top-scores', requireAuth, async (req, res) => {
         const [rows] = await dbPool.query(
             `SELECT s.user_id, s.score, s.metadata, s.updated_at as achieved_at, w.username, w.avatar
              FROM mini_game_scores s
-             LEFT JOIN wallet w ON s.guild_id = w.guild_id AND s.user_id = w.user_id
+             LEFT JOIN (
+                 SELECT user_id, MAX(username) as username, MAX(avatar) as avatar
+                 FROM wallet
+                 GROUP BY user_id
+             ) w ON s.user_id = w.user_id
              WHERE s.guild_id = ? AND s.game_id = ?
              ORDER BY s.score DESC, s.updated_at ASC
              LIMIT ?`,
