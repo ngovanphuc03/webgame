@@ -119,15 +119,19 @@ const COOKIE_OPTS_CLIENT = { // user_info readable by client for display
 
 // Auth middleware (supports both signed and unsigned cookies for backward compat)
 function requireAuth(req, res, next) {
-    // Prefer signed cookie, fallback to unsigned for backward compatibility
-    const uid = (req.signedCookies && req.signedCookies.user_id) || (req.cookies && req.cookies.user_id);
+    // Prefer signed cookie, fallback to unsigned or x-user-id header for app requests
+    const uid = (req.signedCookies && req.signedCookies.user_id) || 
+                (req.cookies && req.cookies.user_id) || 
+                req.headers['x-user-id'];
     if (!uid) {
         return res.status(401).json({ error: 'No login' });
     }
     // Normalize: store resolved uid in req.cookies.user_id for downstream
+    if (!req.cookies) req.cookies = {};
     req.cookies.user_id = uid;
     next();
 }
+
 
 // Flappy anti-cheat: server-side session tokens
 const flappySessions = new Map(); // userId -> { token, startTime }
@@ -234,8 +238,45 @@ const dbPool = mysql.createPool({
         `);
         console.log('✅ mini_game_scores table ready');
 
+        // --- CREATE CINEMA_WATCH_HISTORY TABLE ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS cinema_watch_history (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(64) NOT NULL,
+                movie_slug VARCHAR(128) NOT NULL,
+                movie_name VARCHAR(255) NOT NULL,
+                poster_url TEXT,
+                server_index INT DEFAULT 0,
+                server_name VARCHAR(64) DEFAULT '',
+                episode_index INT DEFAULT 0,
+                episode_name VARCHAR(64) DEFAULT '',
+                current_time DOUBLE DEFAULT 0,
+                duration DOUBLE DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_user_movie (user_id, movie_slug),
+                INDEX idx_user_history (user_id, updated_at DESC)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+        console.log('✅ cinema_watch_history table ready');
+
+        // --- CREATE CINEMA_FAVORITES TABLE (ULTRA-LIGHTWEIGHT) ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS cinema_favorites (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(64) NOT NULL,
+                movie_slug VARCHAR(128) NOT NULL,
+                movie_name VARCHAR(255) NOT NULL,
+                poster_url VARCHAR(500) DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_user_fav (user_id, movie_slug),
+                INDEX idx_user_fav (user_id, created_at DESC)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+        console.log('✅ cinema_favorites table ready');
+
     } catch (e) { console.error('Auto-migrate error:', e.message); }
 })();
+
 
 // --- TRANSACTION LOGGER ---
 async function logTx(conn, uid, type, amount, balBefore, balAfter, details) {
@@ -2190,6 +2231,195 @@ app.post('/api/score/submit', requireAuth, async (req, res) => {
     } catch (e) {
         console.error('Submit Score Error:', e.message);
         res.status(500).json({ error: 'Lỗi Database: ' + e.message });
+    }
+});
+
+// ============================================================
+// CINEMA WATCH HISTORY API (Linked to User Account & Auto-Upsert)
+// ============================================================
+
+// 1. Get user's watch history
+app.get('/api/cinema/history', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT movie_slug as slug, movie_name as name, poster_url as posterUrl,
+                    server_index as serverIndex, server_name as serverName,
+                    episode_index as episodeIndex, episode_name as episodeName,
+                    current_time as currentTime, duration, updated_at as updatedAt
+             FROM cinema_watch_history
+             WHERE user_id = ?
+             ORDER BY updated_at DESC
+             LIMIT 30`,
+            [uid]
+        );
+        res.json({ success: true, history: rows });
+    } catch (e) {
+        console.error('Get Cinema History Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 2. Save / Overwrite watch progress (Called every 10s or upon episode change)
+// Uses ON DUPLICATE KEY UPDATE with UNIQUE KEY uk_user_movie (user_id, movie_slug)
+// to overwrite in-place and guarantee no memory/disk bloat.
+app.post('/api/cinema/history', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const {
+        slug,
+        name,
+        posterUrl,
+        serverIndex,
+        serverName,
+        episodeIndex,
+        episodeName,
+        currentTime,
+        duration
+    } = req.body;
+
+    if (!slug || !name) {
+        return res.status(400).json({ error: 'Missing slug or name' });
+    }
+
+    try {
+        await dbPool.execute(
+            `INSERT INTO cinema_watch_history 
+             (user_id, movie_slug, movie_name, poster_url, server_index, server_name, episode_index, episode_name, current_time, duration)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                 movie_name = VALUES(movie_name),
+                 poster_url = VALUES(poster_url),
+                 server_index = VALUES(server_index),
+                 server_name = VALUES(server_name),
+                 episode_index = VALUES(episode_index),
+                 episode_name = VALUES(episode_name),
+                 current_time = VALUES(current_time),
+                 duration = VALUES(duration),
+                 updated_at = CURRENT_TIMESTAMP`,
+            [
+                uid,
+                String(slug),
+                String(name),
+                String(posterUrl || '').substring(0, 500),
+                Number(serverIndex) || 0,
+                String(serverName || '').substring(0, 32),
+                Number(episodeIndex) || 0,
+                String(episodeName || '').substring(0, 32),
+                Math.round(Number(currentTime) || 0),
+                Math.round(Number(duration) || 0)
+            ]
+        );
+        res.json({ success: true, message: 'Saved successfully' });
+    } catch (e) {
+        console.error('Save Cinema History Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 3. Delete single movie history on server
+app.delete('/api/cinema/history/:slug', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { slug } = req.params;
+    try {
+        await dbPool.execute(
+            'DELETE FROM cinema_watch_history WHERE user_id = ? AND movie_slug = ?',
+            [uid, slug]
+        );
+        res.json({ success: true, message: 'Deleted movie history' });
+    } catch (e) {
+        console.error('Delete Single Movie History Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 4. Delete all watch history for user on server
+app.delete('/api/cinema/history', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        await dbPool.execute(
+            'DELETE FROM cinema_watch_history WHERE user_id = ?',
+            [uid]
+        );
+        res.json({ success: true, message: 'Cleared all cinema history' });
+    } catch (e) {
+        console.error('Clear Cinema History Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 🎬 CINEMA FAVORITES (WATCHLIST) API (ULTRA-LIGHTWEIGHT)
+// ═══════════════════════════════════════════════════════════════
+
+// 1. Get user's favorites
+app.get('/api/cinema/favorites', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT movie_slug as slug, movie_name as name, poster_url as posterUrl, created_at as createdAt
+             FROM cinema_favorites
+             WHERE user_id = ?
+             ORDER BY created_at DESC
+             LIMIT 50`,
+            [uid]
+        );
+        res.json({ success: true, favorites: rows });
+    } catch (e) {
+        console.error('Get Cinema Favorites Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 2. Add movie to favorites
+app.post('/api/cinema/favorites', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { slug, name, posterUrl } = req.body;
+
+    if (!slug || !name) {
+        return res.status(400).json({ error: 'Missing slug or name' });
+    }
+
+    try {
+        await dbPool.execute(
+            `INSERT IGNORE INTO cinema_favorites (user_id, movie_slug, movie_name, poster_url)
+             VALUES (?, ?, ?, ?)`,
+            [uid, String(slug), String(name), String(posterUrl || '').substring(0, 500)]
+        );
+        res.json({ success: true, message: 'Added to favorites' });
+    } catch (e) {
+        console.error('Add Cinema Favorite Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 3. Delete single movie from favorites
+app.delete('/api/cinema/favorites/:slug', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    const { slug } = req.params;
+    try {
+        await dbPool.execute(
+            'DELETE FROM cinema_favorites WHERE user_id = ? AND movie_slug = ?',
+            [uid, slug]
+        );
+        res.json({ success: true, message: 'Removed from favorites' });
+    } catch (e) {
+        console.error('Delete Cinema Favorite Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 4. Clear all favorites
+app.delete('/api/cinema/favorites', requireAuth, async (req, res) => {
+    const uid = req.cookies.user_id;
+    try {
+        await dbPool.execute(
+            'DELETE FROM cinema_favorites WHERE user_id = ?',
+            [uid]
+        );
+        res.json({ success: true, message: 'Cleared all favorites' });
+    } catch (e) {
+        console.error('Clear Cinema Favorites Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
     }
 });
 
