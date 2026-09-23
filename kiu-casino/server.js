@@ -2309,7 +2309,7 @@ app.post('/api/cinema/history', requireAuth, async (req, res) => {
         );
         res.json({ success: true, message: 'Saved successfully' });
     } catch (e) {
-        console.error('Save Cinema History Error:', e.message);
+        console.error('Save Cinema History Error (uid: ' + uid + ', len: ' + uid.length + '):', e.message);
         res.status(500).json({ error: 'Database error: ' + e.message });
     }
 });
