@@ -119,14 +119,12 @@ const COOKIE_OPTS_CLIENT = { // user_info readable by client for display
 
 // Auth middleware (supports both signed and unsigned cookies for backward compat)
 function requireAuth(req, res, next) {
-    // Prefer signed cookie, fallback to unsigned or x-user-id header for app requests
-    const uid = (req.signedCookies && req.signedCookies.user_id) || 
-                (req.cookies && req.cookies.user_id) || 
-                req.headers['x-user-id'];
-    if (!uid) {
-        return res.status(401).json({ error: 'No login' });
+    let uid = req.signedCookies && req.signedCookies.user_id;
+    if (!uid) uid = req.headers['x-user-id'];
+    if (!uid && req.cookies && req.cookies.user_id && !req.cookies.user_id.startsWith('s:')) {
+        uid = req.cookies.user_id;
     }
-    // Normalize: store resolved uid in req.cookies.user_id for downstream
+    if (!uid) return res.status(401).json({ error: 'Chua dang nh?p' });
     if (!req.cookies) req.cookies = {};
     req.cookies.user_id = uid;
     next();
