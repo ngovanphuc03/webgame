@@ -120,9 +120,11 @@ const COOKIE_OPTS_CLIENT = { // user_info readable by client for display
 // Auth middleware (supports both signed and unsigned cookies for backward compat)
 function requireAuth(req, res, next) {
     let uid = req.signedCookies && req.signedCookies.user_id;
-    if (!uid) uid = req.headers['x-user-id'];
     if (!uid && req.cookies && req.cookies.user_id && !req.cookies.user_id.startsWith('s:')) {
         uid = req.cookies.user_id;
+    }
+    if (!uid && req.headers['x-user-id'] && !req.headers['x-user-id'].startsWith('s:')) {
+        uid = req.headers['x-user-id'];
     }
     if (!uid) return res.status(401).json({ error: 'Chua dang nh?p' });
     if (!req.cookies) req.cookies = {};
@@ -130,8 +132,6 @@ function requireAuth(req, res, next) {
     next();
 }
 
-
-// Flappy anti-cheat: server-side session tokens
 const flappySessions = new Map(); // userId -> { token, startTime }
 // Block Blast anti-cheat: server-side session tokens
 const blockblastSessions = new Map(); // userId -> { token, startTime, claimed }
@@ -3531,4 +3531,5 @@ process.on('uncaughtException', (err) => {
     console.error('💥 Uncaught Exception:', err);
     gracefulShutdown('uncaughtException');
 });
+
 
