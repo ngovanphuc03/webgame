@@ -250,7 +250,7 @@ const dbPool = mysql.createPool({
                 server_name VARCHAR(64) DEFAULT '',
                 episode_index INT DEFAULT 0,
                 episode_name VARCHAR(64) DEFAULT '',
-                `current_time` DOUBLE DEFAULT 0,
+                \`current_time\` DOUBLE DEFAULT 0,
                 duration DOUBLE DEFAULT 0,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE KEY uk_user_movie (user_id, movie_slug),
@@ -2246,7 +2246,7 @@ app.get('/api/cinema/history', requireAuth, async (req, res) => {
             `SELECT movie_slug as slug, movie_name as name, poster_url as posterUrl,
                     server_index as serverIndex, server_name as serverName,
                     episode_index as episodeIndex, episode_name as episodeName,
-                    `current_time` as currentTime, duration, updated_at as updatedAt
+                    \`current_time\` as currentTime, duration, updated_at as updatedAt
              FROM cinema_watch_history
              WHERE user_id = ?
              ORDER BY updated_at DESC
@@ -2284,7 +2284,7 @@ app.post('/api/cinema/history', requireAuth, async (req, res) => {
     try {
         await dbPool.execute(
             `INSERT INTO cinema_watch_history 
-             (user_id, movie_slug, movie_name, poster_url, server_index, server_name, episode_index, episode_name, `current_time`, duration)
+             (user_id, movie_slug, movie_name, poster_url, server_index, server_name, episode_index, episode_name, \`current_time\`, duration)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                  movie_name = VALUES(movie_name),
@@ -2293,7 +2293,7 @@ app.post('/api/cinema/history', requireAuth, async (req, res) => {
                  server_name = VALUES(server_name),
                  episode_index = VALUES(episode_index),
                  episode_name = VALUES(episode_name),
-                 `current_time` = VALUES(`current_time`),
+                 \`current_time\` = VALUES(\`current_time\`),
                  duration = VALUES(duration),
                  updated_at = CURRENT_TIMESTAMP`,
             [
