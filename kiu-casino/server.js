@@ -2343,7 +2343,7 @@ app.post('/api/cinema/history', requireAuth, async (req, res) => {
 
 // 3. Delete single movie history on server
 app.delete('/api/cinema/history/:slug', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     const { slug } = req.params;
     try {
         await dbPool.execute(
