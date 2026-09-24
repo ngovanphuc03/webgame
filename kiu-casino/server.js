@@ -117,16 +117,37 @@ const COOKIE_OPTS_CLIENT = { // user_info readable by client for display
     sameSite: 'lax'
 };
 
-// Auth middleware (supports both signed and unsigned cookies for backward compat)
+// Helper to extract clean Discord ID from raw, signed (s:), or URL-encoded (s%3A) cookie/header strings
+function extractCleanUserId(val) {
+    if (!val) return null;
+    let s = String(val).trim();
+    try {
+        s = decodeURIComponent(s);
+    } catch (_) {}
+    if (s.startsWith('s:')) {
+        s = s.substring(2);
+        const dotIdx = s.indexOf('.');
+        if (dotIdx !== -1) {
+            s = s.substring(0, dotIdx);
+        }
+    }
+    s = s.trim();
+    return s.length > 0 ? s : null;
+}
+
+// Auth middleware (supports signed, unsigned, url-encoded cookies and x-user-id header)
 function requireAuth(req, res, next) {
     let uid = req.signedCookies && req.signedCookies.user_id;
-    if (!uid && req.cookies && req.cookies.user_id && !req.cookies.user_id.startsWith('s:')) {
-        uid = req.cookies.user_id;
+    if (!uid && req.cookies && req.cookies.user_id) {
+        uid = extractCleanUserId(req.cookies.user_id);
     }
-    if (!uid && req.headers['x-user-id'] && !req.headers['x-user-id'].startsWith('s:')) {
-        uid = req.headers['x-user-id'];
+    if (!uid && req.headers['x-user-id']) {
+        uid = extractCleanUserId(req.headers['x-user-id']);
     }
-    if (!uid) return res.status(401).json({ error: 'Chua dang nh?p' });
+    if (uid) {
+        uid = extractCleanUserId(uid);
+    }
+    if (!uid) return res.status(401).json({ error: 'Chua dang nhap' });
     if (!req.cookies) req.cookies = {};
     req.cookies.user_id = uid;
     next();
@@ -271,6 +292,12 @@ const dbPool = mysql.createPool({
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
         console.log('✅ cinema_favorites table ready');
+
+        // Safe auto-migration: expand user_id to VARCHAR(128) to prevent Data too long errors
+        try {
+            await dbPool.execute('ALTER TABLE cinema_watch_history MODIFY user_id VARCHAR(128) NOT NULL');
+            await dbPool.execute('ALTER TABLE cinema_favorites MODIFY user_id VARCHAR(128) NOT NULL');
+        } catch (_) {}
 
     } catch (e) { console.error('Auto-migrate error:', e.message); }
 })();
@@ -2238,7 +2265,7 @@ app.post('/api/score/submit', requireAuth, async (req, res) => {
 
 // 1. Get user's watch history
 app.get('/api/cinema/history', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     try {
         const [rows] = await dbPool.execute(
             `SELECT movie_slug as slug, movie_name as name, poster_url as posterUrl,
@@ -2262,7 +2289,7 @@ app.get('/api/cinema/history', requireAuth, async (req, res) => {
 // Uses ON DUPLICATE KEY UPDATE with UNIQUE KEY uk_user_movie (user_id, movie_slug)
 // to overwrite in-place and guarantee no memory/disk bloat.
 app.post('/api/cinema/history', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     const {
         slug,
         name,
@@ -2332,7 +2359,7 @@ app.delete('/api/cinema/history/:slug', requireAuth, async (req, res) => {
 
 // 4. Delete all watch history for user on server
 app.delete('/api/cinema/history', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     try {
         await dbPool.execute(
             'DELETE FROM cinema_watch_history WHERE user_id = ?',
@@ -2351,7 +2378,7 @@ app.delete('/api/cinema/history', requireAuth, async (req, res) => {
 
 // 1. Get user's favorites
 app.get('/api/cinema/favorites', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     try {
         const [rows] = await dbPool.execute(
             `SELECT movie_slug as slug, movie_name as name, poster_url as posterUrl, created_at as createdAt
@@ -2370,7 +2397,7 @@ app.get('/api/cinema/favorites', requireAuth, async (req, res) => {
 
 // 2. Add movie to favorites
 app.post('/api/cinema/favorites', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     const { slug, name, posterUrl } = req.body;
 
     if (!slug || !name) {
@@ -2392,7 +2419,7 @@ app.post('/api/cinema/favorites', requireAuth, async (req, res) => {
 
 // 3. Delete single movie from favorites
 app.delete('/api/cinema/favorites/:slug', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     const { slug } = req.params;
     try {
         await dbPool.execute(
@@ -2408,7 +2435,7 @@ app.delete('/api/cinema/favorites/:slug', requireAuth, async (req, res) => {
 
 // 4. Clear all favorites
 app.delete('/api/cinema/favorites', requireAuth, async (req, res) => {
-    const uid = req.cookies.user_id;
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
     try {
         await dbPool.execute(
             'DELETE FROM cinema_favorites WHERE user_id = ?',
