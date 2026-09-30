@@ -455,7 +455,8 @@ async function fetchDiscordUser(userId) {
                 'User-Agent': 'DiscordBot (https://g18game.onrender.com, 1.0.0)'
             }
         });
-        const { username, avatar, id } = res.data;
+        const { username, avatar, id, global_name } = res.data;
+        const displayName = global_name || username;
         let avatarUrl = '';
         if (avatar) {
             const ext = avatar.startsWith('a_') ? 'gif' : 'png';
@@ -464,7 +465,7 @@ async function fetchDiscordUser(userId) {
             const index = Number((BigInt(id) >> 22n) % 6n);
             avatarUrl = `https://cdn.discordapp.com/embed/avatars/${index}.png`;
         }
-        return { username, avatar: avatarUrl };
+        return { username: displayName, avatar: avatarUrl };
     } catch (e) {
         if (e.response && e.response.status === 429) {
             console.warn(`[Discord Bot] Rate limited, retry after ${e.response.data.retry_after}s`);
@@ -683,7 +684,8 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
             },
             timeout: 10000
         });
-        const { id, username, avatar } = uRes.data;
+        const { id, username, avatar, global_name } = uRes.data;
+        const displayName = global_name || username;
 
         let avatarUrl = "";
         if (avatar) {
@@ -705,10 +707,10 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
             await conn.beginTransaction();
             const [rows] = await conn.execute('SELECT balance FROM wallet WHERE guild_id=? AND user_id=? FOR UPDATE', [TARGET_GUILD_ID, id]);
             if (rows.length === 0) {
-                await conn.execute('INSERT INTO wallet (guild_id, user_id, balance, username, avatar) VALUES (?,?,?,?,?)', [TARGET_GUILD_ID, id, 10000, username, avatarUrl]);
+                await conn.execute('INSERT INTO wallet (guild_id, user_id, balance, username, avatar) VALUES (?,?,?,?,?)', [TARGET_GUILD_ID, id, 10000, displayName, avatarUrl]);
                 await logTx(conn, id, 'signup_bonus', 10000, 0, 10000, { source: 'discord_oauth' });
             } else {
-                await conn.execute('UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?', [username, avatarUrl, TARGET_GUILD_ID, id]);
+                await conn.execute('UPDATE wallet SET username=?, avatar=? WHERE guild_id=? AND user_id=?', [displayName, avatarUrl, TARGET_GUILD_ID, id]);
             }
             await conn.commit();
         } catch (dbErr) {
@@ -721,7 +723,7 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
 
         // Set cookies and redirect
         res.cookie('user_id', id, COOKIE_OPTS);
-        const info = JSON.stringify({ username: encodeURIComponent(username), avatar: avatarUrl });
+        const info = JSON.stringify({ username: encodeURIComponent(displayName), avatar: avatarUrl });
         res.cookie('user_info', info, COOKIE_OPTS_CLIENT);
         res.redirect('/');
     } catch (e) {
