@@ -3765,6 +3765,7 @@ app.post('/api/tv/pair/create', tvRelayLimiter, (req, res) => {
                 success: true,
                 code: cur.code,
                 token: cur.tvToken,
+                remoteKey: cur.remoteKey,
                 expiresAt: cur.expiresAt,
                 pairUrl: `${origin}/tv-pair?code=${cur.code}`,
                 remoteUrl: `${origin}/tv-remote?code=${cur.code}`
@@ -3798,6 +3799,7 @@ app.post('/api/tv/pair/create', tvRelayLimiter, (req, res) => {
         success: true,
         code,
         token: tvToken,
+        remoteKey,
         expiresAt,
         pairUrl: `${origin}/tv-pair?code=${code}`,
         remoteUrl: `${origin}/tv-remote?code=${code}`
