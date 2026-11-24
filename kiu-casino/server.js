@@ -293,6 +293,19 @@ const dbPool = mysql.createPool({
         `);
         console.log('✅ cinema_favorites table ready');
 
+        // --- CREATE CINEMA_USER_SYNC TABLE (CROSS-DEVICE SYNC PROFILE: WATCHED EPS, PREFS, SEARCHES, REACTIONS) ---
+        await dbPool.execute(`
+            CREATE TABLE IF NOT EXISTS cinema_user_sync (
+                user_id VARCHAR(128) PRIMARY KEY,
+                watched_episodes_json LONGTEXT,
+                preferences_json TEXT,
+                recent_searches_json TEXT,
+                reactions_json TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+        console.log('✅ cinema_user_sync table ready');
+
         // Safe auto-migration: expand user_id to VARCHAR(128) to prevent Data too long errors
         try {
             await dbPool.execute('ALTER TABLE cinema_watch_history MODIFY user_id VARCHAR(128) NOT NULL');
@@ -2489,9 +2502,9 @@ app.post('/api/cinema/history', requireAuth, async (req, res) => {
                 String(name),
                 String(posterUrl || '').substring(0, 500),
                 Number(serverIndex) || 0,
-                String(serverName || '').substring(0, 32),
+                String(serverName || '').substring(0, 64),
                 Number(episodeIndex) || 0,
-                String(episodeName || '').substring(0, 32),
+                String(episodeName || '').substring(0, 64),
                 Math.round(Number(currentTime) || 0),
                 Math.round(Number(duration) || 0)
             ]
@@ -2606,6 +2619,279 @@ app.delete('/api/cinema/favorites', requireAuth, async (req, res) => {
         res.json({ success: true, message: 'Cleared all favorites' });
     } catch (e) {
         console.error('Clear Cinema Favorites Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ☁️ CINEMA CROSS-DEVICE SYNC PROFILE API (PC / MOBILE / ANDROID TV)
+// Syncs watched episodes (union merge), personal viewing/subtitle prefs,
+// recent searches, and movie reactions without ever touching local hardware settings.
+// ═══════════════════════════════════════════════════════════════
+
+function safeParseCinemaJson(raw, fallback) {
+    if (!raw || typeof raw !== 'string') return fallback;
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : fallback;
+    } catch (_) {
+        return fallback;
+    }
+}
+
+function sanitizeWatchedEpisodesMap(input) {
+    const out = {};
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return out;
+    const entries = Object.entries(input).slice(0, 250);
+    for (const [rawSlug, rawEps] of entries) {
+        const slug = String(rawSlug || '').trim().substring(0, 128);
+        if (!slug || !Array.isArray(rawEps)) continue;
+        const set = new Set();
+        for (const ep of rawEps) {
+            const n = Number(ep);
+            if (Number.isInteger(n) && n >= 0 && n <= 10000) {
+                set.add(n);
+            }
+            if (set.size >= 500) break;
+        }
+        if (set.size > 0) {
+            out[slug] = Array.from(set).sort((a, b) => a - b);
+        }
+    }
+    return out;
+}
+
+function mergeWatchedEpisodesMaps(existingMap, incomingMap) {
+    const merged = {};
+    const safeExisting = sanitizeWatchedEpisodesMap(existingMap);
+    const safeIncoming = sanitizeWatchedEpisodesMap(incomingMap);
+    for (const [slug, eps] of Object.entries(safeExisting)) {
+        merged[slug] = new Set(eps);
+    }
+    for (const [slug, eps] of Object.entries(safeIncoming)) {
+        if (!merged[slug]) merged[slug] = new Set();
+        for (const ep of eps) {
+            if (merged[slug].size < 500) merged[slug].add(ep);
+        }
+    }
+    const keys = Object.keys(merged);
+    const trimmedKeys = keys.length > 250 ? keys.slice(keys.length - 250) : keys;
+    const result = {};
+    for (const slug of trimmedKeys) {
+        result[slug] = Array.from(merged[slug]).sort((a, b) => a - b);
+    }
+    return result;
+}
+
+const ALLOWED_CINEMA_SYNC_PREF_KEYS = new Set([
+    'subtitleFontSize',
+    'subtitleFontScalePercent',
+    'subtitleColor',
+    'subtitleBackground',
+    'subtitleBackgroundOpacity',
+    'subtitleShadow',
+    'subtitleFontFamily',
+    'subtitleFontWeight',
+    'subtitleTextOpacity',
+    'subtitleLineHeight',
+    'subtitlePosition',
+    'subtitleVerticalPosition',
+    'subtitleHorizontalAlign',
+    'subtitleHorizontalOffset',
+    'subtitleMaxWidthFraction',
+    'subtitleBilingualEnabled',
+    'subtitleSecondaryColor',
+    'subtitleSecondaryScale',
+    'subtitleBilingualOrder',
+    'subtitleLanguagePreference',
+    'aspectRatioMode',
+    'updatedAtMs'
+]);
+
+function sanitizeCinemaPreferences(input) {
+    const out = {};
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return out;
+    for (const [key, val] of Object.entries(input)) {
+        if (!ALLOWED_CINEMA_SYNC_PREF_KEYS.has(key)) continue;
+        if (typeof val === 'boolean') {
+            out[key] = val;
+        } else if (typeof val === 'number' && Number.isFinite(val)) {
+            out[key] = val;
+        } else if (typeof val === 'string') {
+            out[key] = val.trim().substring(0, 48);
+        }
+    }
+    return out;
+}
+
+function sanitizeRecentSearchesList(input) {
+    if (!Array.isArray(input)) return [];
+    const seen = new Set();
+    const out = [];
+    for (const item of input) {
+        const q = String(item || '').trim().substring(0, 80);
+        if (q.length < 2) continue;
+        const lower = q.toLowerCase();
+        if (seen.has(lower)) continue;
+        seen.add(lower);
+        out.push(q);
+        if (out.length >= 20) break;
+    }
+    return out;
+}
+
+function mergeRecentSearchesList(existingList, incomingList, replaceAll) {
+    const safeIncoming = sanitizeRecentSearchesList(incomingList);
+    if (replaceAll) return safeIncoming;
+    const safeExisting = sanitizeRecentSearchesList(existingList);
+    return sanitizeRecentSearchesList([...safeIncoming, ...safeExisting]);
+}
+
+function sanitizeReactionsMap(input) {
+    const out = {};
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return out;
+    const entries = Object.entries(input).slice(0, 250);
+    for (const [rawSlug, rawVal] of entries) {
+        const slug = String(rawSlug || '').trim().substring(0, 128);
+        if (!slug) continue;
+        const val = String(rawVal || '').trim().toLowerCase();
+        if (val === 'like' || val === 'dislike' || val === 'love') {
+            out[slug] = val;
+        }
+    }
+    return out;
+}
+
+function mergeReactionsMaps(existingMap, incomingMap) {
+    const merged = sanitizeReactionsMap(existingMap);
+    if (incomingMap && typeof incomingMap === 'object' && !Array.isArray(incomingMap)) {
+        for (const [rawSlug, rawVal] of Object.entries(incomingMap)) {
+            const slug = String(rawSlug || '').trim().substring(0, 128);
+            if (!slug) continue;
+            if (rawVal === null || rawVal === '') {
+                delete merged[slug];
+            } else {
+                const val = String(rawVal).trim().toLowerCase();
+                if (val === 'like' || val === 'dislike' || val === 'love') {
+                    merged[slug] = val;
+                }
+            }
+        }
+    }
+    const keys = Object.keys(merged);
+    if (keys.length <= 250) return merged;
+    const trimmed = {};
+    for (const k of keys.slice(keys.length - 250)) {
+        trimmed[k] = merged[k];
+    }
+    return trimmed;
+}
+
+// 1. Get full cross-device cinema sync profile
+app.get('/api/cinema/sync-profile', requireAuth, async (req, res) => {
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT watched_episodes_json, preferences_json, recent_searches_json, reactions_json, updated_at
+             FROM cinema_user_sync
+             WHERE user_id = ?
+             LIMIT 1`,
+            [uid]
+        );
+        if (!rows || rows.length === 0) {
+            return res.json({
+                success: true,
+                watchedEpisodes: {},
+                preferences: {},
+                recentSearches: [],
+                reactions: {},
+                updatedAt: null
+            });
+        }
+        const row = rows[0];
+        res.json({
+            success: true,
+            watchedEpisodes: sanitizeWatchedEpisodesMap(safeParseCinemaJson(row.watched_episodes_json, {})),
+            preferences: sanitizeCinemaPreferences(safeParseCinemaJson(row.preferences_json, {})),
+            recentSearches: sanitizeRecentSearchesList(safeParseCinemaJson(row.recent_searches_json, [])),
+            reactions: sanitizeReactionsMap(safeParseCinemaJson(row.reactions_json, {})),
+            updatedAt: row.updated_at || null
+        });
+    } catch (e) {
+        console.error('Get Cinema Sync Profile Error:', e.message);
+        res.status(500).json({ error: 'Database error: ' + e.message });
+    }
+});
+
+// 2. Partial merge & upsert cross-device cinema sync profile
+app.post('/api/cinema/sync-profile', requireAuth, async (req, res) => {
+    const uid = extractCleanUserId(req.cookies.user_id || req.headers['x-user-id']);
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    try {
+        const [rows] = await dbPool.execute(
+            `SELECT watched_episodes_json, preferences_json, recent_searches_json, reactions_json
+             FROM cinema_user_sync
+             WHERE user_id = ?
+             LIMIT 1`,
+            [uid]
+        );
+        const existing = rows && rows.length > 0 ? rows[0] : {};
+        let watchedEpisodes = sanitizeWatchedEpisodesMap(safeParseCinemaJson(existing.watched_episodes_json, {}));
+        let preferences = sanitizeCinemaPreferences(safeParseCinemaJson(existing.preferences_json, {}));
+        let recentSearches = sanitizeRecentSearchesList(safeParseCinemaJson(existing.recent_searches_json, []));
+        let reactions = sanitizeReactionsMap(safeParseCinemaJson(existing.reactions_json, {}));
+
+        if (body.watchedEpisodes && typeof body.watchedEpisodes === 'object') {
+            watchedEpisodes = mergeWatchedEpisodesMaps(watchedEpisodes, body.watchedEpisodes);
+        }
+        if (body.preferences && typeof body.preferences === 'object') {
+            const incomingPrefs = sanitizeCinemaPreferences(body.preferences);
+            const existingTs = Number(preferences.updatedAtMs) || 0;
+            const incomingTs = Number(incomingPrefs.updatedAtMs) || Date.now();
+            if (incomingTs >= existingTs || existingTs === 0) {
+                preferences = { ...preferences, ...incomingPrefs, updatedAtMs: incomingTs };
+            }
+        }
+        if (Array.isArray(body.recentSearches)) {
+            recentSearches = mergeRecentSearchesList(
+                recentSearches,
+                body.recentSearches,
+                Boolean(body.replaceRecentSearches)
+            );
+        }
+        if (body.reactions && typeof body.reactions === 'object') {
+            reactions = mergeReactionsMaps(reactions, body.reactions);
+        }
+
+        await dbPool.execute(
+            `INSERT INTO cinema_user_sync
+             (user_id, watched_episodes_json, preferences_json, recent_searches_json, reactions_json)
+             VALUES (?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                 watched_episodes_json = VALUES(watched_episodes_json),
+                 preferences_json = VALUES(preferences_json),
+                 recent_searches_json = VALUES(recent_searches_json),
+                 reactions_json = VALUES(reactions_json),
+                 updated_at = CURRENT_TIMESTAMP`,
+            [
+                uid,
+                JSON.stringify(watchedEpisodes),
+                JSON.stringify(preferences),
+                JSON.stringify(recentSearches),
+                JSON.stringify(reactions)
+            ]
+        );
+
+        res.json({
+            success: true,
+            watchedEpisodes,
+            preferences,
+            recentSearches,
+            reactions,
+            updatedAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error('Save Cinema Sync Profile Error:', e.message);
         res.status(500).json({ error: 'Database error: ' + e.message });
     }
 });
