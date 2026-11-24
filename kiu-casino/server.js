@@ -613,10 +613,12 @@ app.get('/auth/discord', discordAuthLimiter, (req, res) => {
     const isApp = String(req.query.platform || '').trim().toLowerCase() === 'app';
     const rawAppState = typeof req.query.state === 'string' ? req.query.state.trim() : '';
     const appState = /^[A-Za-z0-9_-]{8,128}$/.test(rawAppState) ? rawAppState : '';
+    const rawTvCode = typeof req.query.tv_code === 'string' ? req.query.tv_code.trim() : '';
+    const tvCode = /^\d{6}$/.test(rawTvCode) ? rawTvCode : '';
 
-    // Generate server-side CSRF state token bound to app context
+    // Generate server-side CSRF state token bound to app/TV context
     const state = crypto.randomBytes(16).toString('hex');
-    oauthStates.set(state, { createdAt: Date.now(), isApp, appState });
+    oauthStates.set(state, { createdAt: Date.now(), isApp, appState, tvCode });
 
     if (isApp) {
         // Short-lived backup cookie in case Discord returns without state on an edge error
@@ -650,6 +652,7 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
     const appState = stateEntry
         ? (stateEntry.appState || '')
         : (/^[A-Za-z0-9_-]{8,128}$/.test(backupAppCookie) ? backupAppCookie : '');
+    const tvCode = stateEntry && typeof stateEntry.tvCode === 'string' ? stateEntry.tvCode : '';
 
     // 1. User cancelled on Discord's authorization page
     if (error === 'access_denied' || error === 'consent_required') {
@@ -866,6 +869,9 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
                 avatar: avatarUrl,
                 state: appState
             });
+        }
+        if (tvCode) {
+            return res.redirect(`/tv-pair?code=${encodeURIComponent(tvCode)}&auto=1`);
         }
         res.redirect('/');
     } catch (e) {
@@ -3647,6 +3653,476 @@ app.get('/transfer', (req, res) => {
 });
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// 📺 G18 CINE TV & PROJECTOR CLOUD RELAY (CROSS-NETWORK PAIRING & REMOTE)
+// ═══════════════════════════════════════════════════════════════
+const tvRelayLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 180,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, error: 'Quá nhiều yêu cầu TV Relay, vui lòng thử lại sau.' }
+});
+
+const tvPairingSessions = new Map(); // 6-digit code -> session
+const TV_PAIR_UNPAIRED_TTL_MS = 5 * 60 * 1000;      // 5 minutes for unpaired PIN
+const TV_PAIR_PAIRED_TTL_MS = 6 * 60 * 60 * 1000;   // 6 hours once paired for Cloud Remote
+const TV_PAIR_MAX_SESSIONS = 1000;
+
+function cleanupTvPairingSessions() {
+    const now = Date.now();
+    for (const [code, sess] of tvPairingSessions) {
+        if (now > sess.expiresAt) {
+            tvPairingSessions.delete(code);
+        }
+    }
+    if (tvPairingSessions.size > TV_PAIR_MAX_SESSIONS) {
+        const overflow = tvPairingSessions.size - TV_PAIR_MAX_SESSIONS;
+        let removed = 0;
+        for (const key of tvPairingSessions.keys()) {
+            tvPairingSessions.delete(key);
+            removed++;
+            if (removed >= overflow) break;
+        }
+    }
+}
+setInterval(cleanupTvPairingSessions, 60 * 1000);
+
+function generateUniqueTvCode(preferredCode) {
+    if (typeof preferredCode === 'string' && /^\d{6}$/.test(preferredCode.trim())) {
+        const clean = preferredCode.trim();
+        const existing = tvPairingSessions.get(clean);
+        if (!existing || Date.now() > existing.expiresAt) {
+            return clean;
+        }
+    }
+    for (let i = 0; i < 30; i++) {
+        const code = String(crypto.randomInt(100000, 1000000));
+        if (!tvPairingSessions.has(code)) return code;
+    }
+    return String(crypto.randomInt(100000, 1000000));
+}
+
+function getPublicBaseOrigin(req) {
+    const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0].trim();
+    const host = (req.headers['x-forwarded-host'] || req.get('host') || 'g18game.onrender.com').split(',')[0].trim();
+    return `${proto}://${host}`;
+}
+
+async function resolveVerifiedTvUser(uid, cookieUserInfo) {
+    const cleanUid = extractCleanUserId(uid);
+    if (!cleanUid || !/^\d{15,22}$/.test(cleanUid)) return null;
+    try {
+        let rows;
+        try {
+            [rows] = await dbPool.execute(
+                'SELECT balance, username, avatar FROM wallet WHERE guild_id=? AND user_id=? LIMIT 1',
+                [TARGET_GUILD_ID, cleanUid]
+            );
+        } catch (_) {
+            [rows] = await dbPool.execute(
+                'SELECT balance FROM wallet WHERE guild_id=? AND user_id=? LIMIT 1',
+                [TARGET_GUILD_ID, cleanUid]
+            );
+        }
+        if (!rows || rows.length === 0) return null;
+        let username = rows[0].username || 'Thành viên G18';
+        if (cookieUserInfo) {
+            try {
+                const raw = JSON.parse(cookieUserInfo.startsWith('j:') ? cookieUserInfo.slice(2) : cookieUserInfo);
+                if (raw.username) username = decodeURIComponent(raw.username);
+            } catch (_) {}
+        }
+        return {
+            userId: cleanUid,
+            username,
+            avatar: `/api/avatar/${cleanUid}`,
+            balance: Number(rows[0].balance) || 0,
+            cookie: `user_id=${cleanUid}`
+        };
+    } catch (e) {
+        console.error('[TV Relay] DB verify error:', e.message);
+        return null;
+    }
+}
+
+// 1. TV creates a pairing + cloud remote session
+app.post('/api/tv/pair/create', tvRelayLimiter, (req, res) => {
+    cleanupTvPairingSessions();
+    const preferredCode = req.body && typeof req.body.preferredCode === 'string' ? req.body.preferredCode.trim() : '';
+    const existingToken = req.body && typeof req.body.token === 'string' ? req.body.token.trim() : '';
+    const deviceName = String((req.body && req.body.deviceName) || 'G18 Cine TV').trim().slice(0, 60);
+    const lanHint = String((req.body && req.body.lanHint) || '').trim().slice(0, 80);
+
+    if (/^\d{6}$/.test(preferredCode) && existingToken) {
+        const cur = tvPairingSessions.get(preferredCode);
+        if (cur && cur.tvToken === existingToken && Date.now() < cur.expiresAt) {
+            cur.expiresAt = Math.max(cur.expiresAt, Date.now() + TV_PAIR_UNPAIRED_TTL_MS);
+            if (lanHint) cur.lanHint = lanHint;
+            const origin = getPublicBaseOrigin(req);
+            return res.json({
+                success: true,
+                code: cur.code,
+                token: cur.tvToken,
+                expiresAt: cur.expiresAt,
+                pairUrl: `${origin}/tv-pair?code=${cur.code}`,
+                remoteUrl: `${origin}/tv-remote?code=${cur.code}`
+            });
+        }
+    }
+
+    const code = generateUniqueTvCode(preferredCode);
+    const tvToken = crypto.randomBytes(16).toString('hex');
+    const remoteKey = crypto.randomBytes(16).toString('hex');
+    const now = Date.now();
+    const expiresAt = now + TV_PAIR_UNPAIRED_TTL_MS;
+
+    tvPairingSessions.set(code, {
+        code,
+        tvToken,
+        remoteKey,
+        deviceName,
+        lanHint,
+        createdAt: now,
+        expiresAt,
+        paired: false,
+        claimedAt: null,
+        user: null,
+        commands: [],
+        nextSeq: 1
+    });
+
+    const origin = getPublicBaseOrigin(req);
+    return res.json({
+        success: true,
+        code,
+        token: tvToken,
+        expiresAt,
+        pairUrl: `${origin}/tv-pair?code=${code}`,
+        remoteUrl: `${origin}/tv-remote?code=${code}`
+    });
+});
+
+// 2. Authenticated phone app or mobile browser claims the 6-digit TV code
+app.post('/api/tv/pair/claim', tvRelayLimiter, requireAuth, async (req, res) => {
+    cleanupTvPairingSessions();
+    const code = String((req.body && req.body.code) || '').replace(/\s+/g, '').trim();
+    if (!/^\d{6}$/.test(code)) {
+        return res.status(400).json({ success: false, error: 'Mã PIN TV phải gồm đúng 6 chữ số.' });
+    }
+    const session = tvPairingSessions.get(code);
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ success: false, error: 'Mã PIN không tồn tại hoặc đã hết hạn trên TV.' });
+    }
+
+    const verified = await resolveVerifiedTvUser(req.cookies.user_id, req.cookies.user_info);
+    if (!verified) {
+        return res.status(403).json({
+            success: false,
+            error: 'Tài khoản Discord chưa nằm trong nhóm hoặc chưa được Bot G18 duyệt.'
+        });
+    }
+
+    session.paired = true;
+    session.claimedAt = Date.now();
+    session.user = verified;
+    session.expiresAt = Date.now() + TV_PAIR_PAIRED_TTL_MS;
+
+    return res.json({
+        success: true,
+        code: session.code,
+        remoteKey: session.remoteKey,
+        deviceName: session.deviceName,
+        user: {
+            userId: verified.userId,
+            username: verified.username,
+            avatar: verified.avatar
+        }
+    });
+});
+
+// 3. TV polls claim status securely with its secret tvToken
+app.get('/api/tv/pair/status', tvRelayLimiter, (req, res) => {
+    cleanupTvPairingSessions();
+    const code = String(req.query.code || '').trim();
+    const token = String(req.query.token || '').trim();
+    const session = tvPairingSessions.get(code);
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ success: false, expired: true, paired: false });
+    }
+    if (!token || session.tvToken !== token) {
+        return res.status(401).json({ success: false, error: 'Token TV không hợp lệ.' });
+    }
+    if (!session.paired || !session.user) {
+        return res.json({
+            success: true,
+            paired: false,
+            expiresAt: session.expiresAt
+        });
+    }
+    return res.json({
+        success: true,
+        paired: true,
+        expiresAt: session.expiresAt,
+        remoteKey: session.remoteKey,
+        userId: session.user.userId,
+        username: session.user.username,
+        avatar: session.user.avatar,
+        balance: session.user.balance,
+        cookie: session.user.cookie
+    });
+});
+
+// 4. Phone app or Cloud Web Remote pushes control / search / cast command to TV
+app.post('/api/tv/remote/push', tvRelayLimiter, async (req, res) => {
+    cleanupTvPairingSessions();
+    const code = String((req.body && req.body.code) || '').replace(/\s+/g, '').trim();
+    const action = String((req.body && req.body.action) || '').trim().slice(0, 40);
+    const params = (req.body && typeof req.body.params === 'object' && req.body.params !== null) ? req.body.params : {};
+    const remoteKey = String((req.body && req.body.remoteKey) || '').trim();
+
+    if (!/^\d{6}$/.test(code) || !action) {
+        return res.status(400).json({ success: false, error: 'Thiếu mã PIN TV hoặc lệnh điều khiển.' });
+    }
+    const session = tvPairingSessions.get(code);
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ success: false, error: 'Phiên điều khiển TV không tồn tại hoặc đã hết hạn.' });
+    }
+
+    let authorized = Boolean(remoteKey && remoteKey === session.remoteKey);
+    if (!authorized) {
+        const rawUid = (req.signedCookies && req.signedCookies.user_id) ||
+            (req.cookies && req.cookies.user_id) ||
+            req.headers['x-user-id'];
+        const verified = await resolveVerifiedTvUser(rawUid, req.cookies && req.cookies.user_info);
+        if (verified) {
+            authorized = true;
+        }
+    }
+    if (!authorized) {
+        return res.status(401).json({ success: false, error: 'Chưa xác thực quyền điều khiển TV.' });
+    }
+
+    const entry = {
+        seq: session.nextSeq++,
+        action,
+        params,
+        ts: Date.now()
+    };
+    session.commands.push(entry);
+    if (session.commands.length > 40) {
+        session.commands.splice(0, session.commands.length - 40);
+    }
+    session.expiresAt = Math.max(session.expiresAt, Date.now() + 2 * 60 * 60 * 1000);
+
+    return res.json({ success: true, seq: entry.seq, action: entry.action });
+});
+
+// 5. TV pulls pending remote commands from Cloud Relay
+app.get('/api/tv/remote/pull', tvRelayLimiter, (req, res) => {
+    cleanupTvPairingSessions();
+    const code = String(req.query.code || '').trim();
+    const token = String(req.query.token || '').trim();
+    const since = Math.max(0, parseInt(String(req.query.since || '0'), 10) || 0);
+
+    const session = tvPairingSessions.get(code);
+    if (!session || Date.now() > session.expiresAt) {
+        return res.status(404).json({ success: false, expired: true, commands: [] });
+    }
+    if (!token || session.tvToken !== token) {
+        return res.status(401).json({ success: false, error: 'Token TV không hợp lệ.' });
+    }
+
+    const pending = session.commands.filter(c => c.seq > since);
+    const latestSeq = session.commands.length > 0
+        ? session.commands[session.commands.length - 1].seq
+        : since;
+    return res.json({ success: true, commands: pending, latestSeq });
+});
+
+// 6. Darkroom Mobile Web Page for QR Pairing (/tv-pair?code=XXXXXX)
+app.get('/tv-pair', (req, res) => {
+    const rawCode = String(req.query.code || '').replace(/\D/g, '').slice(0, 6);
+    const autoClaim = String(req.query.auto || '') === '1';
+    const uid = extractCleanUserId((req.signedCookies && req.signedCookies.user_id) || (req.cookies && req.cookies.user_id));
+    let displayName = '';
+    if (uid && req.cookies && req.cookies.user_info) {
+        try {
+            const parsed = JSON.parse(req.cookies.user_info.startsWith('j:') ? req.cookies.user_info.slice(2) : req.cookies.user_info);
+            if (parsed.username) displayName = decodeURIComponent(parsed.username);
+        } catch (_) {}
+    }
+    const safeCode = escapeHtmlText(rawCode);
+    const safeName = escapeHtmlText(displayName || (uid ? `User ${uid.slice(-4)}` : ''));
+    const isLoggedIn = Boolean(uid);
+
+    res.type('html').send(`<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>G18 Cine TV - Kết Nối Nhanh</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:#0A0A0E;color:#F4F4F8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{width:100%;max-width:410px;background:#14141C;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.65);text-align:center}
+  .brand{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(229,9,20,.16);border:1px solid rgba(229,9,20,.4);color:#FF4D58;font-weight:800;font-size:12px;letter-spacing:1px;margin-bottom:14px}
+  h1{margin:0 0 8px;font-size:21px;font-weight:800}
+  p{margin:0 0 18px;font-size:13.5px;line-height:1.5;color:#A1A1B2}
+  .pin-input{width:100%;padding:14px 16px;text-align:center;font-size:28px;font-weight:800;letter-spacing:8px;background:#0D0D13;border:1.5px solid rgba(255,255,255,.18);border-radius:14px;color:#FF3845;outline:none;margin-bottom:14px}
+  .pin-input:focus{border-color:#E50914}
+  .btn{display:block;width:100%;padding:14px 16px;border-radius:13px;border:none;font-size:15px;font-weight:800;cursor:pointer;text-decoration:none;transition:transform .12s}
+  .btn:active{transform:scale(.98)}
+  .btn-red{background:#E50914;color:#fff}
+  .btn-discord{background:#5865F2;color:#fff}
+  .btn-blue{background:#0284C7;color:#fff;margin-top:10px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;background:rgba(70,211,105,.14);border:1px solid rgba(70,211,105,.35);color:#46D369;font-size:12.5px;font-weight:700;margin-bottom:16px}
+  .msg{margin-top:14px;font-size:13px;font-weight:600;min-height:20px}
+  .ok{color:#46D369} .err{color:#FF6B6B}
+</style></head><body>
+<div class="card">
+  <div class="brand">G18 CINE TV • CLOUD RELAY</div>
+  <h1>Đăng nhập lên TV & Máy Chiếu</h1>
+  <p>Hoạt động xuyên mọi mạng (kể cả điện thoại dùng 4G/5G và máy chiếu dùng Wi-Fi khác).</p>
+  <input id="pin" class="pin-input" type="tel" maxlength="6" placeholder="000000" value="${safeCode}">
+  ${isLoggedIn ? `
+    <div class="pill">✓ Đã đăng nhập: ${safeName}</div>
+    <button id="claimBtn" class="btn btn-red" onclick="claimTv()">Xác nhận đăng nhập TV ngay</button>
+    <a id="remoteBtn" class="btn btn-blue" style="display:none" href="#">Mở Remote Điều Khiển TV</a>
+  ` : `
+    <a id="discordBtn" class="btn btn-discord" href="/auth/discord?tv_code=${safeCode}">Đăng nhập Discord & Mở khóa TV</a>
+  `}
+  <div id="status" class="msg"></div>
+</div>
+<script>
+const pinEl = document.getElementById('pin');
+const statusEl = document.getElementById('status');
+const discordBtn = document.getElementById('discordBtn');
+if (discordBtn) {
+  pinEl.addEventListener('input', () => {
+    const c = pinEl.value.replace(/\D/g, '').slice(0, 6);
+    pinEl.value = c;
+    discordBtn.href = '/auth/discord?tv_code=' + encodeURIComponent(c);
+  });
+}
+async function claimTv() {
+  const code = pinEl.value.replace(/\D/g, '').slice(0, 6);
+  if (code.length !== 6) {
+    statusEl.className = 'msg err';
+    statusEl.textContent = 'Vui lòng nhập đủ 6 chữ số hiển thị trên màn hình TV.';
+    return;
+  }
+  const btn = document.getElementById('claimBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang gửi xác thực lên TV...'; }
+  statusEl.className = 'msg';
+  statusEl.textContent = '';
+  try {
+    const r = await fetch('/api/tv/pair/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const d = await r.json();
+    if (r.ok && d.success) {
+      statusEl.className = 'msg ok';
+      statusEl.textContent = '✓ Thành công! TV đang tự động mở kho phim...';
+      if (btn) btn.textContent = 'Đã kết nối TV thành công';
+      const rb = document.getElementById('remoteBtn');
+      if (rb && d.remoteKey) {
+        rb.href = '/tv-remote?code=' + encodeURIComponent(code) + '&rkey=' + encodeURIComponent(d.remoteKey);
+        rb.style.display = 'block';
+      }
+    } else {
+      statusEl.className = 'msg err';
+      statusEl.textContent = d.error || 'Không thể kết nối TV.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Thử lại'; }
+    }
+  } catch (e) {
+    statusEl.className = 'msg err';
+    statusEl.textContent = 'Lỗi mạng: ' + e.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'Thử lại'; }
+  }
+}
+if (${isLoggedIn ? 'true' : 'false'} && ${autoClaim ? 'true' : 'false'} && pinEl.value.length === 6) {
+  claimTv();
+}
+</script></body></html>`);
+});
+
+// 7. Darkroom Mobile Cloud Web Remote (/tv-remote?code=XXXXXX&rkey=...)
+app.get('/tv-remote', (req, res) => {
+    const safeCode = escapeHtmlText(String(req.query.code || '').replace(/\D/g, '').slice(0, 6));
+    const safeKey = escapeHtmlText(String(req.query.rkey || '').trim());
+    res.type('html').send(`<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>G18 Cine TV Remote</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;min-height:100vh;background:#0A0A0E;color:#F4F4F8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;padding:18px}
+  .wrap{width:100%;max-width:390px;display:flex;flex-direction:column;gap:14px}
+  .hdr{display:flex;justify-content:space-between;align-items:center;background:#14141C;border:1px solid rgba(255,255,255,.1);padding:12px 16px;border-radius:16px}
+  .title{font-weight:800;font-size:15px} .sub{font-size:12px;color:#46D369;font-weight:700}
+  .search-row{display:flex;gap:8px}
+  .search-row input{flex:1;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:#14141C;color:#fff;font-size:14px;outline:none}
+  .search-row button{padding:0 18px;border:none;border-radius:14px;background:#E50914;color:#fff;font-weight:800;cursor:pointer}
+  .dpad{width:228px;height:228px;margin:6px auto;border-radius:50%;background:#15151E;border:2px solid rgba(255,255,255,.12);position:relative;box-shadow:0 14px 36px rgba(0,0,0,.6)}
+  .dpad button{position:absolute;border:none;background:transparent;color:#fff;font-size:24px;font-weight:800;cursor:pointer}
+  .up{top:8px;left:50%;transform:translateX(-50%);width:64px;height:56px}
+  .down{bottom:8px;left:50%;transform:translateX(-50%);width:64px;height:56px}
+  .left{left:8px;top:50%;transform:translateY(-50%);width:56px;height:64px}
+  .right{right:8px;top:50%;transform:translateY(-50%);width:56px;height:64px}
+  .ok{top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;background:#E50914 !important;font-size:18px !important;box-shadow:0 6px 20px rgba(229,9,20,.45)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .tile{padding:14px 8px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#15151E;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+  .tile:active,.dpad button:active{opacity:.7}
+  #toast{text-align:center;font-size:12.5px;color:#9CA3AF;min-height:18px}
+</style></head><body>
+<div class="wrap">
+  <div class="hdr"><div><div class="title">G18 Cine TV Remote</div><div class="sub">Cloud Relay • PIN ${safeCode || '------'}</div></div></div>
+  <div class="search-row">
+    <input id="q" type="text" placeholder="Gõ tên phim tiếng Việt lên TV...">
+    <button onclick="sendSearch()">Tìm</button>
+  </div>
+  <div class="dpad">
+    <button class="up" onclick="cmd('dpad_up')">▲</button>
+    <button class="down" onclick="cmd('dpad_down')">▼</button>
+    <button class="left" onclick="cmd('dpad_left')">◀</button>
+    <button class="right" onclick="cmd('dpad_right')">▶</button>
+    <button class="ok" onclick="cmd('select')">OK</button>
+  </div>
+  <div class="grid">
+    <button class="tile" onclick="cmd('back')">↩ Quay lại</button>
+    <button class="tile" onclick="cmd('home')">⌂ Trang chủ</button>
+    <button class="tile" onclick="cmd('play_pause')">⏯ Phát/Dừng</button>
+    <button class="tile" onclick="cmd('seek_backward')">⏪ -10s</button>
+    <button class="tile" onclick="cmd('prev_episode')">⏮ Tập trước</button>
+    <button class="tile" onclick="cmd('seek_forward')">⏩ +10s</button>
+  </div>
+  <div id="toast">Sẵn sàng điều khiển TV xuyên mạng</div>
+</div>
+<script>
+const code = "${safeCode}";
+const remoteKey = "${safeKey}";
+const toast = document.getElementById('toast');
+async function cmd(action, params) {
+  try {
+    const r = await fetch('/api/tv/remote/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, remoteKey, action, params: params || {} })
+    });
+    const d = await r.json();
+    toast.textContent = (r.ok && d.success) ? ('Đã gửi: ' + action) : (d.error || 'Lỗi gửi lệnh');
+  } catch (e) { toast.textContent = 'Lỗi kết nối: ' + e.message; }
+}
+function sendSearch() {
+  const el = document.getElementById('q');
+  const val = el.value.trim();
+  if (!val) return;
+  cmd('search', { query: val });
+  el.value = '';
+}
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') sendSearch(); });
+</script></body></html>`);
+});
 
 // --- HEALTH CHECK ---
 app.get('/health', (req, res) => {
