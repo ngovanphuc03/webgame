@@ -520,14 +520,69 @@ setTimeout(() => {
 }, 5000);
 
 // --- AUTH ---
-// OAuth state store for CSRF protection & prevent code reuse
-const oauthStates = new Map(); // state → { createdAt }
+// OAuth state store for CSRF protection, prevent code reuse & bind mobile app callback context
+const oauthStates = new Map(); // serverState → { createdAt, isApp, appState }
 setInterval(() => { // cleanup expired states every 5 min
     const now = Date.now();
     for (const [s, v] of oauthStates) {
         if (now - v.createdAt > 300000) oauthStates.delete(s); // 5 min TTL
     }
 }, 300000);
+
+function escapeHtmlText(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Helper: build g18://auth deep link and issue instant HTTP 302 redirect (RFC 8252 Custom Tabs)
+// with a clean Darkroom fallback page in case an OEM browser blocks automatic custom-scheme jumps.
+function redirectToMobileApp(res, { userId, username, avatar, state, error }) {
+    const params = new URLSearchParams();
+    if (error) {
+        params.set('error', String(error));
+    } else if (userId) {
+        params.set('user_id', String(userId));
+        if (username) params.set('username', String(username));
+        if (avatar) params.set('avatar', String(avatar));
+    }
+    if (state) {
+        params.set('state', String(state));
+    }
+    const qs = params.toString();
+    const deepLink = `g18://auth?${qs}`;
+    const androidIntentLink = `intent://auth?${qs}#Intent;scheme=g18;package=com.g18.app_g18;end`;
+
+    res.clearCookie('g18_app_oauth', { httpOnly: true, secure: IS_PROD, sameSite: 'lax' });
+    const safeDeepLink = escapeHtmlText(deepLink);
+    const safeIntentLink = escapeHtmlText(androidIntentLink);
+    const safeTitle = error ? 'Quay lại G18 Cine' : 'Xác thực Discord thành công!';
+    const safeDesc = error
+        ? escapeHtmlText(error)
+        : 'Đang tự động mở ứng dụng G18 Cine... Nếu trình duyệt không tự chuyển, hãy bấm nút bên dưới.';
+
+    const fallbackHtml = `<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${safeTitle}</title>
+<style>
+  body{background:#0A0A0C;color:#F5F6FA;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box}
+  .card{background:#14141A;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:28px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  h2{margin:0 0 10px;font-size:19px;font-weight:800;color:#fff}
+  p{margin:0 0 22px;font-size:13.5px;line-height:1.5;color:#94A3B8}
+  .btn{display:block;width:100%;box-sizing:border-box;padding:13px 16px;border-radius:12px;background:#E50914;color:#fff;font-weight:700;font-size:14.5px;text-decoration:none}
+  .sub{display:inline-block;margin-top:14px;color:#818CF8;font-size:12.5px;text-decoration:underline}
+</style></head><body><div class="card">
+  <h2>${safeTitle}</h2>
+  <p>${safeDesc}</p>
+  <a class="btn" href="${safeDeepLink}">Mở ứng dụng G18 Cine ngay</a>
+  <a class="sub" href="${safeIntentLink}">Dùng liên kết dự phòng (Android)</a>
+</div></body></html>`;
+
+    return res.status(302).set('Location', deepLink).type('html').send(fallbackHtml);
+}
 
 // Helper: render styled error/info page with auto-redirect
 function renderAuthPage({ title, icon, message, color, redirectUrl, redirectSec }) {
@@ -554,9 +609,27 @@ function renderAuthPage({ title, icon, message, color, redirectUrl, redirectSec 
 // Discord OAuth routes (enabled when env is configured)
 app.get('/auth/discord', discordAuthLimiter, (req, res) => {
     if (!isDiscordConfigured) return res.status(503).send('Discord OAuth is not configured.');
-    // Generate CSRF state token
+    // Detect Mobile App OAuth flow (?platform=app&state=<appNonce>)
+    const isApp = String(req.query.platform || '').trim().toLowerCase() === 'app';
+    const rawAppState = typeof req.query.state === 'string' ? req.query.state.trim() : '';
+    const appState = /^[A-Za-z0-9_-]{8,128}$/.test(rawAppState) ? rawAppState : '';
+
+    // Generate server-side CSRF state token bound to app context
     const state = crypto.randomBytes(16).toString('hex');
-    oauthStates.set(state, { createdAt: Date.now() });
+    oauthStates.set(state, { createdAt: Date.now(), isApp, appState });
+
+    if (isApp) {
+        // Short-lived backup cookie in case Discord returns without state on an edge error
+        res.cookie('g18_app_oauth', appState || '1', {
+            maxAge: 300000,
+            httpOnly: true,
+            secure: IS_PROD,
+            sameSite: 'lax'
+        });
+    } else {
+        res.clearCookie('g18_app_oauth', { httpOnly: true, secure: IS_PROD, sameSite: 'lax' });
+    }
+
     const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}&prompt=consent`;
     res.redirect(url);
 });
@@ -564,9 +637,29 @@ app.get('/auth/discord', discordAuthLimiter, (req, res) => {
 app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
     const { code, error, error_description, state } = req.query;
 
+    // Peek & validate server OAuth state up front so mobile app errors/cancels also bounce straight back to app
+    const stateKey = typeof state === 'string' ? state : '';
+    const stateEntry = (stateKey && oauthStates.has(stateKey)) ? oauthStates.get(stateKey) : null;
+    if (stateKey && stateEntry) {
+        oauthStates.delete(stateKey);
+    }
+    const backupAppCookie = (req.cookies && typeof req.cookies.g18_app_oauth === 'string')
+        ? req.cookies.g18_app_oauth.trim()
+        : '';
+    const isApp = stateEntry ? !!stateEntry.isApp : backupAppCookie.length > 0;
+    const appState = stateEntry
+        ? (stateEntry.appState || '')
+        : (/^[A-Za-z0-9_-]{8,128}$/.test(backupAppCookie) ? backupAppCookie : '');
+
     // 1. User cancelled on Discord's authorization page
     if (error === 'access_denied' || error === 'consent_required') {
         console.log('[Auth] User cancelled Discord authorization');
+        if (isApp) {
+            return redirectToMobileApp(res, {
+                error: 'Bạn đã huỷ xác nhận đăng nhập Discord.',
+                state: appState
+            });
+        }
         return res.send(renderAuthPage({
             title: 'Đăng nhập đã huỷ',
             icon: '↩️',
@@ -580,6 +673,12 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
     // 2. Other Discord errors (e.g. server_error, temporarily_unavailable)
     if (error) {
         console.error('[Auth] Discord OAuth error:', error, error_description);
+        if (isApp) {
+            return redirectToMobileApp(res, {
+                error: error_description || `Discord trả về lỗi: ${error}`,
+                state: appState
+            });
+        }
         return res.send(renderAuthPage({
             title: 'Lỗi từ Discord',
             icon: '⚠️',
@@ -590,6 +689,12 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
 
     // 3. No code received at all
     if (!code) {
+        if (isApp) {
+            return redirectToMobileApp(res, {
+                error: 'Không nhận được mã xác thực từ Discord. Vui lòng thử lại.',
+                state: appState
+            });
+        }
         return res.send(renderAuthPage({
             title: 'Lỗi đăng nhập',
             icon: '❌',
@@ -599,13 +704,16 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
     }
 
     // 4. Validate CSRF state
-    if (state && !oauthStates.has(state)) {
-        // State was already used (page refresh) or expired — just redirect home silently
-        console.log('[Auth] Stale/reused OAuth state detected, redirecting to /');
+    if (stateKey && !stateEntry) {
+        console.log('[Auth] Stale/reused OAuth state detected');
+        if (isApp) {
+            return redirectToMobileApp(res, {
+                error: 'Phiên đăng nhập đã hết hạn. Vui lòng bấm đăng nhập lại.',
+                state: appState
+            });
+        }
         return res.redirect('/');
     }
-    // Delete state immediately to prevent code reuse on page refresh
-    if (state) oauthStates.delete(state);
 
     try {
         const headers = {
@@ -633,13 +741,25 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
 
                 // invalid_grant: code already used or expired (e.g. user refreshed the callback page)
                 if (errCode === 'invalid_grant' || (status === 400 && String(errData).includes('invalid'))) {
-                    console.log('[Auth] Invalid grant (code reused/expired), redirecting to /');
+                    console.log('[Auth] Invalid grant (code reused/expired)');
+                    if (isApp) {
+                        return redirectToMobileApp(res, {
+                            error: 'Mã xác thực Discord đã hết hạn. Vui lòng đăng nhập lại.',
+                            state: appState
+                        });
+                    }
                     return res.redirect('/');
                 }
 
                 // invalid_client: wrong client_id or client_secret
                 if (errCode === 'invalid_client') {
                     console.error('[Auth] CRITICAL: Invalid client credentials! Check DISCORD_CLIENT_ID & DISCORD_CLIENT_SECRET in .env');
+                    if (isApp) {
+                        return redirectToMobileApp(res, {
+                            error: 'Lỗi cấu hình xác thực Discord trên máy chủ.',
+                            state: appState
+                        });
+                    }
                     return res.send(renderAuthPage({
                         title: 'Lỗi cấu hình server',
                         icon: '🔧',
@@ -652,6 +772,12 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
                 if (status === 429) {
                     const retryAfter = errData?.retry_after || 60;
                     console.error(`[Auth] Discord Rate Limited! Retry after ${retryAfter}s`);
+                    if (isApp) {
+                        return redirectToMobileApp(res, {
+                            error: `Discord đang bận. Vui lòng đợi ${Math.ceil(retryAfter)} giây rồi thử lại.`,
+                            state: appState
+                        });
+                    }
                     return res.send(renderAuthPage({
                         title: 'Discord đang bận!',
                         icon: '⏳',
@@ -664,6 +790,12 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
                 // redirect_uri mismatch
                 if (errCode === 'redirect_uri_mismatch' || String(JSON.stringify(errData)).includes('redirect_uri')) {
                     console.error('[Auth] CRITICAL: Redirect URI mismatch! .env DISCORD_REDIRECT_URI does not match Discord Developer Portal.');
+                    if (isApp) {
+                        return redirectToMobileApp(res, {
+                            error: 'Redirect URI Discord chưa khớp cấu hình máy chủ.',
+                            state: appState
+                        });
+                    }
                     return res.send(renderAuthPage({
                         title: 'Lỗi cấu hình Redirect URI',
                         icon: '🔧',
@@ -721,16 +853,32 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
             if (conn) conn.release();
         }
 
-        // Set cookies and redirect
+        // Set cookies for browser session
         res.cookie('user_id', id, COOKIE_OPTS);
         const info = JSON.stringify({ username: encodeURIComponent(displayName), avatar: avatarUrl });
         res.cookie('user_info', info, COOKIE_OPTS_CLIENT);
+
+        // Mobile App flow: bounce straight back into G18 Cine via g18://auth (never show old casino website)
+        if (isApp) {
+            return redirectToMobileApp(res, {
+                userId: id,
+                username: displayName,
+                avatar: avatarUrl,
+                state: appState
+            });
+        }
         res.redirect('/');
     } catch (e) {
         // Handle Discord 429 rate limit
         if (e.response && e.response.status === 429) {
             const retryAfter = e.response.data?.retry_after || 60;
             console.error(`[Auth] Discord Rate Limited! Retry after ${retryAfter}s`);
+            if (isApp) {
+                return redirectToMobileApp(res, {
+                    error: `Discord đang bận. Vui lòng đợi ${Math.ceil(retryAfter)} giây rồi thử lại.`,
+                    state: appState
+                });
+            }
             return res.send(renderAuthPage({
                 title: 'Discord đang bận!',
                 icon: '⏳',
@@ -750,6 +898,12 @@ app.get('/auth/discord/callback', discordAuthLimiter, async (req, res) => {
             userMsg = 'Không thể kết nối đến Discord. Kiểm tra kết nối mạng và thử lại.';
         }
 
+        if (isApp) {
+            return redirectToMobileApp(res, {
+                error: userMsg,
+                state: appState
+            });
+        }
         res.send(renderAuthPage({
             title: 'Lỗi đăng nhập',
             icon: '❌',
