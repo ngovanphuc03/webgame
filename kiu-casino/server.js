@@ -3998,13 +3998,13 @@ const statusEl = document.getElementById('status');
 const discordBtn = document.getElementById('discordBtn');
 if (discordBtn) {
   pinEl.addEventListener('input', () => {
-    const c = pinEl.value.replace(/\D/g, '').slice(0, 6);
+    const c = pinEl.value.replace(/\\D/g, '').slice(0, 6);
     pinEl.value = c;
     discordBtn.href = '/auth/discord?tv_code=' + encodeURIComponent(c);
   });
 }
 async function claimTv() {
-  const code = pinEl.value.replace(/\D/g, '').slice(0, 6);
+  const code = pinEl.value.replace(/\\D/g, '').slice(0, 6);
   if (code.length !== 6) {
     statusEl.className = 'msg err';
     statusEl.textContent = 'Vui lòng nhập đủ 6 chữ số hiển thị trên màn hình TV.';
